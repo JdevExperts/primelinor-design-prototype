@@ -1,0 +1,344 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  gap: clamp(16px, 2.2vw, 32px);
+  align-items: stretch;
+}
+
+/* ---------- Preview ----------
+   Cool panel so the stage reads as a shot product against the light section.
+   The stage is height-driven rather than width-driven, which is what keeps
+   this block from eating a whole desktop viewport. */
+.previewPanel {
+  display: flex;
+  flex-direction: column;
+  background-color: #dfe8f5;
+  border: 1px solid rgba(15, 27, 45, 0.09);
+  border-radius: var(--radius-xl);
+  padding: var(--space-16);
+}
+
+.previewStage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  height: clamp(252px, 22vw, 320px);
+}
+
+.previewCaption {
+  margin-top: var(--space-12);
+  padding-inline: var(--space-4);
+}
+
+.previewTitle {
+  font-size: var(--text-body-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.012em;
+  color: var(--color-navy);
+}
+
+.previewMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8) var(--space-12);
+  margin-top: var(--space-8);
+}
+
+/* Carries a variable value, so it stays sentence case rather than the
+   uppercase treatment used for static labels */
+.previewBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px var(--space-12);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-amber-hover);
+  background-color: var(--color-amber-light);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* Basis is large enough that the note drops to its own line instead of
+   being squeezed to nothing beside the badge */
+.previewNote {
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: var(--text-caption);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Controls ---------- */
+/* space-between absorbs the height the taller preview column sets, instead
+   of leaving a block of dead white at the bottom of the card */
+.controls {
+  display: grid;
+  align-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-20);
+  background-color: var(--color-white);
+  border: 1px solid rgba(15, 27, 45, 0.07);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  color: var(--color-charcoal);
+}
+
+.field {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 0;
+  margin-bottom: var(--space-8);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-grey);
+}
+
+.step {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--color-navy);
+  background-color: var(--color-offwhite);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.fieldHint {
+  margin-top: var(--space-8);
+  font-size: var(--text-caption);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.srInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-8) var(--space-16);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--color-border-strong);
+}
+
+.chip:has(.srInput:focus-visible) {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.chipActive {
+  border-color: var(--color-amber);
+  background-color: var(--color-amber-light);
+  color: var(--color-navy);
+  font-weight: var(--weight-semibold);
+}
+
+.swatches {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.swatch {
+  display: inline-flex;
+  padding: 3px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.swatch:hover {
+  border-color: var(--color-border-strong);
+}
+
+.swatch:has(.srInput:focus-visible) {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.swatchActive {
+  border-color: var(--color-amber);
+  box-shadow: 0 0 0 3px var(--color-amber-light);
+}
+
+.swatchDot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(15, 27, 45, 0.12);
+}
+
+.swatchLabel {
+  margin-left: var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+}
+
+/* ---------- Upload ---------- */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-12) var(--space-16);
+  text-align: center;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-offwhite);
+  cursor: pointer;
+  transition:
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease);
+}
+
+.dropzone:hover {
+  border-color: var(--color-amber);
+  background-color: var(--color-amber-light);
+}
+
+.dropzone:has(.srInput:focus-visible) {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.dropIcon {
+  color: var(--color-amber-hover);
+}
+
+.dropTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.dropHint {
+  font-size: var(--text-caption);
+  color: var(--color-grey);
+}
+
+.fileChip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border: 1.5px solid var(--color-amber);
+  border-radius: var(--radius-md);
+  background-color: var(--color-amber-light);
+}
+
+.fileIcon {
+  color: var(--color-amber-hover);
+  flex: none;
+}
+
+.fileName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileRemove {
+  flex: none;
+  display: inline-flex;
+  color: var(--color-grey);
+  transition: color var(--duration) var(--ease);
+}
+
+.fileRemove:hover {
+  color: var(--color-navy);
+}
+
+/* ---------- Actions ---------- */
+.actions {
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.actionsNote {
+  margin-top: var(--space-8);
+  font-size: var(--text-caption);
+  color: var(--color-grey);
+  text-align: center;
+}
+
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .previewStage {
+    height: clamp(260px, 44vw, 340px);
+  }
+
+  .controls {
+    align-content: start;
+    gap: var(--space-20);
+  }
+}
+
+@media (max-width: 520px) {
+  .previewPanel {
+    padding: var(--space-12);
+  }
+
+  .previewCaption {
+    padding-inline: var(--space-8);
+  }
+
+  .chip {
+    padding: var(--space-8) var(--space-12);
+    font-size: var(--text-caption);
+  }
+
+  .swatchDot {
+    width: 28px;
+    height: 28px;
+  }
+}

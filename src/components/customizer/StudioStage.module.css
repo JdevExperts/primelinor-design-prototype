@@ -1,0 +1,350 @@
+.stageWrap {
+  min-width: 0;
+}
+
+.previewStage {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  /* Fallback only — the photo fills this frame, so the studio grey
+     in the asset is the only background the customer sees. */
+  background: #d1d0d2;
+  border-radius: var(--radius-xl);
+}
+
+.previewStage > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.previewPortrait > *:not(.lifeBadge),
+.previewWide > *:not(.lifeBadge) {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+  Size the stage to the photo (2:3 product/model, 3:2 team) so the image
+  covers the rounded frame. A wider box + object-fit:contain letterboxed
+  the packshot and showed a second grey.
+*/
+.previewPortrait {
+  width: min(100%, calc(min(76dvh, 720px) * 2 / 3));
+  aspect-ratio: 2 / 3;
+  height: auto;
+}
+
+.previewWide {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  height: auto;
+}
+
+.previewBoth {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+}
+
+.bothGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(128px, 0.4fr);
+  gap: 0;
+  align-items: stretch;
+  background: #d1d0d2;
+}
+
+.pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  background: #d1d0d2;
+}
+
+.previewBoth .pane {
+  aspect-ratio: 2 / 3;
+  align-self: start;
+}
+
+.pane > *:first-child {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.previewBoth .pane > *:first-child {
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  background: #d1d0d2;
+}
+
+.paneCaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  pointer-events: none;
+}
+
+.zoomCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: var(--space-16);
+  padding: var(--space-16) var(--space-12);
+  background: #d1d0d2;
+}
+
+.zoom {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.zoomClip {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #d1d0d2;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72);
+}
+
+.zoomPhoto {
+  position: absolute;
+  max-width: none;
+  object-fit: fill;
+}
+
+.zoomMark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed rgba(245, 158, 11, 0.75);
+  border-radius: 2px;
+}
+
+.zoomMarkOn {
+  border: none;
+}
+
+.zoomMark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.zoomLabel {
+  font-size: 9px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-amber-hover);
+}
+
+.zoomCaption {
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+  text-align: center;
+}
+
+.lifeImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.lifeBadge {
+  position: absolute;
+  left: var(--space-12);
+  bottom: var(--space-12);
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-navy);
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: var(--radius-sm);
+}
+
+.orientation {
+  margin-top: var(--space-12);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.disclaimer {
+  margin-top: 2px;
+  max-width: 52ch;
+  font-size: var(--text-caption);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.thumbs {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  overflow-x: auto;
+  padding: 3px 2px 4px;
+  scrollbar-width: thin;
+}
+
+.thumbs > li {
+  flex: none;
+  display: flex;
+}
+
+.thumb {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: 6px;
+  width: 96px;
+  padding: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-white);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.thumb:hover {
+  border-color: var(--color-border-strong);
+}
+
+.thumb img,
+.thumbFallback {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  background: #d1d0d2;
+}
+
+.thumbLife {
+  object-position: center 32%;
+}
+
+.thumbSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #d1d0d2;
+}
+
+.thumbSplit img,
+.thumbSplit .thumbFallback {
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbFallback {
+  display: grid;
+  place-items: center;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.thumbLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4em;
+  padding: 0 4px 8px;
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.thumbOn {
+  border-color: var(--color-navy);
+  background: var(--color-white);
+}
+
+.thumbOn .thumbLabel {
+  color: var(--color-navy);
+  font-weight: var(--weight-semibold);
+}
+
+.thumb:focus-visible {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1279px) {
+  .previewPortrait {
+    width: min(100%, calc(min(64dvh, 560px) * 2 / 3));
+  }
+}
+
+@media (max-width: 899px) {
+  .previewPortrait {
+    width: min(100%, calc(min(70dvw, 440px) * 2 / 3));
+  }
+
+  .bothGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .zoomCol {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: center;
+    padding: var(--space-12) var(--space-8);
+  }
+
+  .zoomClip {
+    width: 108px;
+    height: 108px;
+  }
+
+  .thumb {
+    width: 84px;
+  }
+}
+
+@media (max-width: 430px) {
+  .thumb {
+    width: 78px;
+  }
+
+  .thumbLabel {
+    font-size: 10px;
+  }
+}

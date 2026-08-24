@@ -1,0 +1,218 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
+}
+
+.card:hover {
+  border-color: rgba(15, 27, 45, 0.14);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card:focus-within {
+  border-color: var(--color-navy);
+}
+
+.media {
+  position: relative;
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.mediaInner {
+  transition: transform var(--duration-slow) var(--ease);
+}
+
+.card:hover .mediaInner,
+.card:focus-within .mediaInner {
+  transform: scale(1.03);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--space-12) var(--space-16) var(--space-8);
+}
+
+.name {
+  font-size: var(--text-body);
+  line-height: 1.35;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.008em;
+  color: var(--color-navy);
+  margin: 0;
+}
+
+.spec {
+  margin-top: 2px;
+  margin-bottom: var(--space-12);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+/* auto margin plus a reserved note line keeps every price row on one
+   baseline across a card row, whatever the name or note length */
+.priceBlock {
+  margin-top: auto;
+  min-height: 50px;
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.price {
+  font-size: 1.3125rem;
+  font-weight: var(--weight-bold);
+  color: var(--color-navy);
+  letter-spacing: -0.028em;
+  line-height: 1.2;
+}
+
+.priceUnit {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+.quotePrice {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+/* MOQ stays visible but visually secondary */
+.moq {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.priceNote {
+  margin-top: var(--space-4);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+.swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-8);
+}
+
+.swatch {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 27, 45, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.swatchMore {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 0 var(--space-16) var(--space-12);
+  margin-top: auto;
+}
+
+.details {
+  flex: 1 1 110px;
+}
+
+.tryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--color-amber-hover);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration) var(--ease);
+}
+
+.tryAction:hover {
+  background-color: var(--color-amber-light);
+}
+
+.tryAction:visited {
+  color: var(--color-amber-hover);
+}
+
+@media (max-width: 1023px) {
+  .media {
+    --visual-ratio-override: 4 / 2.7;
+  }
+}
+
+@media (max-width: 639px) {
+  .compactMobile .media {
+    --visual-ratio-override: 16 / 10;
+  }
+}
+
+@media (max-width: 560px) {
+  .name {
+    font-size: var(--text-sm);
+  }
+
+  .price {
+    font-size: 1.125rem;
+  }
+
+  .priceBlock {
+    min-height: 44px;
+  }
+
+  .body {
+    padding: var(--space-8) var(--space-12) var(--space-4);
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+    padding: 0 var(--space-12) var(--space-8);
+  }
+
+  .details {
+    flex: none;
+    width: 100%;
+  }
+
+  .tryAction {
+    justify-content: center;
+    padding-block: var(--space-4);
+  }
+}

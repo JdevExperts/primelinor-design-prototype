@@ -1,0 +1,87 @@
+.hero {
+  background-color: var(--color-white);
+  padding-block: var(--space-16) var(--space-12);
+}
+
+.inner {
+  min-width: 0;
+}
+
+/*
+  ~68 / 32 split. Height is viewport-aware so announcement + header + this
+  wall fit in a first look without a long scroll. At 1440px the primary lands
+  near 2.1:1 and each secondary near 1.8:1 — the recommended creative ratios.
+*/
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: var(--space-12);
+  height: clamp(248px, 30vw, 440px);
+}
+
+.primary {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  min-height: 0;
+}
+
+.secondary {
+  position: relative;
+  grid-column: 2;
+  min-height: 0;
+}
+
+.solo {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr;
+}
+
+.oneSecondary .secondary {
+  grid-row: 1 / -1;
+}
+
+.noPrimary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: 1fr;
+}
+
+.noPrimary .secondary {
+  grid-column: auto;
+  grid-row: 1;
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    height: clamp(240px, 34vw, 360px);
+    gap: var(--space-8);
+  }
+}
+
+@media (max-width: 767px) {
+  .grid,
+  .solo,
+  .oneSecondary,
+  .noPrimary {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    gap: var(--space-8);
+  }
+
+  .primary,
+  .secondary,
+  .oneSecondary .secondary {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .primary {
+    aspect-ratio: 2 / 1;
+  }
+
+  .secondary {
+    aspect-ratio: 1.7 / 1;
+  }
+}

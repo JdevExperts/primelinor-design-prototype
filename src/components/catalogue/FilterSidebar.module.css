@@ -1,0 +1,122 @@
+.filters {
+  display: grid;
+  gap: 2px;
+}
+
+.group {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.groupToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-12) 0;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-navy);
+  text-align: left;
+}
+
+.groupIcon {
+  color: var(--color-text-muted);
+  transition: transform var(--duration) var(--ease);
+}
+
+.groupIconOpen {
+  transform: rotate(180deg);
+}
+
+.groupBody {
+  padding-bottom: var(--space-12);
+}
+
+.options,
+.colors {
+  display: grid;
+  gap: 2px;
+}
+
+.check,
+.color {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 32px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.checkbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.checkBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 4px;
+  background: var(--color-white);
+  color: var(--color-white);
+}
+
+.checkbox:checked + .checkBox {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+}
+
+.checkbox:focus-visible + .checkBox,
+.checkbox:focus-visible + .swatch {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+.checkLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.swatch {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid rgba(15, 27, 45, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.swatchOn {
+  box-shadow:
+    0 0 0 2px var(--color-white),
+    0 0 0 4px var(--color-navy);
+}
+
+.custom {
+  padding-block: var(--space-12);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.moreCopy {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 28ch;
+}

@@ -1,0 +1,79 @@
+/* Chrome-less index treatment — deliberately lighter than the bordered
+   product and creation-type cards so the page reads with more than one
+   card pattern. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.media {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-white);
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+
+.card:hover .media {
+  border-color: rgba(15, 27, 45, 0.16);
+  box-shadow: var(--shadow-md);
+}
+
+.card:focus-within .media {
+  border-color: var(--color-navy);
+}
+
+.mediaInner {
+  transition: transform var(--duration-slow) var(--ease);
+}
+
+.card:hover .mediaInner,
+.card:focus-within .mediaInner {
+  transform: scale(1.03);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding-inline: var(--space-4);
+}
+
+.trigger {
+  text-align: left;
+  font: inherit;
+  min-width: 0;
+}
+
+/* Card-wide hit area driven by the single focusable control */
+.trigger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+  letter-spacing: -0.005em;
+}
+
+.arrow {
+  flex: none;
+  color: #b3bac6;
+  transition:
+    transform var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+.card:hover .arrow,
+.card:focus-within .arrow {
+  color: var(--color-amber-hover);
+  transform: translateX(3px);
+}

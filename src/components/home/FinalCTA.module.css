@@ -1,0 +1,84 @@
+.section {
+  background-color: var(--color-white);
+  padding-block: var(--section-y);
+}
+
+/* The page shell is wide; the closing surface stays deliberately contained */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: var(--container-narrow);
+  margin-inline: auto;
+  text-align: center;
+  padding: clamp(32px, 4.2vw, 56px) clamp(24px, 5vw, 64px);
+  background-color: var(--color-navy-light);
+  border: 1px solid rgba(15, 27, 45, 0.06);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+/* Soft lift so the page ends on a lighter note than the footer that follows */
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    72% 90% at 50% 0%,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0) 68%
+  );
+  pointer-events: none;
+}
+
+.panel > * {
+  position: relative;
+}
+
+.title {
+  margin-top: var(--space-16);
+  font-size: var(--text-h1);
+  line-height: var(--leading-h1);
+  color: var(--color-navy);
+  max-width: 22ch;
+}
+
+.description {
+  margin-top: var(--space-16);
+  font-size: var(--text-body-lg);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  max-width: 50ch;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-12);
+  margin-top: var(--space-24);
+}
+
+.note {
+  margin-top: var(--space-20);
+  padding-top: var(--space-20);
+  border-top: 1px solid rgba(15, 27, 45, 0.08);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  max-width: 46ch;
+}
+
+.noteIcon {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: var(--space-4);
+  color: var(--color-amber-hover);
+}
+
+@media (max-width: 520px) {
+  .ctas {
+    width: 100%;
+    flex-direction: column;
+  }
+}

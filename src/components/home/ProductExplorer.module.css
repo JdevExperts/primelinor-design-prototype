@@ -1,0 +1,130 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-20);
+  scroll-margin-top: var(--space-24);
+}
+
+.grid:focus {
+  outline: none;
+}
+
+.item {
+  display: flex;
+}
+
+.item > * {
+  width: 100%;
+}
+
+/* ---------- Pager ---------- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  margin-top: var(--space-24);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.count {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.step,
+.page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  height: 38px;
+  padding-inline: var(--space-12);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--duration) var(--ease),
+    background-color var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+.step:hover:not(:disabled),
+.page:hover {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-offwhite);
+}
+
+.step:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.pages {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.page {
+  min-width: 38px;
+  padding-inline: var(--space-8);
+}
+
+.pageActive,
+.pageActive:hover {
+  color: var(--color-white);
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
+  font-weight: var(--weight-semibold);
+}
+
+@media (max-width: 1279px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-16);
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    gap: var(--space-12);
+  }
+
+  .footer {
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* the arrows carry the meaning once space is tight */
+  .stepLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .step {
+    padding-inline: var(--space-12);
+  }
+}

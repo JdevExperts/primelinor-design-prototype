@@ -1,0 +1,196 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  font-family: inherit;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.005em;
+  text-align: center;
+  white-space: nowrap;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Sizes ---------- */
+.sm {
+  min-height: 36px;
+  padding: 0 var(--space-16);
+  font-size: var(--text-sm);
+}
+
+.md {
+  min-height: 44px;
+  padding: 0 var(--space-20);
+  font-size: var(--text-body);
+}
+
+.lg {
+  min-height: 52px;
+  padding: 0 var(--space-32);
+  font-size: var(--text-body-lg);
+}
+
+/* ---------- Primary: Deep Navy authority CTA ---------- */
+.primary {
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+.primary:hover {
+  background-color: var(--color-navy-hover);
+  border-color: var(--color-navy-hover);
+}
+
+:global(.on-dark) .primary {
+  background-color: var(--color-white);
+  border-color: var(--color-white);
+  color: var(--color-navy);
+}
+
+:global(.on-dark) .primary:hover {
+  background-color: #e9eef6;
+  border-color: #e9eef6;
+}
+
+/* ---------- Accent: reserved for Try Your Logo ---------- */
+.accent {
+  background-color: var(--color-white);
+  border-color: var(--color-amber);
+  color: var(--color-navy);
+}
+
+.accent:hover {
+  background-color: var(--color-amber-light);
+  border-color: var(--color-amber-hover);
+}
+
+.accent .icon {
+  color: var(--color-amber-hover);
+}
+
+:global(.on-dark) .accent {
+  background-color: transparent;
+  border-color: var(--color-amber);
+  color: var(--color-white);
+}
+
+:global(.on-dark) .accent:hover {
+  background-color: rgba(245, 158, 11, 0.14);
+}
+
+:global(.on-dark) .accent .icon {
+  color: var(--color-amber);
+}
+
+/* ---------- Secondary: quiet outline ---------- */
+.secondary {
+  background-color: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-navy);
+}
+
+.secondary:hover {
+  border-color: var(--color-navy);
+  background-color: var(--color-navy-light);
+}
+
+:global(.on-dark) .secondary {
+  border-color: rgba(255, 255, 255, 0.28);
+  color: var(--color-white);
+}
+
+:global(.on-dark) .secondary:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Quiet: text-level action ---------- */
+.quiet {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-navy);
+  padding-inline: var(--space-8);
+}
+
+.quiet:hover {
+  color: var(--color-amber-hover);
+}
+
+:global(.on-dark) .quiet {
+  color: var(--color-white);
+}
+
+:global(.on-dark) .quiet:hover {
+  color: var(--color-amber);
+}
+
+/* Light panels nested inside a navy section restore the light treatment */
+:global(.on-light) .primary {
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+:global(.on-light) .primary:hover {
+  background-color: var(--color-navy-hover);
+  border-color: var(--color-navy-hover);
+}
+
+:global(.on-light) .accent {
+  background-color: var(--color-white);
+  border-color: var(--color-amber);
+  color: var(--color-navy);
+}
+
+:global(.on-light) .accent:hover {
+  background-color: var(--color-amber-light);
+  border-color: var(--color-amber-hover);
+}
+
+:global(.on-light) .accent .icon {
+  color: var(--color-amber-hover);
+}
+
+:global(.on-light) .secondary {
+  border-color: var(--color-border-strong);
+  color: var(--color-navy);
+}
+
+:global(.on-light) .secondary:hover {
+  border-color: var(--color-navy);
+  background-color: var(--color-navy-light);
+}
+
+:global(.on-light) .quiet {
+  color: var(--color-navy);
+}
+
+.full {
+  width: 100%;
+}
+
+.icon {
+  flex: none;
+  transition: transform var(--duration) var(--ease);
+}
+
+.button:hover .iconTrail {
+  transform: translateX(3px);
+}

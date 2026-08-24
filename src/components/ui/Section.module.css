@@ -1,0 +1,35 @@
+.section {
+  padding-block: var(--section-y);
+}
+
+.white {
+  background-color: var(--color-white);
+}
+
+.muted {
+  background-color: var(--color-surface-muted);
+}
+
+.tint {
+  background-color: var(--color-surface-tint);
+}
+
+/* Cool light band used where a section needs its own environment without
+   the weight of a full navy block */
+.studio {
+  background: linear-gradient(180deg, #f5f8fd 0%, #e8eff9 100%);
+  border-block: 1px solid rgba(15, 27, 45, 0.07);
+}
+
+.navy {
+  background-color: var(--color-navy);
+  color: var(--color-text);
+}
+
+.spacious {
+  padding-block: var(--section-y-lg);
+}
+
+.tightTop {
+  padding-top: clamp(28px, 2.8vw, 40px);
+}

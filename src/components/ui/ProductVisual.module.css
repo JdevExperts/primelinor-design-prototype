@@ -1,0 +1,101 @@
+.frame {
+  position: relative;
+  width: 100%;
+  /* Consumers can retune the frame shape per breakpoint by setting
+     --visual-ratio-override on any ancestor. */
+  aspect-ratio: var(--visual-ratio-override, var(--visual-ratio, 4 / 5));
+  overflow: hidden;
+  border-radius: inherit;
+  isolation: isolate;
+  background: radial-gradient(
+    120% 96% at 50% 2%,
+    var(--surface-top) 0%,
+    var(--surface-mid) 52%,
+    var(--surface-base) 100%
+  );
+}
+
+/* Studio surfaces — the art-direction lever for composing product groups */
+.default {
+  --surface-top: #ffffff;
+  --surface-mid: #f6f8fa;
+  --surface-base: #eaedf2;
+}
+
+.deep {
+  --surface-top: #f8fafc;
+  --surface-mid: #eaeef4;
+  --surface-base: #d8dee7;
+}
+
+.tint {
+  --surface-top: #f9fbfe;
+  --surface-mid: #eaf0f9;
+  --surface-base: #d9e3f1;
+}
+
+/* Used for the Try Your Logo stage: even and cool enough that a white
+   garment keeps its edges from top to hem */
+.tintDeep {
+  --surface-top: #e9f0f9;
+  --surface-mid: #dce6f3;
+  --surface-base: #c2d2e7;
+}
+
+.warm {
+  --surface-top: #fdfcfa;
+  --surface-mid: #f6f2ec;
+  --surface-base: #ece5da;
+}
+
+.warmDeep {
+  --surface-top: #faf7f2;
+  --surface-mid: #eee7dd;
+  --surface-base: #dcd2c3;
+}
+
+.dark {
+  --surface-top: #24344f;
+  --surface-mid: #17253c;
+  --surface-base: #0f1b2d;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.art {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Soft studio floor so the placeholder reads as a product shot, not a box */
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 38%;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 27, 45, 0) 0%,
+    rgba(15, 27, 45, 0.03) 100%
+  );
+  pointer-events: none;
+}
+
+.dark::after {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.22) 100%
+  );
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}

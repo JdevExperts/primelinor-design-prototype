@@ -1,0 +1,25 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-12);
+  color: var(--color-navy);
+}
+
+.mark {
+  flex: none;
+}
+
+.wordmark {
+  font-size: 1.1875rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.025em;
+  color: var(--color-navy);
+}
+
+.onDark {
+  color: rgba(255, 255, 255, 0.14);
+}
+
+.onDark .wordmark {
+  color: var(--color-white);
+}

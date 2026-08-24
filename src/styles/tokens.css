@@ -1,0 +1,140 @@
+/* PrimeLinor Design Prototype — Design Tokens */
+
+:root {
+  /* ---------- Brand: Deep Navy (primary authority) ---------- */
+  --color-navy: #0f1b2d;
+  --color-navy-hover: #1e2f48;
+  --color-navy-light: #f0f4fa;
+
+  /* ---------- Brand: Warm Amber (energy, used selectively) ---------- */
+  --color-amber: #f59e0b;
+  --color-amber-hover: #d97706;
+  --color-amber-light: #fef3c7;
+
+  /* ---------- Neutral ---------- */
+  --color-charcoal: #1a1a2e;
+  --color-grey: #6b7280;
+  --color-border: #e5e7eb;
+  --color-white: #ffffff;
+  --color-offwhite: #fafafa;
+
+  /* ---------- Semantic (functional use only) ---------- */
+  --color-success: #047857;
+  --color-error: #b42318;
+  --color-info: #1d4ed8;
+
+  /* ---------- Semantic aliases ---------- */
+  --color-text: var(--color-charcoal);
+  --color-text-strong: var(--color-navy);
+  --color-text-muted: var(--color-grey);
+  --color-text-inverse: var(--color-white);
+  --color-text-inverse-muted: rgba(255, 255, 255, 0.68);
+
+  --color-background: var(--color-white);
+  --color-surface: var(--color-white);
+  --color-surface-muted: var(--color-offwhite);
+  --color-surface-tint: var(--color-navy-light);
+  --color-surface-inverse: var(--color-navy);
+
+  --color-border-strong: #d3d8e0;
+  --color-border-inverse: rgba(255, 255, 255, 0.16);
+
+  /* Focus colour flips on dark surfaces via .on-dark */
+  --focus-color: var(--color-navy);
+
+  /* ---------- Typography ---------- */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  --text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4rem); /* → 64px */
+  --text-h1: clamp(2rem, 1.35rem + 2.6vw, 3rem); /* → 48px */
+  --text-h2: clamp(1.625rem, 1.35rem + 1.1vw, 2rem); /* → 32px */
+  --text-h3: clamp(1.25rem, 1.13rem + 0.5vw, 1.5rem); /* → 24px */
+  --text-h4: 1.25rem; /* 20px */
+  --text-body-lg: clamp(1rem, 0.95rem + 0.2vw, 1.125rem); /* → 18px */
+  --text-body: 1rem; /* 16px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-caption: 0.75rem; /* 12px */
+
+  --leading-display: 1.05;
+  --leading-h1: 1.14;
+  --leading-h2: 1.25;
+  --leading-h3: 1.33;
+  --leading-body: 1.6;
+
+  --tracking-display: -0.028em;
+  --tracking-heading: -0.018em;
+  --tracking-label: 0.1em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------- Spacing scale ---------- */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-80: 80px;
+  --space-96: 96px;
+  --space-128: 128px;
+
+  /* ---------- Layout ----------
+     The page shell is wide so product and category grids read as a
+     marketplace; text blocks pull themselves back in with their own
+     max-widths (--container-narrow, or a ch value on the element). */
+  --container-max: 1440px;
+  --container-pad: clamp(20px, 4vw, 56px);
+  --container-narrow: 1080px;
+  /* Commerce density: sections breathe, but a wide viewport should hold
+     more than one band of content at a time. */
+  --section-y: clamp(40px, 3.9vw, 62px);
+  --section-y-lg: clamp(48px, 4.6vw, 74px);
+
+  /* ---------- Radius ---------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---------- Shadows (restrained) ---------- */
+  --shadow-xs: 0 1px 2px rgba(15, 27, 45, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 27, 45, 0.06), 0 1px 2px rgba(15, 27, 45, 0.04);
+  --shadow-md: 0 6px 20px rgba(15, 27, 45, 0.07);
+  --shadow-lg: 0 18px 44px rgba(15, 27, 45, 0.1);
+
+  /* ---------- Motion ---------- */
+  --ease: cubic-bezier(0.2, 0.6, 0.3, 1);
+  --duration-fast: 140ms;
+  --duration: 200ms;
+  --duration-slow: 320ms;
+}
+
+/* Sections rendered on Deep Navy re-map surface + focus tokens */
+.on-dark {
+  --color-text: rgba(255, 255, 255, 0.78);
+  --color-text-strong: var(--color-white);
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-border: rgba(255, 255, 255, 0.14);
+  --color-border-strong: rgba(255, 255, 255, 0.24);
+  --focus-color: var(--color-amber);
+}
+
+/* Light panels nested inside a navy section opt back out */
+.on-light {
+  --color-text: var(--color-charcoal);
+  --color-text-strong: var(--color-navy);
+  --color-text-muted: var(--color-grey);
+  --color-border: #e5e7eb;
+  --color-border-strong: #d3d8e0;
+  --focus-color: var(--color-navy);
+}
