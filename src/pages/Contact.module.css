@@ -1,0 +1,128 @@
+.hero {
+  padding-block: clamp(28px, 3.4vw, 44px);
+  background: linear-gradient(180deg, #f5f8fd 0%, #eef3fb 100%);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heroInner {
+  max-width: 60ch;
+}
+
+.heroTitle {
+  margin-top: var(--space-16);
+  font-size: var(--text-h1);
+  line-height: var(--leading-h1);
+}
+
+.heroCopy {
+  margin-top: var(--space-12);
+  font-size: var(--text-body-lg);
+  color: var(--color-text-muted);
+}
+
+.body {
+  padding-block: var(--section-y);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
+  gap: clamp(32px, 4vw, 56px);
+  align-items: start;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.channels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.channel {
+  padding-bottom: var(--space-20);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.channel:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.channelTitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.channelDescription {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  max-width: 40ch;
+}
+
+.channelAction {
+  display: inline-block;
+  margin-top: var(--space-8);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-amber-hover);
+}
+
+.channelAction:hover {
+  text-decoration: underline;
+}
+
+.quotePanel {
+  padding: var(--space-20);
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-lg);
+}
+
+.quotePanelTitle {
+  font-size: var(--text-h4);
+  color: var(--color-navy);
+}
+
+.quotePanelCopy {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.quotePanelCtas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.formCol {
+  padding: clamp(20px, 2.4vw, 28px);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.formTitle {
+  font-size: var(--text-h3);
+  margin-bottom: var(--space-16);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .quotePanelCtas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

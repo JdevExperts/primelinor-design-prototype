@@ -1,0 +1,112 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-20);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+
+.card:hover {
+  border-color: rgba(15, 27, 45, 0.14);
+  box-shadow: var(--shadow-md);
+}
+
+.media {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--space-16);
+}
+
+.name {
+  font-size: var(--text-h4);
+  color: var(--color-navy);
+}
+
+.contents {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-top: auto;
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--color-border);
+}
+
+.price {
+  font-size: 1.1875rem;
+  font-weight: var(--weight-bold);
+  color: var(--color-navy);
+  letter-spacing: -0.02em;
+}
+
+.priceUnit {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+}
+
+.quotePrice {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.moq {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  margin-top: var(--space-12);
+}
+
+.textAction {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--color-amber-hover);
+  cursor: pointer;
+}
+
+.textAction:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

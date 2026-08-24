@@ -45,9 +45,10 @@ export default function QuoteModal({
     setSubmitted(true);
   };
 
-  const color = getColorMeta(colorId);
-  const priceLine =
-    quote.kind === "priced"
+  const color = colorId ? getColorMeta(colorId) : null;
+  const priceLine = !quote
+    ? null
+    : quote.kind === "priced"
       ? `${formatInr(quote.total)} · ${quantity} × ${formatInr(quote.unitPrice)}`
       : quote.headline;
 
@@ -78,15 +79,17 @@ export default function QuoteModal({
           <div className={styles.summary}>
             <p className={styles.summaryTitle}>{product.name}</p>
             <ul className={styles.summaryList}>
-              <li>Color: {color.label}</li>
+              {color ? <li>Color: {color.label}</li> : null}
               {variantLabel ? <li>Size: {variantLabel}</li> : null}
               {extraSummary.map((line) => (
                 <li key={line}>{line}</li>
               ))}
-              <li>
-                Quantity: {quantity} {pluralUnit(product.unit, quantity)}
-              </li>
-              <li>Estimated: {priceLine}</li>
+              {quantity ? (
+                <li>
+                  Quantity: {quantity} {pluralUnit(product.unit, quantity)}
+                </li>
+              ) : null}
+              {priceLine ? <li>Estimated: {priceLine}</li> : null}
             </ul>
           </div>
 

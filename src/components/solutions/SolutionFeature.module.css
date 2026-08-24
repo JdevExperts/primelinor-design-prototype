@@ -1,0 +1,50 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(28px, 4vw, 48px);
+}
+
+.media {
+  order: 1;
+}
+
+.copy {
+  order: 2;
+  max-width: 46ch;
+}
+
+.reversed .media {
+  order: 2;
+}
+
+.reversed .copy {
+  order: 1;
+}
+
+.title {
+  font-size: var(--text-h2);
+}
+
+.description {
+  margin-top: var(--space-12);
+  margin-bottom: var(--space-20);
+  color: var(--color-text-muted);
+}
+
+/* Copy always reads first on mobile, whichever side the image sits on
+   desktop — higher specificity than .reversed so it always wins here. */
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .layout .media {
+    order: 2;
+  }
+
+  .layout .copy {
+    order: 1;
+    max-width: none;
+  }
+}

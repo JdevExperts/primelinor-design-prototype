@@ -64,6 +64,27 @@ const PATHS = {
       <circle cx="11" cy="17" r="2.2" />
     </>
   ),
+  package: (
+    <>
+      <path d="M4 7.5L12 4l8 3.5v9L12 20l-8-3.5z" />
+      <path d="M4 7.5L12 11l8-3.5" />
+      <path d="M12 11v9" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M12 21s7-6.4 7-11.5A7 7 0 005 9.5C5 14.6 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.4" />
+    </>
+  ),
+  headset: (
+    <>
+      <path d="M4 13v-1a8 8 0 0116 0v1" />
+      <path d="M4 13v4a2 2 0 002 2h1v-6H5a1 1 0 00-1 1z" />
+      <path d="M20 13v4a2 2 0 01-2 2h-1v-6h2a1 1 0 011 1z" />
+      <path d="M9 19a3 3 0 003 2" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 20, strokeWidth = 1.6, ...rest }) {

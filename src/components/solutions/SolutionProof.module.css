@@ -1,0 +1,36 @@
+.card {
+  max-width: var(--container-narrow);
+  margin-inline: auto;
+  padding: clamp(24px, 3vw, 36px);
+  text-align: center;
+  background: var(--color-white);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.quoteMark {
+  display: block;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--color-border-strong);
+}
+
+.title {
+  margin-top: var(--space-8);
+  font-size: var(--text-h4);
+  color: var(--color-navy);
+}
+
+.context {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.note {
+  margin-top: var(--space-12);
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  max-width: 50ch;
+  margin-inline: auto;
+}

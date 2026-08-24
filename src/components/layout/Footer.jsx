@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
 import Icon from "../ui/Icon";
 import Logo from "./Logo";
 import {
   footerColumns,
   footerContact,
+  footerLinkRoutes,
   footerPolicies,
   socialPlaceholders,
 } from "../../data/mockData";
@@ -40,13 +42,22 @@ export default function Footer() {
               <div key={column.id} className={styles.column}>
                 <h2 className={styles.columnTitle}>{column.title}</h2>
                 <ul className={styles.columnList}>
-                  {column.links.map((link) => (
-                    <li key={link}>
-                      <a className={styles.columnLink} href="#top">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
+                  {column.links.map((link) => {
+                    const to = footerLinkRoutes[link];
+                    return (
+                      <li key={link}>
+                        {to ? (
+                          <Link className={styles.columnLink} to={to}>
+                            {link}
+                          </Link>
+                        ) : (
+                          <a className={styles.columnLink} href="#top">
+                            {link}
+                          </a>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}

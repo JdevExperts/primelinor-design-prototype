@@ -30,18 +30,20 @@ export default function SiteLayout() {
     return undefined;
   }, [location.pathname, location.hash, location.key]);
 
+  /**
+   * Every route's page component sets its own document.title, except these
+   * two — Home has no page-level effect for it, and the listing page has
+   * no per-item variation to justify one. Every other route is left alone
+   * here rather than maintained as a growing list of exceptions.
+   */
   useEffect(() => {
-    if (location.pathname.startsWith("/customize")) {
+    if (location.pathname === "/") {
+      document.title = "PrimeLinor — Custom Products for Your Brand";
       return;
     }
     if (location.pathname === "/products") {
       document.title = "Products — PrimeLinor";
-      return;
     }
-    if (location.pathname.startsWith("/products/")) {
-      return;
-    }
-    document.title = "PrimeLinor — Custom Products for Your Brand";
   }, [location.pathname]);
 
   return (

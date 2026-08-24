@@ -1,0 +1,5 @@
+.copy {
+  margin-bottom: var(--space-16);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

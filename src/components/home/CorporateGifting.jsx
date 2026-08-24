@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import ProductVisual from "../ui/ProductVisual";
 import Section from "../ui/Section";
@@ -30,10 +31,16 @@ export default function CorporateGifting() {
           </p>
 
           <div className={styles.ctas}>
-            <Button variant="primary" size="lg">
+            <Button as={Link} to="/corporate-gifting" variant="primary" size="lg">
               Explore Corporate Gifting
             </Button>
-            <Button variant="quiet" size="lg" trailingIcon="arrowRight">
+            <Button
+              as={Link}
+              to={{ pathname: "/corporate-gifting", hash: "#build-kit" }}
+              variant="quiet"
+              size="lg"
+              trailingIcon="arrowRight"
+            >
               Build Your Kit
             </Button>
           </div>

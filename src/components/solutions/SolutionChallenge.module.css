@@ -1,0 +1,73 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: clamp(28px, 4vw, 48px);
+  align-items: start;
+}
+
+.title {
+  font-size: var(--text-h2);
+}
+
+.description {
+  margin-top: var(--space-12);
+  color: var(--color-text-muted);
+  max-width: 48ch;
+}
+
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.pointIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-amber-hover);
+}
+
+.useCases {
+  margin-top: clamp(24px, 3vw, 36px);
+  padding-top: clamp(20px, 2.4vw, 28px);
+  border-top: 1px solid var(--color-border);
+}
+
+.useCasesLabel {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.useCasesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.useCase {
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-navy);
+  background: var(--color-white);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

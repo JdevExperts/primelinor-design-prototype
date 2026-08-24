@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Icon from "../ui/Icon";
 import ProductVisual from "../ui/ProductVisual";
 import Section from "../ui/Section";
@@ -36,9 +37,9 @@ export default function BusinessUseCases() {
 
             <div className={styles.body}>
               <h3 className={styles.title}>
-                <button type="button" className={styles.trigger}>
+                <Link to={`/solutions/${useCase.solutionSlug}`} className={styles.trigger}>
                   {useCase.title}
-                </button>
+                </Link>
               </h3>
               <p className={styles.description}>{useCase.description}</p>
             </div>

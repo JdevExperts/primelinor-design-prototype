@@ -1,0 +1,29 @@
+.missingPage {
+  min-height: 60vh;
+}
+
+.missing {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+  padding-block: var(--space-64);
+  min-height: 40vh;
+}
+
+.missingTitle {
+  margin: 0;
+  font-size: var(--text-h1);
+  line-height: var(--leading-h1);
+}
+
+.missingCopy {
+  max-width: 46ch;
+  color: var(--color-text-muted);
+}
+
+.missingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  margin-top: var(--space-8);
+}

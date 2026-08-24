@@ -23,10 +23,10 @@ export const announcement = [
 
 export const primaryNav = [
   { id: "products", label: "Products", href: "/products", hasMegaMenu: true },
-  { id: "solutions", label: "Solutions", href: "/#solutions" },
-  { id: "gifting", label: "Corporate Gifting", href: "/#corporate-gifting" },
+  { id: "solutions", label: "Solutions", href: "/solutions" },
+  { id: "gifting", label: "Corporate Gifting", href: "/corporate-gifting" },
   { id: "try-logo", label: "Try Your Logo", href: "/#try-your-logo" },
-  { id: "about", label: "About", href: "/#about" },
+  { id: "about", label: "About", href: "/about" },
 ];
 
 export const productsMegaMenu = [
@@ -1228,6 +1228,7 @@ export const businessUseCases = [
     art: "polo",
     color: "#22304a",
     image: null,
+    solutionSlug: "corporate-teams",
   },
   {
     id: "startups",
@@ -1236,6 +1237,7 @@ export const businessUseCases = [
     art: "tshirt",
     color: "#e3e6eb",
     image: null,
+    solutionSlug: "startups",
   },
   {
     id: "events",
@@ -1244,6 +1246,7 @@ export const businessUseCases = [
     art: "cap",
     color: "#2b2b33",
     image: null,
+    solutionSlug: "events-conferences",
   },
   {
     id: "schools",
@@ -1252,6 +1255,7 @@ export const businessUseCases = [
     art: "hoodie",
     color: "#3c4a63",
     image: null,
+    solutionSlug: "schools-colleges",
   },
   {
     id: "marketing",
@@ -1260,6 +1264,7 @@ export const businessUseCases = [
     art: "pen",
     color: "#22304a",
     image: null,
+    solutionSlug: "marketing-campaigns",
   },
   {
     id: "employee-gifting",
@@ -1268,6 +1273,7 @@ export const businessUseCases = [
     art: "kit",
     color: "#e3ddd0",
     image: null,
+    solutionSlug: "employee-gifting",
   },
 ];
 
@@ -1409,6 +1415,39 @@ export const footerColumns = [
     links: ["About PrimeLinor", "Our Process", "Quality", "Careers", "Contact"],
   },
 ];
+
+/**
+ * Real destinations for footer links, keyed by the visible label. A label
+ * missing from this map stays a dead "#top" placeholder in Footer.jsx —
+ * intentional: only link labels with a real page behind them are wired.
+ */
+export const footerLinkRoutes = {
+  "T-Shirts": "/products",
+  "Polo T-Shirts": "/products",
+  Hoodies: "/products",
+  Bags: "/products",
+  "Bottles & Drinkware": "/products",
+  "Notebooks & Diaries": "/products",
+  "Promotional Products": "/products",
+
+  "Corporate Teams": "/solutions/corporate-teams",
+  Startups: "/solutions/startups",
+  Events: "/solutions/events-conferences",
+  "Schools & Colleges": "/solutions/schools-colleges",
+  "Marketing Campaigns": "/solutions/marketing-campaigns",
+  "Employee Gifting": "/solutions/employee-gifting",
+
+  "Employee Welcome Kits": "/corporate-gifting",
+  "Festival Gifting": "/corporate-gifting",
+  "Conference Kits": "/corporate-gifting",
+  "Client Gifts": "/corporate-gifting",
+  "Build Your Kit": { pathname: "/corporate-gifting", hash: "#build-kit" },
+
+  "Try Your Logo": { pathname: "/", hash: "#try-your-logo" },
+
+  "About PrimeLinor": "/about",
+  Contact: "/contact",
+};
 
 export const footerContact = {
   email: "hello@primelinor.example",
