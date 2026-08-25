@@ -1,0 +1,131 @@
+.page {
+  display: grid;
+  gap: 16px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-navy, #0f1b2d);
+}
+
+.pageMeta {
+  font-size: 12px;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filters input,
+.filters select {
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--color-border-strong, #d3d8e0);
+  border-radius: 6px;
+  font-size: 12.5px;
+  background: #fff;
+}
+
+.filters input[type="search"] {
+  min-width: 220px;
+}
+
+.tableWrap {
+  background: #fff;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted, #6b7280);
+  background: #f8f9fb;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f1f4;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background: #f8f9fb;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rowLink {
+  color: var(--color-navy, #0f1b2d);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rowLink:hover {
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--color-text-muted, #6b7280);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.pager button {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-strong, #d3d8e0);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--color-text-muted, #6b7280);
+  font-size: 13px;
+}
+
+.actionLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-navy, #0f1b2d);
+}
