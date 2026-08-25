@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { getProductBySlug } from "../api/catalog";
+import { submitRfq } from "../api/rfqs";
 import ProductGallery from "../components/product/ProductGallery";
 import ProductStickyCta from "../components/product/ProductStickyCta";
 import QuoteModal from "../components/product/QuoteModal";
@@ -8,13 +10,7 @@ import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
 import ProductCard from "../components/ui/ProductCard";
 import { formatInr, pluralUnit, quoteForQuantity } from "../utils/pricing";
-import {
-  getColorMeta,
-  getPlacementLabel,
-  getProductDetail,
-  getRelatedProducts,
-  visibleQuickQuantities,
-} from "../utils/productDetail";
+import { getColorMeta, getPlacementLabel, visibleQuickQuantities } from "../utils/productDetail";
 import styles from "./ProductDetail.module.css";
 
 function defaultVariant(product) {
@@ -44,8 +40,43 @@ function ProductNotFound() {
   );
 }
 
+function ProductLoading() {
+  return (
+    <main id="main" className={styles.page}>
+      <div className={`container ${styles.missing}`}>
+        <p className="eyebrow">Products</p>
+        <h1 className={styles.title}>Loading…</h1>
+      </div>
+    </main>
+  );
+}
+
+function ProductLoadError({ message, onRetry }) {
+  useEffect(() => {
+    document.title = "Couldn't load product — PrimeLinor";
+  }, []);
+
+  return (
+    <main id="main" className={styles.page}>
+      <div className={`container ${styles.missing}`}>
+        <p className="eyebrow">Products</p>
+        <h1 className={styles.title}>Couldn&rsquo;t load this product</h1>
+        <p className={styles.lede}>{message}</p>
+        <div className={styles.missingActions}>
+          <Button variant="primary" size="md" onClick={onRetry}>
+            Try Again
+          </Button>
+          <Button as={Link} to="/products" variant="secondary" size="md">
+            Browse Products
+          </Button>
+        </div>
+      </div>
+    </main>
+  );
+}
+
 function ProductDetailView({ product }) {
-  const related = useMemo(() => getRelatedProducts(product), [product]);
+  const related = product.relatedProducts || [];
   const colors = product.colors || [];
   const [view, setView] = useState("front");
   const [colorId, setColorId] = useState(colors[0] || "white");
@@ -501,6 +532,28 @@ function ProductDetailView({ product }) {
         variantLabel={variantLabel}
         quantity={quantity}
         quote={quote}
+        onSubmit={(contact) =>
+          submitRfq({
+            contact: {
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              companyName: contact.company,
+            },
+            message: contact.notes,
+            deliveryCity: contact.city,
+            sourceType: "PDP",
+            sourceContext: { productSlug: product.id },
+            items: [
+              {
+                productId: product.id,
+                colorId,
+                variantId: variantId || undefined,
+                quantity,
+              },
+            ],
+          })
+        }
       />
       <SizeGuideModal
         open={sizeOpen}
@@ -511,9 +564,54 @@ function ProductDetailView({ product }) {
   );
 }
 
+/**
+ * Keyed by `${id}:${retryToken}` in the parent below so a new product slug
+ * (route navigation) or a retry click both fully remount this component —
+ * `status` starts fresh at "loading" from its own initial state rather
+ * than being reset imperatively inside the effect.
+ */
+function ProductDetailLoader({ id, onRetry }) {
+  const [status, setStatus] = useState("loading"); // "loading" | "ready" | "not-found" | "error"
+  const [product, setProduct] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getProductBySlug(id)
+      .then((result) => {
+        if (cancelled) return;
+        if (result) {
+          setProduct(result);
+          setStatus("ready");
+        } else {
+          setStatus("not-found");
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadError(err.message);
+        setStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (status === "loading") return <ProductLoading />;
+  if (status === "error") return <ProductLoadError message={loadError} onRetry={onRetry} />;
+  if (status === "not-found") return <ProductNotFound />;
+  return <ProductDetailView key={product.id} product={product} />;
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
-  const product = getProductDetail(id);
-  if (!product) return <ProductNotFound />;
-  return <ProductDetailView key={product.id} product={product} />;
+  const [retryToken, setRetryToken] = useState(0);
+
+  return (
+    <ProductDetailLoader
+      key={`${id}:${retryToken}`}
+      id={id}
+      onRetry={() => setRetryToken((token) => token + 1)}
+    />
+  );
 }

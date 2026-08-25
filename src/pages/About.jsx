@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import WhatsAppDialog from "../components/common/WhatsAppDialog";
+import { submitLead } from "../api/leads";
 import QuoteModal from "../components/product/QuoteModal";
 import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
@@ -182,6 +183,18 @@ export default function About() {
         onClose={() => setQuoteOpen(false)}
         product={{ name: "General Product Enquiry" }}
         extraSummary={["Source: About page"]}
+        onSubmit={(contact) =>
+          submitLead({
+            contact: {
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              companyName: contact.company,
+            },
+            message: contact.notes?.trim() || "General enquiry from the About page.",
+            sourceType: "ABOUT",
+          })
+        }
       />
       <WhatsAppDialog open={waOpen} onClose={() => setWaOpen(false)} />
     </main>

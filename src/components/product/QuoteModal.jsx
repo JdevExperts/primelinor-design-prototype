@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Button from "../ui/Button";
 import { formatInr, pluralUnit } from "../../utils/pricing";
 import { getColorMeta } from "../../utils/productDetail";
@@ -14,6 +14,16 @@ const EMPTY = {
   notes: "",
 };
 
+/**
+ * Owns the contact-capture form AND the real submission lifecycle
+ * (idle/submitting/success/error) — every page that opens this modal
+ * supplies an `onSubmit(contactFields)` that builds and sends its own
+ * Lead or RFQ payload (see src/api/leads.js / src/api/rfqs.js) and
+ * resolves with `{ reference }`. This keeps the domain logic (what a
+ * "quantity" or "product" means on that particular page) with the caller,
+ * while the form UI, validation-error display and reference-number success
+ * screen live here once.
+ */
 export default function QuoteModal({
   open,
   onClose,
@@ -23,14 +33,20 @@ export default function QuoteModal({
   quantity,
   quote,
   extraSummary = [],
+  onSubmit,
 }) {
+  const formRef = useRef(null);
   const [form, setForm] = useState(EMPTY);
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | submitting | success | error
   const [viaWhatsApp, setViaWhatsApp] = useState(false);
+  const [reference, setReference] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const close = () => {
-    setSubmitted(false);
+    setStatus("idle");
     setViaWhatsApp(false);
+    setReference(null);
+    setErrorMessage(null);
     setForm(EMPTY);
     onClose();
   };
@@ -39,10 +55,24 @@ export default function QuoteModal({
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const onSubmit = (event) => {
+  const submit = async (event, { viaWhatsApp: whatsApp = false } = {}) => {
     event.preventDefault();
-    setViaWhatsApp(false);
-    setSubmitted(true);
+    // The "Continue on WhatsApp" button is type="button" (it must not
+    // trigger the browser's native submit), so it doesn't get native
+    // required-field validation for free the way the submit button does —
+    // ask the form directly instead.
+    if (!formRef.current?.reportValidity()) return;
+    setViaWhatsApp(whatsApp);
+    setStatus("submitting");
+    setErrorMessage(null);
+    try {
+      const result = await onSubmit(form);
+      setReference(result?.reference || null);
+      setStatus("success");
+    } catch (err) {
+      setErrorMessage(err.message || "Something went wrong. Please try again.");
+      setStatus("error");
+    }
   };
 
   const color = colorId ? getColorMeta(colorId) : null;
@@ -57,25 +87,30 @@ export default function QuoteModal({
       open={open}
       onClose={close}
       titleId="quote-dialog-title"
-      title={submitted ? "Request received" : "Request a Quote"}
+      title={status === "success" ? "Request received" : "Request a Quote"}
     >
-      {submitted ? (
+      {status === "success" ? (
         <div className={styles.success}>
           <p className={styles.successTitle}>
             {viaWhatsApp
-              ? "WhatsApp would open here in production."
-              : "Your quote request is ready to send."}
+              ? "Request received — we'll also follow up on WhatsApp."
+              : "Your quote request has been sent."}
           </p>
+          {reference ? (
+            <p className={styles.successReference}>
+              Reference: <strong>{reference}</strong>
+            </p>
+          ) : null}
           <p className={styles.successCopy}>
-            This is a visual prototype — nothing was submitted. Our team would
-            confirm pricing, artwork and dispatch from here.
+            Our team will confirm pricing, artwork and dispatch and reach out
+            on the number you provided.
           </p>
           <Button variant="primary" size="md" onClick={close}>
             Close
           </Button>
         </div>
       ) : (
-        <form className={styles.form} onSubmit={onSubmit}>
+        <form ref={formRef} className={styles.form} onSubmit={submit}>
           <div className={styles.summary}>
             <p className={styles.summaryTitle}>{product.name}</p>
             <ul className={styles.summaryList}>
@@ -146,21 +181,31 @@ export default function QuoteModal({
             />
           </label>
 
+          {status === "error" ? (
+            <p className={styles.errorMessage} role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
+
           <div className={styles.actions}>
-            <Button variant="primary" size="md" type="submit" fullWidth>
-              Submit Quote Request
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              fullWidth
+              disabled={status === "submitting"}
+            >
+              {status === "submitting" && !viaWhatsApp ? "Sending…" : "Submit Quote Request"}
             </Button>
             <Button
               variant="secondary"
               size="md"
               type="button"
               fullWidth
-              onClick={() => {
-                setViaWhatsApp(true);
-                setSubmitted(true);
-              }}
+              disabled={status === "submitting"}
+              onClick={(event) => submit(event, { viaWhatsApp: true })}
             >
-              Continue on WhatsApp
+              {status === "submitting" && viaWhatsApp ? "Sending…" : "Continue on WhatsApp"}
             </Button>
           </div>
         </form>

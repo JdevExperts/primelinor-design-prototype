@@ -1,0 +1,516 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+enum PriceMode {
+  FIXED
+  TIERED
+  QUOTE_ONLY
+}
+
+enum AssetType {
+  CATALOG
+  GALLERY_FRONT
+  GALLERY_BACK
+  DETAIL
+  CUSTOMIZATION_FRONT
+  CUSTOMIZATION_BACK
+  MODEL
+  TEAM
+  LIFESTYLE
+}
+
+enum PlacementView {
+  FRONT
+  BACK
+}
+
+// ── Category ─────────────────────────────────────────────────────────────────
+// Self-referencing so "subcategory" is just a Category whose parent is set —
+// no separate Subcategory table, per the Phase 1 brief.
+
+model Category {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  parentCategoryId String?  @map("parent_category_id")
+  active           Boolean  @default(true)
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  parent   Category?  @relation("CategoryChildren", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryChildren")
+  products Product[]
+
+  @@index([parentCategoryId])
+  @@map("categories")
+}
+
+// ── Product ──────────────────────────────────────────────────────────────────
+
+model Product {
+  id               String    @id @default(uuid())
+  slug             String    @unique
+  name             String
+  categoryId       String    @map("category_id")
+  active           Boolean   @default(true)
+  sortOrder        Int       @default(0) @map("sort_order")
+  description      String
+  longSpec         String?   @map("long_spec")
+  material         String?
+  gsm              Int?
+  moq              Int
+  unit             String    @default("piece")
+  priceMode        PriceMode @map("price_mode")
+  fixedPrice       Decimal?  @map("fixed_price") @db.Decimal(10, 2)
+  customizable     Boolean   @default(false)
+  variantType      String?   @map("variant_type")
+  dispatchEstimate String?   @map("dispatch_estimate")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  category       Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  priceTiers     ProductPriceTier[]
+  colors         ProductColor[]
+  variants       ProductVariant[]
+  specifications ProductSpecification[]
+  assets         ProductAsset[]
+  placementZones PlacementZone[]
+  tags           ProductTag[]
+  relatedFrom    ProductRelated[]       @relation("ProductRelatedFrom")
+  relatedTo      ProductRelated[]       @relation("ProductRelatedTo")
+
+  @@index([categoryId])
+  @@index([active])
+  @@map("products")
+}
+
+// Catalog estimate pricing only — NOT negotiated quotation pricing (that's a
+// Phase 2 concern living entirely outside this schema).
+model ProductPriceTier {
+  id        String  @id @default(uuid())
+  productId String  @map("product_id")
+  minQty    Int     @map("min_qty")
+  maxQty    Int?    @map("max_qty")
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_price_tiers")
+}
+
+// ── Colors ───────────────────────────────────────────────────────────────────
+
+model Color {
+  id        String  @id @default(uuid())
+  name      String
+  slug      String  @unique
+  hex       String?
+  active    Boolean @default(true)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  products       ProductColor[]
+  assets         ProductAsset[]
+  placementZones PlacementZone[]
+
+  @@map("colors")
+}
+
+model ProductColor {
+  id        String  @id @default(uuid())
+  productId String  @map("product_id")
+  colorId   String  @map("color_id")
+  active    Boolean @default(true)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color   @relation(fields: [colorId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, colorId])
+  @@index([colorId])
+  @@map("product_colors")
+}
+
+// ── Variants ─────────────────────────────────────────────────────────────────
+// Generic — sizes (S/M/L), volumes (500ml/750ml), formats (A4/A5), whatever a
+// product needs. Deliberately not named ProductSize.
+
+model ProductVariant {
+  id        String  @id @default(uuid())
+  productId String  @map("product_id")
+  code      String
+  label     String
+  active    Boolean @default(true)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, code])
+  @@map("product_variants")
+}
+
+// ── Specifications ───────────────────────────────────────────────────────────
+// Pragmatic label/value rows rather than a generic EAV engine — keeps
+// frontend display order and rendering trivial.
+
+model ProductSpecification {
+  id        String @id @default(uuid())
+  productId String @map("product_id")
+  label     String
+  value     String
+  sortOrder Int    @default(0) @map("sort_order")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_specifications")
+}
+
+// ── Assets ───────────────────────────────────────────────────────────────────
+// ONE canonical asset model for every product image, replacing the PDP-vs-
+// Studio schema split found in the frontend audit.
+//
+// `storageKey` is nullable deliberately: existing production S3 objects can
+// be referenced by `url` alone (their real key convention isn't something
+// this task reads or reproduces — see backend README). New uploads (Phase 2+)
+// will populate both `storageKey` and `url`.
+
+model ProductAsset {
+  id                     String    @id @default(uuid())
+  productId              String    @map("product_id")
+  colorId                String?   @map("color_id")
+  type                   AssetType
+  storageKey             String?   @map("storage_key")
+  url                    String
+  alt                    String?
+  sortOrder              Int       @default(0) @map("sort_order")
+  active                 Boolean   @default(true)
+  supportsArtworkOverlay Boolean   @default(false) @map("supports_artwork_overlay")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color          Color?          @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  placementZones PlacementZone[]
+
+  @@index([productId])
+  @@index([colorId])
+  @@map("product_assets")
+}
+
+// ── Placement zones ──────────────────────────────────────────────────────────
+// Normalized (0–100) coordinates the frontend customization preview reads
+// directly. Kept separate from ProductAsset because one asset can carry
+// multiple zones, and zones describe product capability, not one photo file.
+
+model PlacementZone {
+  id           String        @id @default(uuid())
+  productId    String        @map("product_id")
+  colorId      String?       @map("color_id")
+  assetId      String?       @map("asset_id")
+  view         PlacementView
+  placementKey String        @map("placement_key")
+  label        String
+  cx           Decimal       @db.Decimal(6, 3)
+  cy           Decimal       @db.Decimal(6, 3)
+  width        Decimal       @db.Decimal(6, 3)
+  height       Decimal       @db.Decimal(6, 3)
+  active       Boolean       @default(true)
+  sortOrder    Int           @default(0) @map("sort_order")
+
+  product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color   Color?        @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  asset   ProductAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@map("placement_zones")
+}
+
+// ── Related products ─────────────────────────────────────────────────────────
+
+model ProductRelated {
+  id               String @id @default(uuid())
+  productId        String @map("product_id")
+  relatedProductId String @map("related_product_id")
+  sortOrder        Int    @default(0) @map("sort_order")
+
+  product        Product @relation("ProductRelatedFrom", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct Product @relation("ProductRelatedTo", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedProductId])
+  @@map("product_related")
+}
+
+// ── Tags (use-case attribution) ──────────────────────────────────────────────
+// Lightweight tagging, not a CMS taxonomy system — covers "Corporate Teams",
+// "Events", etc. so Solutions pages can eventually query real products.
+
+model Tag {
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  products ProductTag[]
+
+  @@map("tags")
+}
+
+model ProductTag {
+  id        String @id @default(uuid())
+  productId String @map("product_id")
+  tagId     String @map("tag_id")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tagId])
+  @@index([tagId])
+  @@map("product_tags")
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// PHASE 2 — Leads, RFQs, artwork intake.
+//
+// Deliberately no Prisma relation from RFQItem back to Product/Color/
+// ProductVariant: those catalog models are untouched from Phase 1. RFQItem
+// stores plain id columns validated in application code (see
+// src/services/rfqValidation.js), matching the snapshot-first design in
+// the architecture doc — historical RFQs must not change if catalog data
+// changes later, so the FK isn't load-bearing anyway.
+// ═════════════════════════════════════════════════════════════════════════
+
+enum LeadStatus {
+  NEW
+  IN_REVIEW
+  CONVERTED
+  CLOSED
+}
+
+enum RfqStatus {
+  NEW
+  IN_PROGRESS
+  QUOTED
+  NEGOTIATING
+  WON
+  LOST
+  CANCELLED
+}
+
+enum ArtworkStatus {
+  PENDING
+  ATTACHED
+  DELETED
+}
+
+/**
+ * Where a Lead/RFQ came from — the frontend surface, not marketing UTM.
+ */
+enum SourceType {
+  HEADER_QUOTE
+  PDP
+  CUSTOMIZATION_STUDIO
+  CORPORATE_GIFTING
+  KIT_BUILDER
+  SOLUTION
+  CONTACT
+  ABOUT
+  OTHER
+}
+
+// ── Contact / Company ────────────────────────────────────────────────────────
+// Phone is the primary dedup key (see src/services/contact.js) — this is a
+// WhatsApp-first B2B audience, not an email-first one. Company matching is
+// deliberately conservative: exact case-insensitive name match only, never
+// fuzzy, so unrelated companies never get merged.
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contacts Contact[]
+
+  @@map("companies")
+}
+
+model Contact {
+  id             String   @id @default(uuid())
+  name           String
+  phone          String   @unique // normalized, e.g. +91XXXXXXXXXX — see normalizePhone()
+  phoneRaw       String   @map("phone_raw") // as originally typed, for display/audit only
+  email          String?
+  companyId      String?  @map("company_id")
+  companyNameRaw String?  @map("company_name_raw")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  leads   Lead[]
+  rfqs    RFQ[]
+
+  @@map("contacts")
+}
+
+// ── Lead ─────────────────────────────────────────────────────────────────────
+// An enquiry with no concrete priceable requirement yet (Contact form, a
+// bare "Request a Quote" click with no product/quantity attached).
+
+model Lead {
+  id               String     @id @default(uuid())
+  reference        String     @unique
+  contactId        String     @map("contact_id")
+  status           LeadStatus @default(NEW)
+  sourceType       SourceType @map("source_type")
+  sourcePath       String     @map("source_path")
+  sourceContext    Json?      @map("source_context")
+  utmSource        String?    @map("utm_source")
+  utmMedium        String?    @map("utm_medium")
+  utmCampaign      String?    @map("utm_campaign")
+  utmContent       String?    @map("utm_content")
+  message          String
+  submissionId     String     @unique @map("submission_id")
+  assignedToUserId String?    @map("assigned_to_user_id")
+  convertedRfqId   String?    @map("converted_rfq_id")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Restrict)
+
+  @@index([contactId])
+  @@index([status])
+  @@map("leads")
+}
+
+// ── RFQ ──────────────────────────────────────────────────────────────────────
+// A concrete, priceable request. Estimated pricing on its items is a frozen
+// snapshot computed server-side at submission time — see
+// src/services/pricingEstimate.js — never the frontend's number, and never
+// overwritten later (a future Quotation is a separate, versioned entity).
+
+model RFQ {
+  id               String     @id @default(uuid())
+  reference        String     @unique
+  contactId        String     @map("contact_id")
+  leadId           String?    @map("lead_id")
+  status           RfqStatus  @default(NEW)
+  sourceType       SourceType @map("source_type")
+  sourcePath       String     @map("source_path")
+  sourceContext    Json?      @map("source_context")
+  utmSource        String?    @map("utm_source")
+  utmMedium        String?    @map("utm_medium")
+  utmCampaign      String?    @map("utm_campaign")
+  utmContent       String?    @map("utm_content")
+  message          String?
+  deliveryCity     String?    @map("delivery_city")
+  deliveryPin      String?    @map("delivery_pin")
+  currency         String     @default("INR")
+  requirementData  Json?      @map("requirement_data")
+  submissionId     String     @unique @map("submission_id")
+  assignedToUserId String?    @map("assigned_to_user_id")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  contact  Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  items    RFQItem[]
+  activity RFQActivity[]
+
+  @@index([contactId])
+  @@index([status])
+  @@map("rfqs")
+}
+
+model RFQItem {
+  id    String @id @default(uuid())
+  rfqId String @map("rfq_id")
+
+  // Real catalogue product (nullable — a Kit Builder item may have none).
+  productId   String? @map("product_id")
+  // Described/custom item — required when productId is absent.
+  description String?
+
+  // Snapshots — frozen at submission time, never re-derived from live data.
+  productNameSnapshot  String? @map("product_name_snapshot")
+  productSlugSnapshot  String? @map("product_slug_snapshot")
+  specSnapshot         String? @map("spec_snapshot")
+  colorId              String? @map("color_id")
+  colorNameSnapshot    String? @map("color_name_snapshot")
+  variantId            String? @map("variant_id")
+  variantLabelSnapshot String? @map("variant_label_snapshot")
+  unitSnapshot         String? @map("unit_snapshot")
+  pricingModeSnapshot  String? @map("pricing_mode_snapshot")
+
+  quantity           Int?
+  // Server-computed at submission — see §12 of the Phase 2 brief. Never
+  // trusted from the client, never mutated after creation.
+  estimatedUnitPrice Decimal? @map("estimated_unit_price") @db.Decimal(10, 2)
+  estimatedTotal     Decimal? @map("estimated_total") @db.Decimal(10, 2)
+
+  // { front: {enabled, placementKey, artworkAssetId}, back: {...} }
+  customizationData Json? @map("customization_data")
+
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rfq      RFQ            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  artworks ArtworkAsset[]
+
+  @@index([rfqId])
+  @@map("rfq_items")
+}
+
+// ── RFQ activity ─────────────────────────────────────────────────────────────
+// Append-only. `type` is a plain string, not an enum, so later phases (admin
+// status changes, quotation events) can add new event types without a
+// migration — validated against a known list in application code for now.
+
+model RFQActivity {
+  id        String   @id @default(uuid())
+  rfqId     String   @map("rfq_id")
+  type      String
+  actorType String   @map("actor_type") // "SYSTEM" | "CUSTOMER" — no "STAFF" actor yet
+  actorId   String?  @map("actor_id")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rfq RFQ @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+
+  @@index([rfqId])
+  @@map("rfq_activity")
+}
+
+// ── Artwork ──────────────────────────────────────────────────────────────────
+// Customer-provided private source artwork — distinct from ProductAsset
+// (public catalogue media). Private storage, signed access only, never a
+// permanent public URL. See src/services/storage.js.
+
+model ArtworkAsset {
+  id                String        @id @default(uuid())
+  status            ArtworkStatus @default(PENDING)
+  originalFileName  String        @map("original_file_name")
+  mimeType          String        @map("mime_type")
+  size              Int
+  storageKey        String        @map("storage_key")
+  previewStorageKey String?       @map("preview_storage_key")
+  expiresAt         DateTime?     @map("expires_at")
+  rfqItemId         String?       @map("rfq_item_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  attachedAt        DateTime?     @map("attached_at")
+
+  rfqItem RFQItem? @relation(fields: [rfqItemId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([expiresAt])
+  @@map("artwork_assets")
+}

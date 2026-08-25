@@ -203,6 +203,13 @@
   color: var(--color-text-muted);
 }
 
+.fileError {
+  margin-bottom: var(--space-8);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  color: var(--color-error);
+}
+
 .sr {
   position: absolute;
   width: 1px;

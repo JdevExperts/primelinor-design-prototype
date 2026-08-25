@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Button from "../components/ui/Button";
 import QuoteModal from "../components/product/QuoteModal";
+import { submitLead } from "../api/leads";
 import SolutionBenefits from "../components/solutions/SolutionBenefits";
 import SolutionChallenge from "../components/solutions/SolutionChallenge";
 import SolutionFeature from "../components/solutions/SolutionFeature";
@@ -80,6 +81,19 @@ function SolutionDetailView({ solution }) {
         onClose={() => setQuoteOpen(false)}
         product={{ name: `${solution.label} Enquiry` }}
         extraSummary={[`Solution: ${solution.label}`]}
+        onSubmit={(contact) =>
+          submitLead({
+            contact: {
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              companyName: contact.company,
+            },
+            message: contact.notes?.trim() || `Enquiry about ${solution.label}.`,
+            sourceType: "SOLUTION",
+            sourceContext: { solutionSlug: solution.slug },
+          })
+        }
       />
     </main>
   );

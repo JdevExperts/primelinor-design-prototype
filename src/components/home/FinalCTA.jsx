@@ -1,8 +1,19 @@
+import { useState } from "react";
+import { submitLead } from "../../api/leads";
+import QuoteModal from "../product/QuoteModal";
 import Button from "../ui/Button";
 import Icon from "../ui/Icon";
 import styles from "./FinalCTA.module.css";
 
+/**
+ * The Header's "Request a Quote" CTA links here (`/#request-quote`) — this
+ * is the button it ultimately resolves to. No product/quantity context is
+ * available at this point, so it submits a Lead (see Phase 2 §5/§6),
+ * matching the same generic-enquiry pattern used on About/Solutions.
+ */
 export default function FinalCTA() {
+  const [quoteOpen, setQuoteOpen] = useState(false);
+
   return (
     <section
       id="request-quote"
@@ -23,7 +34,7 @@ export default function FinalCTA() {
           </p>
 
           <div className={styles.ctas}>
-            <Button variant="primary" size="lg">
+            <Button variant="primary" size="lg" onClick={() => setQuoteOpen(true)}>
               Request a Quote
             </Button>
             <Button variant="accent" size="lg" icon="upload">
@@ -37,6 +48,25 @@ export default function FinalCTA() {
           </p>
         </div>
       </div>
+
+      <QuoteModal
+        open={quoteOpen}
+        onClose={() => setQuoteOpen(false)}
+        product={{ name: "General Product Enquiry" }}
+        extraSummary={["Source: Header / Home CTA"]}
+        onSubmit={(contact) =>
+          submitLead({
+            contact: {
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              companyName: contact.company,
+            },
+            message: contact.notes?.trim() || "General enquiry from the Request a Quote CTA.",
+            sourceType: "HEADER_QUOTE",
+          })
+        }
+      />
     </section>
   );
 }

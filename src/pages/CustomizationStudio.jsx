@@ -6,7 +6,10 @@ import ProductStickyCta from "../components/product/ProductStickyCta";
 import QuoteModal from "../components/product/QuoteModal";
 import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
+import { submitRfq } from "../api/rfqs";
+import { uploadArtwork } from "../api/uploads";
 import { productColors } from "../data/mockData";
+import { validateArtworkFile } from "../utils/artworkValidation";
 import { formatInr, pluralUnit, quoteForQuantity } from "../utils/pricing";
 import { visibleQuickQuantities } from "../utils/productDetail";
 import {
@@ -56,7 +59,7 @@ function Unavailable({ listing, productId }) {
   );
 }
 
-function ArtworkUpload({ id, title, file, onFile, onClear }) {
+function ArtworkUpload({ id, title, file, error, onFile, onClear }) {
   const inputRef = useRef(null);
   const replaceRef = useRef(null);
 
@@ -65,11 +68,19 @@ function ArtworkUpload({ id, title, file, onFile, onClear }) {
       <p className={styles.subLegend} id={id}>
         {title}
       </p>
+      {error ? (
+        <p className={styles.fileError} role="alert">
+          {error}
+        </p>
+      ) : null}
       {file ? (
         <div className={styles.fileRow}>
           <div className={styles.fileChip}>
-            <Icon name="check" size={16} className={styles.fileIcon} />
-            <span className={styles.fileName}>{file.name}</span>
+            <Icon name={file.uploading ? "upload" : "check"} size={16} className={styles.fileIcon} />
+            <span className={styles.fileName}>
+              {file.name}
+              {file.uploading ? " · Uploading…" : ""}
+            </span>
           </div>
           <div className={styles.fileActions}>
             <label className={styles.textBtn}>
@@ -112,7 +123,7 @@ function ArtworkUpload({ id, title, file, onFile, onClear }) {
           <Icon name="upload" size={20} className={styles.dropIcon} />
           <span className={styles.dropTitle}>Upload PNG, JPG or SVG</span>
           <span className={styles.dropHint}>
-            Stays in your browser — nothing is sent anywhere.
+            Uploaded securely — only used to prepare your quote.
           </span>
         </label>
       )}
@@ -123,6 +134,7 @@ function ArtworkUpload({ id, title, file, onFile, onClear }) {
 function StudioView({
   setup,
   artwork,
+  artworkErrors,
   onFrontFile,
   onBackFile,
   onClearFront,
@@ -386,6 +398,7 @@ function StudioView({
                   id="studio-front-upload"
                   title="Front Logo / Artwork"
                   file={artwork.front}
+                  error={artworkErrors.front}
                   onFile={onFrontFile}
                   onClear={onClearFront}
                 />
@@ -445,6 +458,7 @@ function StudioView({
                         id="studio-back-upload"
                         title="Back Artwork"
                         file={artwork.back}
+                        error={artworkErrors.back}
                         onFile={onBackFile}
                         onClear={onClearBack}
                       />
@@ -631,6 +645,44 @@ function StudioView({
         quantity={quantity}
         quote={quote}
         extraSummary={extraSummary}
+        onSubmit={(contact) => {
+          if (artwork.front?.uploading || (backEnabled && artwork.back?.uploading)) {
+            return Promise.reject(new Error("Please wait for artwork to finish uploading."));
+          }
+          return submitRfq({
+            contact: {
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              companyName: contact.company,
+            },
+            message: contact.notes,
+            deliveryCity: contact.city,
+            sourceType: "CUSTOMIZATION_STUDIO",
+            sourceContext: { productSlug: listing.id },
+            items: [
+              {
+                productId: listing.id,
+                colorId: colorKey,
+                quantity,
+                customizationData: {
+                  front: {
+                    enabled: true,
+                    placementKey: frontPlacement,
+                    artworkAssetId: artwork.front?.artworkAssetId || undefined,
+                  },
+                  back: backEnabled
+                    ? {
+                        enabled: true,
+                        placementKey: backPlacement,
+                        artworkAssetId: artwork.back?.artworkAssetId || undefined,
+                      }
+                    : undefined,
+                },
+              },
+            ],
+          });
+        }}
       />
 
       <Dialog
@@ -663,6 +715,7 @@ export default function CustomizationStudio() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const [artwork, setArtwork] = useState({ front: null, back: null });
+  const [artworkErrors, setArtworkErrors] = useState({ front: null, back: null });
 
   const artworkRef = useRef(artwork);
 
@@ -685,17 +738,53 @@ export default function CustomizationStudio() {
     };
   }, []);
 
-  const applySide = (side, file) => {
+  const applySide = async (side, file) => {
+    if (!file) {
+      setArtworkErrors((current) => ({ ...current, [side]: null }));
+      setArtwork((current) => {
+        const other = current[side === "front" ? "back" : "front"];
+        revokeIfOrphan(current[side]?.url, other?.url);
+        return { ...current, [side]: null };
+      });
+      return;
+    }
+
+    const validation = validateArtworkFile(file);
+    if (!validation.ok) {
+      setArtworkErrors((current) => ({ ...current, [side]: validation.message }));
+      return;
+    }
+
+    setArtworkErrors((current) => ({ ...current, [side]: null }));
     setArtwork((current) => {
       const prev = current[side];
       const other = current[side === "front" ? "back" : "front"];
       revokeIfOrphan(prev?.url, other?.url);
-      if (!file) return { ...current, [side]: null };
       return {
         ...current,
-        [side]: { url: URL.createObjectURL(file), name: file.name },
+        [side]: { url: URL.createObjectURL(file), name: file.name, artworkAssetId: null, uploading: true },
       };
     });
+
+    // Uploaded immediately on pick — not deferred to quote submit — so
+    // the backend's PENDING ArtworkAsset row exists ready to attach
+    // (Phase 2 §22 lifecycle), and a bad/oversized file fails fast here
+    // rather than at the end of the quote form.
+    try {
+      const uploaded = await uploadArtwork(file);
+      setArtwork((current) =>
+        current[side]?.name === file.name
+          ? { ...current, [side]: { ...current[side], artworkAssetId: uploaded.id, uploading: false } }
+          : current,
+      );
+    } catch (err) {
+      setArtworkErrors((current) => ({ ...current, [side]: err.message || "Upload failed. Please try again." }));
+      setArtwork((current) => {
+        const other = current[side === "front" ? "back" : "front"];
+        revokeIfOrphan(current[side]?.url, other?.url);
+        return { ...current, [side]: null };
+      });
+    }
   };
 
   const setup = resolveStudioSetup(productId);
@@ -708,6 +797,7 @@ export default function CustomizationStudio() {
       key={setup.listing.id}
       setup={setup}
       artwork={artwork}
+      artworkErrors={artworkErrors}
       onFrontFile={(file) => applySide("front", file)}
       onBackFile={(file) => applySide("back", file)}
       onClearFront={() => applySide("front", null)}

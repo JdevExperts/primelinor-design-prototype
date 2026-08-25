@@ -77,3 +77,13 @@
   color: var(--color-text-muted);
   max-width: 42ch;
 }
+
+.successReference {
+  font-size: var(--text-sm);
+  color: var(--color-navy);
+}
+
+.errorMessage {
+  font-size: var(--text-sm);
+  color: var(--color-error, #b3261e);
+}

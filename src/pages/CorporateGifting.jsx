@@ -11,6 +11,7 @@ import KitBuilder from "../components/gifting/KitBuilder";
 import PopularGiftingProducts from "../components/gifting/PopularGiftingProducts";
 import WelcomeKitFeature from "../components/gifting/WelcomeKitFeature";
 import QuoteModal from "../components/product/QuoteModal";
+import { submitRfq } from "../api/rfqs";
 import { kitDefaultQuantity } from "../data/corporateGiftingData";
 import { buildKitQuotePayload } from "../utils/giftKit";
 
@@ -83,6 +84,41 @@ export default function CorporateGifting() {
           quantity={quotePayload.quantity}
           quote={quotePayload.quote}
           extraSummary={quotePayload.extraSummary}
+          onSubmit={(contact) =>
+            submitRfq({
+              contact: {
+                name: contact.name,
+                phone: contact.phone,
+                email: contact.email,
+                companyName: contact.company,
+              },
+              message: contact.notes,
+              deliveryCity: contact.city,
+              sourceType: "CORPORATE_GIFTING",
+              // Corporate Gifting's kit/collection browsing is local mock
+              // data, not fetched from the real catalogue (unlike PDP/
+              // Listing) — every item here is submitted as a described
+              // item rather than a productId lookup, since the frontend
+              // can't guarantee the referenced slug exists as a real
+              // backend Product. Structured context (audience/items/
+              // budget, or a collection's contents) travels in
+              // requirementData; no price is ever submitted.
+              requirementData: {
+                audience: kitAudience || undefined,
+                kitItems: kitItems.length ? kitItems : undefined,
+                budget: kitBudget || undefined,
+                summary: quotePayload.extraSummary,
+              },
+              items: [
+                {
+                  description: `${quotePayload.product.name}${
+                    quotePayload.extraSummary.length ? ` — ${quotePayload.extraSummary.join("; ")}` : ""
+                  }`,
+                  quantity: quotePayload.quantity || undefined,
+                },
+              ],
+            })
+          }
         />
       ) : null}
     </main>

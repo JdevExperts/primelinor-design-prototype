@@ -1,16 +1,13 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { getProducts } from "../api/catalog";
 import CategoryStrip from "../components/catalogue/CategoryStrip";
 import FilterDrawer from "../components/catalogue/FilterDrawer";
 import FilterSidebar from "../components/catalogue/FilterSidebar";
 import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
 import ProductCard from "../components/ui/ProductCard";
-import {
-  listingPageSize,
-  listingProducts,
-  listingSortOptions,
-} from "../data/mockData";
+import { listingPageSize, listingSortOptions } from "../data/mockData";
 import {
   EMPTY_FILTERS,
   countActiveFilters,
@@ -64,6 +61,10 @@ export default function ProductListing() {
   const [pageSignature, setPageSignature] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const [products, setProducts] = useState([]);
+  const [loadStatus, setLoadStatus] = useState("loading");
+  const [loadError, setLoadError] = useState(null);
+
   if (location.key !== navKey) {
     setNavKey(location.key);
     applyLocationState(location.state, setQuery, setFilters);
@@ -73,9 +74,45 @@ export default function ProductListing() {
     setDrawerOpen(false);
   }
 
+  // Loads the active catalogue once, then all filtering/sorting below stays
+  // client-side over that fetched set — the existing filter/sort UX (multi-
+  // select bands, instant response) is preserved rather than rebuilt around
+  // a fetch-per-filter-change model. Revisit once the catalogue is too big
+  // to reasonably fetch in one page load (see completion report).
+  useEffect(() => {
+    let cancelled = false;
+    getProducts({ limit: 100 })
+      .then(({ products: fetched }) => {
+        if (cancelled) return;
+        setProducts(fetched);
+        setLoadStatus("ready");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadError(err.message);
+        setLoadStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const retryLoad = () => {
+    setLoadStatus("loading");
+    getProducts({ limit: 100 })
+      .then(({ products: fetched }) => {
+        setProducts(fetched);
+        setLoadStatus("ready");
+      })
+      .catch((err) => {
+        setLoadError(err.message);
+        setLoadStatus("error");
+      });
+  };
+
   const filtered = useMemo(
-    () => sortProducts(filterProducts(listingProducts, filters, query), sort),
-    [filters, query, sort],
+    () => sortProducts(filterProducts(products, filters, query), sort),
+    [products, filters, query, sort],
   );
 
   const total = filtered.length;
@@ -169,7 +206,9 @@ export default function ProductListing() {
 
         <div className={styles.controls}>
           <p className={styles.count} aria-live="polite">
-            {total} {total === 1 ? "Product" : "Products"}
+            {loadStatus === "loading"
+              ? "Loading…"
+              : `${total} ${total === 1 ? "Product" : "Products"}`}
           </p>
 
           <div className={styles.tools}>
@@ -273,7 +312,21 @@ export default function ProductListing() {
               Product results
             </h2>
 
-            {total === 0 ? (
+            {loadStatus === "loading" ? (
+              <div className={styles.empty} aria-live="polite">
+                <p className={styles.emptyTitle}>Loading products…</p>
+              </div>
+            ) : loadStatus === "error" ? (
+              <div className={styles.empty} role="alert">
+                <p className={styles.emptyTitle}>Couldn&rsquo;t load products.</p>
+                <p className={styles.emptyCopy}>{loadError}</p>
+                <div className={styles.emptyActions}>
+                  <Button variant="primary" size="md" onClick={retryLoad}>
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            ) : total === 0 ? (
               <div className={styles.empty}>
                 <p className={styles.emptyTitle}>
                   No products match your filters.

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import SolutionCard from "../components/solutions/SolutionCard";
 import QuoteModal from "../components/product/QuoteModal";
+import { submitLead } from "../api/leads";
 import { solutions } from "../data/solutionsData";
 import styles from "./Solutions.module.css";
 
@@ -79,6 +80,18 @@ export default function Solutions() {
         onClose={() => setQuoteOpen(false)}
         product={{ name: "Solutions Enquiry" }}
         extraSummary={[]}
+        onSubmit={(contact) =>
+          submitLead({
+            contact: {
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              companyName: contact.company,
+            },
+            message: contact.notes?.trim() || "General enquiry from the Solutions page.",
+            sourceType: "SOLUTION",
+          })
+        }
       />
     </main>
   );

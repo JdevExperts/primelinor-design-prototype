@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "../ui/Button";
 import Icon from "../ui/Icon";
+import { submitLead } from "../../api/leads";
 import { enquiryInterests } from "../../data/companyData";
 import styles from "./ContactForm.module.css";
 
@@ -15,39 +16,63 @@ const EMPTY = {
   message: "",
 };
 
-/**
- * General business enquiry — separate from the product-specific QuoteModal
- * flow. No backend yet; the conceptual payload this would eventually send
- * is documented below so wiring a real endpoint later is a drop-in change.
- */
+/** General business enquiry — submits a real Lead (see src/api/leads.js). */
 export default function ContactForm() {
   const [form, setForm] = useState(EMPTY);
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | submitting | success | error
+  const [reference, setReference] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const update = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
-    // Eventual payload shape: { ...form, source: "contact_page" }
-    setSubmitted(true);
+    setStatus("submitting");
+    setErrorMessage(null);
+    try {
+      const lead = await submitLead({
+        contact: {
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          companyName: form.company,
+        },
+        message: form.message,
+        sourceType: "CONTACT",
+        sourceContext: {
+          interest: form.interest || undefined,
+          approxQuantity: form.quantity || undefined,
+          city: form.city || undefined,
+        },
+      });
+      setReference(lead?.reference || null);
+      setStatus("success");
+    } catch (err) {
+      setErrorMessage(err.message || "Something went wrong. Please try again.");
+      setStatus("error");
+    }
   };
 
   const sendAnother = () => {
     setForm(EMPTY);
-    setSubmitted(false);
+    setStatus("idle");
+    setReference(null);
+    setErrorMessage(null);
   };
 
-  if (submitted) {
+  if (status === "success") {
     return (
       <div className={styles.success}>
         <Icon name="check" size={22} className={styles.successIcon} />
-        <p className={styles.successTitle}>Your enquiry is ready to send.</p>
-        <p className={styles.successCopy}>
-          This is a visual prototype — nothing was submitted. Our team would
-          follow up directly from here.
-        </p>
+        <p className={styles.successTitle}>Your enquiry has been sent.</p>
+        {reference ? (
+          <p className={styles.successCopy}>
+            Reference: <strong>{reference}</strong>
+          </p>
+        ) : null}
+        <p className={styles.successCopy}>Our team will follow up directly.</p>
         <Button variant="secondary" size="md" onClick={sendAnother}>
           Send another enquiry
         </Button>
@@ -111,8 +136,14 @@ export default function ContactForm() {
         <textarea required rows={4} value={form.message} onChange={update("message")} />
       </label>
 
-      <Button variant="primary" size="lg" type="submit" fullWidth>
-        Send Enquiry
+      {status === "error" ? (
+        <p className={styles.errorMessage} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <Button variant="primary" size="lg" type="submit" fullWidth disabled={status === "submitting"}>
+        {status === "submitting" ? "Sending…" : "Send Enquiry"}
       </Button>
     </form>
   );

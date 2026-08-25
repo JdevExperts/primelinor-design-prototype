@@ -74,6 +74,11 @@
   max-width: 42ch;
 }
 
+.errorMessage {
+  font-size: var(--text-sm);
+  color: var(--color-error);
+}
+
 @media (max-width: 560px) {
   .row {
     grid-template-columns: minmax(0, 1fr);

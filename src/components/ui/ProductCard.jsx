@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { productColors } from "../../data/mockData";
+import { formatInr } from "../../utils/pricing";
 import Button from "./Button";
 import Icon from "./Icon";
 import ProductVisual from "./ProductVisual";
 import styles from "./ProductCard.module.css";
 
-const inr = (value) => `₹${value.toLocaleString("en-IN")}`;
 const SWATCH_LIMIT = 4;
 
 export default function ProductCard({
@@ -70,7 +70,7 @@ export default function ProductCard({
               <span className={styles.quotePrice}>Price on request</span>
             ) : (
               <span className={styles.price}>
-                {inr(price)}
+                {formatInr(price)}
                 <span className={styles.priceUnit}> / {unit}</span>
               </span>
             )}
