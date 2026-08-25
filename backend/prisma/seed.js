@@ -10,6 +10,10 @@
  * decision.
  */
 const { PrismaClient } = require("@prisma/client");
+const { assertSeedAllowed } = require("../src/utils/seedGuard");
+
+assertSeedAllowed();
+
 const prisma = new PrismaClient();
 
 const COLORS = [

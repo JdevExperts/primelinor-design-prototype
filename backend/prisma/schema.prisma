@@ -387,6 +387,7 @@ model Lead {
   updatedAt        DateTime   @updatedAt @map("updated_at")
 
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  rfqs    RFQ[]
 
   @@index([contactId])
   @@index([status])
@@ -422,12 +423,18 @@ model RFQ {
   createdAt        DateTime   @default(now()) @map("created_at")
   updatedAt        DateTime   @updatedAt @map("updated_at")
 
-  contact  Contact       @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  items    RFQItem[]
-  activity RFQActivity[]
+  contact    Contact        @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  lead       Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedTo StaffUser?     @relation("RFQAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  items      RFQItem[]
+  activity   RFQActivity[]
+  notes      InternalNote[]
+  quotations Quotation[]
 
   @@index([contactId])
   @@index([status])
+  @@index([leadId])
+  @@index([assignedToUserId])
   @@map("rfqs")
 }
 
@@ -463,8 +470,9 @@ model RFQItem {
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
 
-  rfq      RFQ            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  artworks ArtworkAsset[]
+  rfq            RFQ             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  artworks       ArtworkAsset[]
+  quotationLines QuotationLine[]
 
   @@index([rfqId])
   @@map("rfq_items")
@@ -479,7 +487,10 @@ model RFQActivity {
   id        String   @id @default(uuid())
   rfqId     String   @map("rfq_id")
   type      String
-  actorType String   @map("actor_type") // "SYSTEM" | "CUSTOMER" — no "STAFF" actor yet
+  actorType String   @map("actor_type") // "SYSTEM" | "CUSTOMER" | "STAFF"
+  // Loose reference, not a FK — actorId's meaning depends on actorType
+  // (a StaffUser.id for "STAFF", absent otherwise), so a single relation
+  // column would be wrong for two of the three actor types.
   actorId   String?  @map("actor_id")
   metadata  Json?
   createdAt DateTime @default(now()) @map("created_at")
@@ -513,4 +524,146 @@ model ArtworkAsset {
   @@index([status])
   @@index([expiresAt])
   @@map("artwork_assets")
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// PHASE 3 — Staff auth, RFQ admin workflow, versioned quotations.
+// ═════════════════════════════════════════════════════════════════════════
+
+enum StaffRole {
+  ADMIN
+  SALES
+}
+
+/**
+ * No public signup — rows are created via prisma/createStaffUser.js only.
+ */
+model StaffUser {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         StaffRole
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+
+  assignedRfqs      RFQ[]          @relation("RFQAssignedTo")
+  internalNotes     InternalNote[]
+  quotationsCreated Quotation[]
+
+  @@map("staff_users")
+}
+
+model InternalNote {
+  id           String   @id @default(uuid())
+  rfqId        String   @map("rfq_id")
+  authorUserId String   @map("author_user_id")
+  body         String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  rfq    RFQ       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  author StaffUser @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+
+  @@index([rfqId])
+  @@map("internal_notes")
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  SUPERSEDED
+}
+
+// ── Quotation ────────────────────────────────────────────────────────────────
+// One row = one immutable-once-sent version. `subtotal`/`grandTotal` are
+// always server-computed from this quotation's QuotationLine rows (see
+// src/services/quotationTotals.js) — a client-submitted total is never
+// trusted, mirroring the RFQItem pricing rule from Phase 2. `taxMode` is a
+// free-text label only ("GST 18% exclusive", etc.) — there is no tax-rate
+// engine yet; `taxAmount` is a manually entered figure that totals simply
+// add in, deliberately deferring any GST inclusive/exclusive policy
+// decision to a later phase.
+model Quotation {
+  id              String          @id @default(uuid())
+  rfqId           String          @map("rfq_id")
+  version         Int
+  supersedesId    String?         @unique @map("supersedes_id")
+  status          QuotationStatus @default(DRAFT)
+  currency        String          @default("INR")
+  subtotal        Decimal         @default(0) @db.Decimal(10, 2)
+  taxMode         String?         @map("tax_mode")
+  taxAmount       Decimal?        @map("tax_amount") @db.Decimal(10, 2)
+  grandTotal      Decimal         @default(0) @map("grand_total") @db.Decimal(10, 2)
+  validUntil      DateTime?       @map("valid_until")
+  customerNotes   String?         @map("customer_notes")
+  createdByUserId String          @map("created_by_user_id")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  sentAt          DateTime?       @map("sent_at")
+  viewedAt        DateTime?       @map("viewed_at")
+  respondedAt     DateTime?       @map("responded_at")
+
+  // ── Customer access token (Phase 4 §3) ──────────────────────────────────
+  // Only the SHA-256 hash is stored — the raw token is returned once, at
+  // generation time (on send, or on regenerate), and never persisted.
+  // Human-readable references (RFQ reference, quotation version) must never
+  // grant access on their own; only possession of the raw token, verified
+  // against this hash, does.
+  accessTokenHash      String?   @unique @map("access_token_hash")
+  accessTokenCreatedAt DateTime? @map("access_token_created_at")
+  accessTokenRevokedAt DateTime? @map("access_token_revoked_at")
+
+  rfq          RFQ             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  createdBy    StaffUser       @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
+  // The prior version this one revises — set only on the NEW row created by
+  // a revision. The prior row only flips to SUPERSEDED once this new row is
+  // actually SENT (Phase 3 §24), not merely on draft creation.
+  supersedes   Quotation?      @relation("QuotationSupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy Quotation?      @relation("QuotationSupersedes")
+  lines        QuotationLine[]
+
+  @@unique([rfqId, version])
+  @@index([rfqId])
+  @@map("quotations")
+}
+
+enum QuotationLineType {
+  PRODUCT
+  SHIPPING
+  DISCOUNT
+  ADJUSTMENT
+}
+
+// ── Quotation line ───────────────────────────────────────────────────────────
+// `lineTotal` is server-computed as quantity * unitPrice whenever both are
+// present (PRODUCT/SHIPPING lines); DISCOUNT/ADJUSTMENT lines — and any
+// PRODUCT/SHIPPING line without a quantity/unitPrice decomposition, e.g. a
+// flat custom-branding fee — carry a directly staff-entered lineTotal
+// instead. DISCOUNT lines must be <= 0, enforced in
+// src/validation/quotations.schema.js. This is the one consistent
+// mechanism for every commercial adjustment — there is no separate
+// "discount %" or hidden total-override field.
+model QuotationLine {
+  id          String            @id @default(uuid())
+  quotationId String            @map("quotation_id")
+  rfqItemId   String?           @map("rfq_item_id")
+  lineType    QuotationLineType @map("line_type")
+  description String
+  quantity    Int?
+  unit        String?
+  unitPrice   Decimal?          @map("unit_price") @db.Decimal(10, 2)
+  lineTotal   Decimal           @map("line_total") @db.Decimal(10, 2)
+  sortOrder   Int               @default(0) @map("sort_order")
+  metadata    Json?
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  rfqItem   RFQItem?  @relation(fields: [rfqItemId], references: [id], onDelete: SetNull)
+
+  @@index([quotationId])
+  @@map("quotation_lines")
 }

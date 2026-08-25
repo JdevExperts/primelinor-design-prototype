@@ -37,10 +37,27 @@ async function putObject({ buffer, contentType, key }) {
   return key;
 }
 
-async function getSignedReadUrl(key, { expiresInSeconds = 900 } = {}) {
-  return getSignedUrl(s3Client, new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }), {
-    expiresIn: expiresInSeconds,
-  });
+/**
+ * `filename`, when given, forces the browser to download rather than
+ * render the object inline (Production Hardening Patch §1) — S3 supports
+ * overriding a fixed set of response headers per-request via a presigned
+ * URL's query params, and Content-Disposition is one of them.
+ * X-Content-Type-Options is *not* one of the overridable headers S3
+ * supports on a GetObject response, so it can't be forced this way for
+ * S3-served artwork — Content-Disposition: attachment is the header that
+ * actually matters here, since it stops inline rendering regardless of
+ * MIME-sniffing behavior.
+ */
+async function getSignedReadUrl(key, { expiresInSeconds = 900, filename } = {}) {
+  return getSignedUrl(
+    s3Client,
+    new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      ...(filename ? { ResponseContentDisposition: `attachment; filename="${filename}"` } : {}),
+    }),
+    { expiresIn: expiresInSeconds },
+  );
 }
 
 async function deleteObject(key) {

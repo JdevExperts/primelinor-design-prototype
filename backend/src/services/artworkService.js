@@ -10,6 +10,7 @@ const prisma = require("../lib/prisma");
 const ApiError = require("../utils/ApiError");
 const storage = require("./storage");
 const { validateUploadedFile, sanitizeSvg } = require("./artworkValidation");
+const { safeDownloadFilename } = require("../utils/artworkHeaders");
 
 const PENDING_TTL_MS = 24 * 60 * 60 * 1000; // 24h — plenty for one browsing session
 
@@ -35,7 +36,10 @@ async function uploadArtwork(file) {
     },
   });
 
-  const previewUrl = await storage.getSignedReadUrl(key, { expiresInSeconds: 900 });
+  const previewUrl = await storage.getSignedReadUrl(key, {
+    expiresInSeconds: 900,
+    filename: safeDownloadFilename(file.originalname),
+  });
 
   return {
     id: asset.id,

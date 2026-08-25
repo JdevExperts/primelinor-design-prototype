@@ -52,6 +52,10 @@ async function getObjectBuffer(key) {
   return fs.readFile(resolvePath(key));
 }
 
+// `filename` isn't threaded into the URL itself — the preview controller
+// looks the asset (and its original filename) up from the DB directly and
+// applies Content-Disposition: attachment there. Accepted here only so
+// callers share one call signature with s3Storage's getSignedReadUrl.
 async function getSignedReadUrl(key, { expiresInSeconds = 900 } = {}) {
   const expires = Date.now() + expiresInSeconds * 1000;
   const signature = sign(key, expires);

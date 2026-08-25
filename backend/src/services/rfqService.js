@@ -11,6 +11,7 @@ const { normalizePhone } = require("./phone");
 const { resolveContact } = require("./contact");
 const { generateRfqReference } = require("./referenceNumber");
 const { resolveRfqItem } = require("./rfqItem");
+const { recordActivity } = require("./rfqActivity");
 
 const UNIQUE_CONSTRAINT = "P2002";
 
@@ -69,9 +70,7 @@ async function createRfq(payload) {
         await resolveRfqItem(tx, created.id, payload.items[i], i);
       }
 
-      await tx.rFQActivity.create({
-        data: { rfqId: created.id, type: "SUBMITTED", actorType: "CUSTOMER" },
-      });
+      await recordActivity(tx, { rfqId: created.id, type: "RFQ_CREATED", actorType: "CUSTOMER" });
 
       return tx.rFQ.findUnique({ where: { id: created.id }, include: { items: true } });
     });

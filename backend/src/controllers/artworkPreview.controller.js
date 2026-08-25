@@ -11,6 +11,7 @@ const ApiError = require("../utils/ApiError");
 const prisma = require("../lib/prisma");
 const localStorage = require("../services/storage/localStorage");
 const storage = require("../services/storage");
+const { applyAttachmentHeaders } = require("../utils/artworkHeaders");
 
 // GET /api/v1/artwork-preview/:key
 exports.getArtworkPreview = asyncHandler(async (req, res) => {
@@ -32,6 +33,11 @@ exports.getArtworkPreview = asyncHandler(async (req, res) => {
   ]);
   if (!buffer || !asset) throw ApiError.notFound("Artwork not found");
 
+  // Content-Disposition: attachment is the primary defense here, not the
+  // SVG sanitizer — see Production Hardening Patch §1. Never render
+  // customer-supplied artwork inline from this origin, regardless of how
+  // well-sanitized it is believed to be.
+  applyAttachmentHeaders(res, asset.originalFileName);
   res.type(asset.mimeType);
   res.send(buffer);
 });

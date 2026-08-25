@@ -45,7 +45,7 @@ test("sanitizeSvg: strips <script> tags", () => {
   const dirty = '<svg><script>alert(1)</script><rect/></svg>';
   const clean = sanitizeSvg(dirty);
   assert.equal(clean.includes("<script"), false);
-  assert.equal(clean.includes("<rect/>"), true);
+  assert.equal(clean.includes("<rect"), true);
 });
 
 test("sanitizeSvg: strips event-handler attributes", () => {
@@ -61,7 +61,33 @@ test("sanitizeSvg: neutralizes javascript: URIs", () => {
   assert.equal(clean.includes("javascript:"), false);
 });
 
-test("sanitizeSvg: leaves safe markup untouched", () => {
+test("sanitizeSvg: strips <foreignObject> (can smuggle arbitrary HTML/script inside an SVG)", () => {
+  const dirty = '<svg><foreignObject><body xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></body></foreignObject><rect/></svg>';
+  const clean = sanitizeSvg(dirty);
+  assert.equal(clean.includes("foreignObject"), false);
+  assert.equal(clean.includes("<script"), false);
+});
+
+test("sanitizeSvg: strips <iframe>/<embed>/<object>", () => {
+  const dirty = '<svg><iframe src="https://evil.example"></iframe><embed src="x"/><object data="x"></object></svg>';
+  const clean = sanitizeSvg(dirty);
+  assert.equal(clean.includes("iframe"), false);
+  assert.equal(clean.includes("embed"), false);
+  assert.equal(clean.includes("object"), false);
+});
+
+test("sanitizeSvg: does not throw on malformed SVG, and strips what it can parse", () => {
+  const malformed = '<svg><rect><script>alert(1)</script>';
+  assert.doesNotThrow(() => sanitizeSvg(malformed));
+  assert.equal(sanitizeSvg(malformed).includes("<script"), false);
+});
+
+test("sanitizeSvg: preserves safe markup (DOMPurify re-serializes self-closing tags but keeps structure/attributes)", () => {
   const safe = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="4" fill="red"/></svg>';
-  assert.equal(sanitizeSvg(safe), safe);
+  const clean = sanitizeSvg(safe);
+  assert.equal(clean.includes('width="10"'), true);
+  assert.equal(clean.includes('height="10"'), true);
+  assert.equal(clean.includes("<circle"), true);
+  assert.equal(clean.includes('cx="5"'), true);
+  assert.equal(clean.includes('fill="red"'), true);
 });

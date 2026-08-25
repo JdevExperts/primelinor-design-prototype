@@ -41,4 +41,4 @@ const createRfqSchema = z
   })
   .strict();
 
-module.exports = { createRfqSchema };
+module.exports = { createRfqSchema, rfqItemSchema };

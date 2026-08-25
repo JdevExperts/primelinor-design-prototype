@@ -1,19 +1,64 @@
 /**
  * Server-side artwork validation — the frontend's validateArtworkFile()
  * (src/utils/artworkValidation.js) is a UX nicety only; a client-reported
- * MIME type is never trusted here. Two checks, deliberately dependency-free:
+ * MIME type is never trusted here.
  *
  *  1. Magic-byte sniffing — the actual file content must match one of the
  *     three accepted formats, regardless of what Content-Type/extension it
  *     arrived with.
- *  2. SVG sanitization — SVG is XML and can carry <script>, event-handler
- *     attributes, or javascript: URIs. A full sanitizer library (DOMPurify)
- *     is deliberately not pulled in for one upload endpoint; this strips
- *     the specific known-dangerous constructs via regex, which is
- *     sufficient for a case where the worst outcome of a miss is "an
- *     internal reviewer later opens a malicious SVG," not "a public page
- *     renders user SVG to arbitrary visitors."
+ *  2. SVG sanitization — real parser-based sanitization via DOMPurify +
+ *     jsdom (Production Hardening Patch §2). The original regex-only
+ *     approach was explicitly flagged in the Post-Phase-4 audit as not
+ *     production-safe: SVG is XML, and regex substitution over arbitrary
+ *     nesting/encoding tricks (obfuscated tag casing, entity encoding,
+ *     namespace confusion) is exactly the class of bypass a real parser
+ *     closes. DOMPurify is the de-facto standard sanitizer maintained by
+ *     the Cure53 security team; jsdom is its recommended server-side DOM.
+ *     Sanitization is now the primary defense, but is *not* the only one —
+ *     see artworkPreview.controller.js / admin PDF-adjacent download
+ *     routes, which additionally force Content-Disposition: attachment so
+ *     a sanitizer bypass still can't execute inline from the app origin.
  */
+const { JSDOM } = require("jsdom");
+
+// One jsdom window for the process — sanitizing is a pure, synchronous,
+// side-effect-free operation per call, so there's no reason to spin up a
+// fresh JSDOM instance (relatively expensive) per upload. This installed
+// version of dompurify's CJS build calls its own environment auto-detect
+// at require()-time, which throws unless a global `window`/`document`
+// already exists — so, unlike its README example, jsdom must be created
+// and installed as globals *before* requiring dompurify, not after.
+//
+// That global `window`/`document` is only needed for this one require()
+// call — createDOMPurify(purifyWindow) closes over purifyWindow directly,
+// so the returned DOMPurify instance keeps working correctly afterward.
+// Leaving global.window/global.document set for the rest of the process
+// is not just unnecessary, it's actively dangerous: pdfkit (loaded
+// elsewhere for quotePdf.js) feature-detects a browser environment via
+// `typeof document !== 'undefined'` and, once tricked into thinking it's
+// in a browser, tries to resolve its own asset URLs relative to
+// `document.baseURI` — which jsdom defaults to "about:blank", crashing
+// pdfkit's require with `TypeError: Invalid URL`. So these globals are
+// restored to whatever they were (almost always undefined) immediately
+// after DOMPurify is constructed.
+const purifyWindow = new JSDOM("").window;
+const hadGlobalWindow = Object.prototype.hasOwnProperty.call(global, "window");
+const hadGlobalDocument = Object.prototype.hasOwnProperty.call(global, "document");
+const previousGlobalWindow = global.window;
+const previousGlobalDocument = global.document;
+if (!global.window) global.window = purifyWindow;
+if (!global.document) global.document = purifyWindow.document;
+const createDOMPurify = require("dompurify");
+const DOMPurify = createDOMPurify(purifyWindow);
+if (global.window === purifyWindow) {
+  if (hadGlobalWindow) global.window = previousGlobalWindow;
+  else delete global.window;
+}
+if (global.document === purifyWindow.document) {
+  if (hadGlobalDocument) global.document = previousGlobalDocument;
+  else delete global.document;
+}
+
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/svg+xml"];
 
@@ -56,24 +101,30 @@ function validateUploadedFile(file) {
   return { ok: true, mimeType: detected };
 }
 
-const DANGEROUS_TAG_RE = /<\s*(script|foreignObject|iframe|embed|object)[\s\S]*?<\s*\/\s*\1\s*>/gi;
-const SELF_CLOSING_DANGEROUS_RE = /<\s*(script|foreignObject|iframe|embed|object)[^>]*\/?>/gi;
-const EVENT_HANDLER_ATTR_RE = /\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
-const JS_URI_RE = /(href|xlink:href|src)\s*=\s*(["'])\s*javascript:[^"']*\2/gi;
+// Tags that can carry or load executable/foreign content, forbidden
+// outright regardless of DOMPurify's own SVG profile defaults — explicit
+// rather than relied-upon-implicitly, so this list is the one place that
+// answers "what's blocked" without reading DOMPurify's source.
+const FORBIDDEN_SVG_TAGS = ["script", "foreignObject", "iframe", "embed", "object"];
 
 /**
- * Strips script tags, embedded foreign content, event-handler attributes,
- * and javascript: URIs from an SVG's source text. Operates on raw text
- * (no XML parser dependency) — safe because it only ever removes content,
- * never rewrites structure, so a false-negative match leaves markup intact
- * rather than corrupting valid SVG.
+ * Real parser-based SVG sanitization (DOMPurify, configured for SVG).
+ * Parses the actual DOM tree rather than pattern-matching text, so
+ * obfuscation tricks that defeat regex (mixed casing, HTML entities,
+ * duplicate/nested attributes, namespace confusion) don't help an
+ * attacker — DOMPurify normalizes the tree before applying its
+ * allow/forbid rules. Removes <script>, event-handler attributes (on*),
+ * javascript:/data: URIs in href-like attributes, and foreign/embedded
+ * content (foreignObject, iframe, embed, object). A structurally invalid
+ * SVG is handled gracefully by the underlying parser (auto-corrected, not
+ * thrown) — the file was already confirmed to start with a real <svg> tag
+ * by detectMimeType() before this ever runs.
  */
 function sanitizeSvg(svgText) {
-  return svgText
-    .replace(DANGEROUS_TAG_RE, "")
-    .replace(SELF_CLOSING_DANGEROUS_RE, "")
-    .replace(EVENT_HANDLER_ATTR_RE, "")
-    .replace(JS_URI_RE, "$1=$2#$2");
+  return DOMPurify.sanitize(svgText, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: FORBIDDEN_SVG_TAGS,
+  });
 }
 
 module.exports = { MAX_SIZE_BYTES, ACCEPTED_TYPES, detectMimeType, validateUploadedFile, sanitizeSvg };
