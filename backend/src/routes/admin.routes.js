@@ -9,5 +9,6 @@ router.use("/leads", require("./adminLeads.routes"));
 router.use("/rfqs", require("./adminRfqs.routes"));
 router.use("/quotations", require("./adminQuotations.routes"));
 router.use("/staff", require("./adminStaff.routes"));
+router.use("/catalog", require("./adminCatalog.routes"));
 
 module.exports = router;

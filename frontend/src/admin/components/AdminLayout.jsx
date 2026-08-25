@@ -8,6 +8,12 @@ const NAV_ITEMS = [
   { to: "/admin/leads", label: "Leads" },
 ];
 
+const CATALOGUE_NAV_ITEMS = [
+  { to: "/admin/catalog/products", label: "Products" },
+  { to: "/admin/catalog/categories", label: "Categories" },
+  { to: "/admin/catalog/colors", label: "Colors" },
+];
+
 export default function AdminLayout() {
   const { staffUser, logout } = useAdminAuth();
 
@@ -21,6 +27,18 @@ export default function AdminLayout() {
         <div className={styles.brand}>PrimeLinor Admin</div>
         <nav className={styles.nav} aria-label="Admin navigation">
           {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+        <nav className={styles.nav} aria-label="Catalogue navigation">
+          <div className={styles.navSectionLabel}>Catalogue</div>
+          {CATALOGUE_NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

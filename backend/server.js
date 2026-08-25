@@ -1,3 +1,4 @@
+const path = require("node:path");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -19,6 +20,7 @@ const { requireStaffAuth } = require("./src/middleware/requireStaffAuth");
 const requireTrustedOrigin = require("./src/middleware/requireTrustedOrigin");
 const errorHandler = require("./src/middleware/errorHandler");
 const requestLogger = require("./src/middleware/requestLogger");
+const noCache = require("./src/middleware/noCache");
 const { validateConfig } = require("./src/startup/validateConfig");
 const prisma = require("./src/lib/prisma");
 const { logSafeStartupError } = require("./src/utils/safeLog");
@@ -67,8 +69,25 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(requestLogger);
 
-app.use("/api/v1/products", productsRoutes);
-app.use("/api/v1/categories", categoriesRoutes);
+// Local-disk product images (dev fallback only — see storage/productAssets.js;
+// unused/empty when S3 is configured, since those URLs point directly at S3).
+// helmet()'s default Cross-Origin-Resource-Policy: same-origin would
+// otherwise block the frontend (a different origin/port in dev) from
+// embedding these via <img> — these are meant to be public, cross-origin
+// embeddable catalogue images, so that default is relaxed for this route
+// only. Real S3 doesn't set this header at all, so production is
+// unaffected either way.
+app.use(
+  "/product-assets",
+  (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "storage/products")),
+);
+
+app.use("/api/v1/products", noCache, productsRoutes);
+app.use("/api/v1/categories", noCache, categoriesRoutes);
 app.use("/api/v1/leads", writeLimiter, leadsRoutes);
 app.use("/api/v1/rfqs", writeLimiter, rfqsRoutes);
 app.use("/api/v1/uploads", uploadLimiter, uploadsRoutes);

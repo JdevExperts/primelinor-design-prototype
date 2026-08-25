@@ -64,6 +64,9 @@ function serializeProductSummary(product) {
     fixedPrice: product.fixedPrice != null ? Number(product.fixedPrice) : null,
     effectivePrice: effectivePrice(product),
     priceTiers: (product.priceTiers || []).map(serializeTier),
+    // TIERED only — quantities at/above this are outside priced coverage and
+    // become quote-required (Phase 5 §23/§24). Null for every other mode.
+    quoteAboveQty: product.quoteAboveQty ?? null,
     customizable: product.customizable,
     colors: (product.colors || []).map(serializeColorRef),
     sortOrder: product.sortOrder,

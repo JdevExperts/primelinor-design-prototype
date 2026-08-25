@@ -71,13 +71,25 @@ model Product {
   unit             String    @default("piece")
   priceMode        PriceMode @map("price_mode")
   fixedPrice       Decimal?  @map("fixed_price") @db.Decimal(10, 2)
+  // TIERED only. Quantities at/above this are outside priced tier coverage
+  // and become quote-required even though the product otherwise has tiered
+  // pricing (Phase 5 §23) — e.g. priced tiers up to 4999, "5000+ Request
+  // Quote". Null means the priced tiers are the only coverage rule (no
+  // separate quote-above cutoff).
+  quoteAboveQty    Int?      @map("quote_above_qty")
   customizable     Boolean   @default(false)
   variantType      String?   @map("variant_type")
   dispatchEstimate String?   @map("dispatch_estimate")
+  seoTitle         String?   @map("seo_title")
+  seoDescription   String?   @map("seo_description")
+  createdByUserId  String?   @map("created_by_user_id")
+  updatedByUserId  String?   @map("updated_by_user_id")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
   category       Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdByUser  StaffUser?             @relation("ProductCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser  StaffUser?             @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
   priceTiers     ProductPriceTier[]
   colors         ProductColor[]
   variants       ProductVariant[]
@@ -552,6 +564,8 @@ model StaffUser {
   assignedRfqs      RFQ[]          @relation("RFQAssignedTo")
   internalNotes     InternalNote[]
   quotationsCreated Quotation[]
+  productsCreated   Product[]      @relation("ProductCreatedBy")
+  productsUpdated   Product[]      @relation("ProductUpdatedBy")
 
   @@map("staff_users")
 }

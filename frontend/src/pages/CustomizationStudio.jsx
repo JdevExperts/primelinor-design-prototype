@@ -17,8 +17,24 @@ import {
   resolveStudioSetup,
   studioSwitchProducts,
 } from "../utils/studio";
+import { buildRealStudioSetup, fetchCustomizableProducts, fetchStudioProduct } from "../utils/studioReal";
 import { hasPreviewKind, studioPlacementLabel } from "../utils/studioAssets";
 import styles from "./CustomizationStudio.module.css";
+
+function StudioLoading() {
+  useEffect(() => {
+    document.title = "Loading — PrimeLinor";
+  }, []);
+
+  return (
+    <main id="main" className={styles.page}>
+      <div className={`container ${styles.missing}`}>
+        <p className="eyebrow">Try Your Logo</p>
+        <h1 className={styles.missingTitle}>Loading…</h1>
+      </div>
+    </main>
+  );
+}
 
 function Unavailable({ listing, productId }) {
   useEffect(() => {
@@ -167,15 +183,28 @@ function StudioView({
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [realSwitcher, setRealSwitcher] = useState(null);
 
   useEffect(() => {
     document.title = `Try Your Logo — ${listing.name}`;
   }, [listing.name]);
 
-  const color = productColors[colorKey] || productColors.white;
+  useEffect(() => {
+    let cancelled = false;
+    fetchCustomizableProducts().then((list) => {
+      if (!cancelled && list.length) setRealSwitcher(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const colorMeta = setup.colorMeta || productColors;
+  const color = colorMeta[colorKey] || productColors[colorKey] || productColors.white;
+  const labelFor = (key) => setup.placementLabels?.[key] || studioPlacementLabel(key);
   const quote = quoteForQuantity(listing, quantity);
   const chips = visibleQuickQuantities(listing.moq);
-  const switcher = studioSwitchProducts();
+  const switcher = realSwitcher || studioSwitchProducts();
   const apparelSizes =
     listing.variantType === "size" && listing.variants?.length
       ? `${listing.variants[0].label}–${listing.variants[listing.variants.length - 1].label}`
@@ -220,10 +249,10 @@ function StudioView({
       "PrimeLinor design reference",
       listing.name,
       `Color: ${color.label}`,
-      `Front: ${artwork.front ? artwork.front.name : "None"} · ${studioPlacementLabel(frontPlacement)}`,
+      `Front: ${artwork.front ? artwork.front.name : "None"} · ${labelFor(frontPlacement)}`,
       `Back: ${
         backEnabled
-          ? `${artwork.back ? artwork.back.name : "No artwork"} · ${studioPlacementLabel(backPlacement)}`
+          ? `${artwork.back ? artwork.back.name : "No artwork"} · ${labelFor(backPlacement)}`
           : "None"
       }`,
       `Quantity: ${quantity} ${pluralUnit(listing.unit, quantity)}`,
@@ -242,12 +271,12 @@ function StudioView({
 
   const extraSummary = [
     `Front Artwork: ${artwork.front ? artwork.front.name : "None"}`,
-    `Front Placement: ${studioPlacementLabel(frontPlacement)}`,
+    `Front Placement: ${labelFor(frontPlacement)}`,
     backEnabled
       ? `Back Artwork: ${artwork.back ? artwork.back.name : "None"}`
       : "Back Artwork: None",
     backEnabled
-      ? `Back Placement: ${studioPlacementLabel(backPlacement)}`
+      ? `Back Placement: ${labelFor(backPlacement)}`
       : null,
     quote.kind === "priced"
       ? `Unit price: ${formatInr(quote.unitPrice)} / ${listing.unit}`
@@ -348,7 +377,7 @@ function StudioView({
                 </legend>
                 <div className={styles.swatches}>
                   {colors.map((key) => {
-                    const swatch = productColors[key];
+                    const swatch = colorMeta[key] || productColors[key];
                     return (
                       <label
                         key={key}
@@ -420,7 +449,7 @@ function StudioView({
                         checked={key === frontPlacement}
                         onChange={() => setFrontPlacement(key)}
                       />
-                      {studioPlacementLabel(key)}
+                      {labelFor(key)}
                     </label>
                   ))}
                 </div>
@@ -480,7 +509,7 @@ function StudioView({
                               checked={key === backPlacement}
                               onChange={() => setBackPlacement(key)}
                             />
-                            {studioPlacementLabel(key)}
+                            {labelFor(key)}
                           </label>
                         ))}
                       </div>
@@ -585,13 +614,13 @@ function StudioView({
                   <li>{listing.name}</li>
                   <li>{color.label}</li>
                   <li>
-                    Front: {studioPlacementLabel(frontPlacement)}
+                    Front: {labelFor(frontPlacement)}
                     {artwork.front ? " · Artwork uploaded" : " · No artwork"}
                   </li>
                   <li>
                     Back:{" "}
                     {backEnabled
-                      ? `${studioPlacementLabel(backPlacement)}${
+                      ? `${labelFor(backPlacement)}${
                           artwork.back ? " · Artwork uploaded" : " · No artwork"
                         }`
                       : "None"}
@@ -787,7 +816,32 @@ export default function CustomizationStudio() {
     }
   };
 
-  const setup = resolveStudioSetup(productId);
+  const [setup, setSetup] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSetup(null);
+    const resolvedSlug = demoProductToCatalogue[productId] || productId;
+    // Real backend data takes priority whenever the product exists there at
+    // all (Phase 5 §51-52) — the legacy mock resolver is only a fallback
+    // for content that has no backend equivalent yet (§59), so a product
+    // that's real but not (yet) previewable still shows real listing data
+    // on the Unavailable screen rather than silently falling back to mock.
+    fetchStudioProduct(resolvedSlug)
+      .then((product) => {
+        if (cancelled) return;
+        setSetup(product ? buildRealStudioSetup(product) : resolveStudioSetup(productId));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSetup(resolveStudioSetup(productId));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  if (!setup) return <StudioLoading />;
   if (setup.status !== "ok") {
     return <Unavailable listing={setup.listing} productId={productId} />;
   }

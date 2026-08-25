@@ -28,6 +28,13 @@ const RfqsInbox = lazy(() => import("./admin/pages/RfqsInbox"));
 const RfqDetail = lazy(() => import("./admin/pages/RfqDetail"));
 const QuotationEditor = lazy(() => import("./admin/pages/QuotationEditor"));
 
+// Catalogue Admin (Phase 5) — same admin shell/bundle, not a separate app.
+const ProductsList = lazy(() => import("./admin/pages/catalog/ProductsList"));
+const NewProduct = lazy(() => import("./admin/pages/catalog/NewProduct"));
+const ProductEditor = lazy(() => import("./admin/pages/catalog/ProductEditor"));
+const CategoriesAdmin = lazy(() => import("./admin/pages/catalog/CategoriesAdmin"));
+const ColorsAdmin = lazy(() => import("./admin/pages/catalog/ColorsAdmin"));
+
 // Token-gated customer quotation page — its own lightweight branded shell,
 // never the customer SiteLayout (Header/Footer) or the admin shell (Phase
 // 4 §8).
@@ -62,6 +69,12 @@ export default function App() {
                 <Route path="rfqs" element={<RfqsInbox />} />
                 <Route path="rfqs/:id" element={<RfqDetail />} />
                 <Route path="quotations/:id" element={<QuotationEditor />} />
+                <Route path="catalog" element={<Navigate to="catalog/products" replace />} />
+                <Route path="catalog/products" element={<ProductsList />} />
+                <Route path="catalog/products/new" element={<NewProduct />} />
+                <Route path="catalog/products/:id" element={<ProductEditor />} />
+                <Route path="catalog/categories" element={<CategoriesAdmin />} />
+                <Route path="catalog/colors" element={<ColorsAdmin />} />
               </Route>
             </Route>
           </Route>
