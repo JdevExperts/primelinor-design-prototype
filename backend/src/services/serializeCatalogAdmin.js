@@ -5,6 +5,7 @@
  * that the public API deliberately hides.
  */
 const { effectivePrice } = require("./pricing");
+const { selectPrimaryImage } = require("./productImageSelection");
 
 function serializeCategoryAdmin(category) {
   return {
@@ -35,14 +36,14 @@ function serializeTagAdmin(tag) {
 }
 
 /**
- * Deterministic catalogue-image rule (Phase 5 §32): the first active
- * CATALOG asset by sortOrder. Documented once, applied everywhere a
- * product needs exactly one representative image (admin list, this
- * summary shape's `thumbnailUrl`).
+ * Deterministic catalogue-image rule — CATALOG preferred, then
+ * GALLERY_FRONT, then the first active asset by sortOrder (Phase 6A.1
+ * §2/§30). Shared with the public serializer (services/serialize.js) via
+ * productImageSelection.js so the admin thumbnail and every customer-
+ * facing card agree on the same product's image.
  */
 function pickThumbnail(product) {
-  const catalogAsset = (product.assets || [])[0];
-  return catalogAsset ? { url: catalogAsset.url, alt: catalogAsset.alt } : null;
+  return selectPrimaryImage(product.assets);
 }
 
 /** "₹149–₹139 / pc" / "₹349" / "Quote Only" — no fake sale pricing (Phase 5 §25). */

@@ -329,16 +329,18 @@ function ProductDetailView({ product }) {
               >
                 Request a Quote
               </Button>
-              <Button
-                as={Link}
-                to={`/customize/${product.id}`}
-                variant="accent"
-                size="lg"
-                icon="upload"
-                fullWidth
-              >
-                See With Your Logo
-              </Button>
+              {product.studioReady ? (
+                <Button
+                  as={Link}
+                  to={`/customize/${product.id}`}
+                  variant="accent"
+                  size="lg"
+                  icon="upload"
+                  fullWidth
+                >
+                  See With Your Logo
+                </Button>
+              ) : null}
               <button type="button" className={styles.chat}>
                 <Icon name="chat" size={16} />
                 Chat with Product Expert
@@ -377,39 +379,45 @@ function ProductDetailView({ product }) {
         </div>
       </section>
 
-      <section className={styles.band} aria-labelledby="customize-title">
-        <div className="container">
-          <h2 id="customize-title" className={styles.sectionTitle}>
-            Customize this product
-          </h2>
-          <p className={styles.copy}>
-            Upload your logo, choose a placement, preview branding, then
-            request a quotation. You do not need to pick a printing method —
-            our team will recommend the right option for your artwork and
-            quantity.
-          </p>
-          {product.placements.length > 0 ? (
-            <ul className={styles.placements} aria-label="Available placements">
-              {product.placements.map((id) => (
-                <li key={id}>{getPlacementLabel(id)}</li>
-              ))}
-            </ul>
-          ) : (
+      {product.customizable ? (
+        <section className={styles.band} aria-labelledby="customize-title">
+          <div className="container">
+            <h2 id="customize-title" className={styles.sectionTitle}>
+              Customize this product
+            </h2>
             <p className={styles.copy}>
-              Branding is confirmed with the quotation for this product type.
+              Upload your logo, choose a placement, preview branding, then
+              request a quotation. You do not need to pick a printing method —
+              our team will recommend the right option for your artwork and
+              quantity.
             </p>
-          )}
-          <Button
-            as={Link}
-            to={`/customize/${product.id}`}
-            variant="accent"
-            size="md"
-            icon="upload"
-          >
-            See With Your Logo
-          </Button>
-        </div>
-      </section>
+            {product.placements.length > 0 ? (
+              <ul className={styles.placements} aria-label="Available placements">
+                {product.placements.map((id) => (
+                  <li key={id}>{getPlacementLabel(id)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.copy}>
+                Branding is confirmed with the quotation for this product type.
+              </p>
+            )}
+            {product.studioReady ? (
+              <Button
+                as={Link}
+                to={`/customize/${product.id}`}
+                variant="accent"
+                size="md"
+                icon="upload"
+              >
+                See With Your Logo
+              </Button>
+            ) : (
+              <p className={styles.copy}>Logo preview coming soon for this product.</p>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       {product.sizeGuide ? (
         <section
@@ -502,15 +510,17 @@ function ProductDetailView({ product }) {
             >
               Request a Quote
             </Button>
-            <Button
-              as={Link}
-              to={`/customize/${product.id}`}
-              variant="accent"
-              size="lg"
-              icon="upload"
-            >
-              See With Your Logo
-            </Button>
+            {product.studioReady ? (
+              <Button
+                as={Link}
+                to={`/customize/${product.id}`}
+                variant="accent"
+                size="lg"
+                icon="upload"
+              >
+                See With Your Logo
+              </Button>
+            ) : null}
           </div>
         </div>
       </section>

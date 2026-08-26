@@ -28,11 +28,18 @@ export async function fetchStudioProduct(slug) {
   }
 }
 
-/** Populates the Studio product switcher from real customizable products (Phase 5 §53) — no hardcoded slug list. */
+/**
+ * Populates the Studio product switcher from real customizable products
+ * (Phase 5 §53) — no hardcoded slug list. Filters on `studioReady`, not
+ * the raw `customizable` flag (Phase 6A.1 §20): a product can be flagged
+ * customizable before its photography/zones are configured, and the
+ * switcher must not offer a product that will immediately dead-end into
+ * the Unavailable screen.
+ */
 export async function fetchCustomizableProducts() {
   try {
     const { products } = await apiGet("/products", { params: { customizable: "true", limit: 24, sort: "recommended" } });
-    return products.map((p) => ({ id: p.slug, name: p.name, switchLabel: p.name }));
+    return products.filter((p) => p.studioReady).map((p) => ({ id: p.slug, name: p.name, switchLabel: p.name }));
   } catch {
     return [];
   }
@@ -72,13 +79,29 @@ function buildListing(product) {
  * reverse, so a calibrated per-color zone is never silently replaced by a
  * generic one.
  */
+export const DEFAULT_COLOR_KEY = "default";
+
+const SIDE_BY_VIEW = { FRONT: "productFront", BACK: "productBack" };
+
+/**
+ * Builds one {src, alt, active, placementZones} photo object per side —
+ * `placementZones` lives ON the photo object itself (keyed by
+ * placementKey), matching the shape `utils/studioAssets.js`'s
+ * `resolvePlacementZone` reads via `colorPack[side].placementZones[key]`
+ * (its first, primary lookup — the shape the original mock data in
+ * `data/productAssets.js` also uses). An earlier version of this function
+ * attached zones as a flat sibling of `productFront`/`productBack`
+ * instead, which every one of resolvePlacementZone's real-data lookups
+ * missed — real photo + real zones loaded, but no logo ever appeared,
+ * because the zone the overlay needed could never be found.
+ */
 function buildAssetsFromProduct(product) {
   const colorSlugById = new Map((product.colors || []).map((c) => [c.id, c.slug]));
   const byColor = {};
   const ANY = "__any__";
 
   const ensure = (key) => {
-    if (!byColor[key]) byColor[key] = { placementZones: {} };
+    if (!byColor[key]) byColor[key] = {};
     return byColor[key];
   };
 
@@ -90,21 +113,41 @@ function buildAssetsFromProduct(product) {
     const key = asset.colorId ? colorSlugById.get(asset.colorId) : ANY;
     if (!key) continue; // orphaned colorId reference — skip rather than guess
     const pack = ensure(key);
-    if (asset.type === "CUSTOMIZATION_FRONT") pack.productFront = { src: asset.url, alt: asset.alt, active: true };
-    if (asset.type === "CUSTOMIZATION_BACK") pack.productBack = { src: asset.url, alt: asset.alt, active: true };
+    if (asset.type === "CUSTOMIZATION_FRONT") pack.productFront = { src: asset.url, alt: asset.alt, active: true, placementZones: {} };
+    if (asset.type === "CUSTOMIZATION_BACK") pack.productBack = { src: asset.url, alt: asset.alt, active: true, placementZones: {} };
   }
 
+  // Zone geometry describes the garment, not the colourway (schema
+  // comment on PlacementZone) — an ANY-scoped (colorId=null) zone is the
+  // common case and applies to every colour's photo on that side; a
+  // colour-specific zone overrides it for that colour only.
+  const anyZonesBySide = { productFront: {}, productBack: {} };
+  const ownZonesByColorSide = {};
+
   for (const zone of product.placementZones || []) {
-    const key = zone.colorId ? colorSlugById.get(zone.colorId) : ANY;
-    if (!key) continue;
-    const pack = ensure(key);
-    pack.placementZones[zone.placementKey] = {
-      cx: Number(zone.cx),
-      cy: Number(zone.cy),
-      w: Number(zone.width),
-      h: Number(zone.height),
-    };
+    const side = SIDE_BY_VIEW[zone.view];
+    if (!side) continue;
+    const geometry = { cx: Number(zone.cx), cy: Number(zone.cy), w: Number(zone.width), h: Number(zone.height) };
+    if (!zone.colorId) {
+      anyZonesBySide[side][zone.placementKey] = geometry;
+      continue;
+    }
+    const colorSlug = colorSlugById.get(zone.colorId);
+    if (!colorSlug) continue;
+    ownZonesByColorSide[colorSlug] ??= { productFront: {}, productBack: {} };
+    ownZonesByColorSide[colorSlug][side][zone.placementKey] = geometry;
   }
+
+  const attachZones = (photo, side, colorSlug) => {
+    if (!photo) return null;
+    return {
+      ...photo,
+      placementZones: {
+        ...anyZonesBySide[side],
+        ...(colorSlug ? ownZonesByColorSide[colorSlug]?.[side] : null),
+      },
+    };
+  };
 
   const anyPack = byColor[ANY];
   delete byColor[ANY];
@@ -112,12 +155,29 @@ function buildAssetsFromProduct(product) {
   const resolved = {};
   for (const color of product.colors || []) {
     const own = byColor[color.slug] || {};
+    const front = own.productFront || anyPack?.productFront;
+    const back = own.productBack || anyPack?.productBack;
     resolved[color.slug] = {
-      productFront: own.productFront || anyPack?.productFront || null,
-      productBack: own.productBack || anyPack?.productBack || null,
-      placementZones: { ...(anyPack?.placementZones || {}), ...(own.placementZones || {}) },
+      productFront: attachZones(front, "productFront", color.slug),
+      productBack: attachZones(back, "productBack", color.slug),
     };
   }
+
+  // A product can be genuinely single-colorway with no ProductColor rows
+  // at all (common among legacy-imported products — the backfill didn't
+  // register colorways, only photography). Without this, an ANY-scoped
+  // customization asset/zone would have nowhere to land: the loop above
+  // only ever populates `resolved` by iterating `product.colors`.
+  // DEFAULT_COLOR_KEY stands in as the product's one appearance so Studio
+  // still works rather than reporting "unsupported" for a product that
+  // is, in fact, fully configured.
+  if (!product.colors?.length && anyPack) {
+    resolved[DEFAULT_COLOR_KEY] = {
+      productFront: attachZones(anyPack.productFront, "productFront", null),
+      productBack: attachZones(anyPack.productBack, "productBack", null),
+    };
+  }
+
   return { byColor: resolved };
 }
 
@@ -134,7 +194,7 @@ export function buildRealStudioSetup(product) {
 
   const assets = buildAssetsFromProduct(product);
   const colorsWithFront = Object.entries(assets.byColor)
-    .filter(([, pack]) => pack.productFront?.src && Object.keys(pack.placementZones).length)
+    .filter(([, pack]) => pack.productFront?.src && Object.keys(pack.productFront.placementZones || {}).length)
     .map(([slug]) => slug);
 
   if (!colorsWithFront.length) {
@@ -144,6 +204,13 @@ export function buildRealStudioSetup(product) {
   const colorMeta = {};
   for (const c of product.colors || []) {
     colorMeta[c.slug] = { label: c.name, hex: c.hex || "#cccccc" };
+  }
+  // Mirrors the DEFAULT_COLOR_KEY fallback in buildAssetsFromProduct — a
+  // zero-ProductColor product previewed via its one real photo has no
+  // registered name/hex, so this is a deliberately generic label rather
+  // than guessing a colour from the image.
+  if (colorsWithFront.includes(DEFAULT_COLOR_KEY) && !colorMeta[DEFAULT_COLOR_KEY]) {
+    colorMeta[DEFAULT_COLOR_KEY] = { label: "Standard", hex: "#d8d3c8" };
   }
 
   const frontZoneKeys = new Set();

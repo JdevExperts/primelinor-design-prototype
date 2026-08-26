@@ -21,13 +21,16 @@ const ApiError = require("../../utils/ApiError");
 const ADMIN_LIST_INCLUDE = {
   category: { select: { id: true, slug: true, name: true } },
   priceTiers: { select: { minQty: true, maxQty: true, unitPrice: true }, orderBy: { minQty: "asc" } },
-  // One thumbnail only — the list view doesn't need the full asset library
-  // (Phase 5 §87: avoid over-fetching on the list endpoint).
+  // Enough to run the canonical CATALOG→GALLERY_FRONT→first-active
+  // priority (productImageSelection.js), not the full asset library
+  // (Phase 5 §87 / Phase 6A.1 §30: avoid over-fetching on the list
+  // endpoint). Was CATALOG-only before, which meant a product with only
+  // GALLERY_FRONT photos showed no admin thumbnail at all.
   assets: {
-    where: { type: "CATALOG", active: true },
+    where: { active: true },
     orderBy: { sortOrder: "asc" },
-    take: 1,
-    select: { url: true, alt: true },
+    take: 5,
+    select: { type: true, url: true, alt: true, sortOrder: true },
   },
 };
 

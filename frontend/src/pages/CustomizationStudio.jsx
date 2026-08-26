@@ -17,7 +17,7 @@ import {
   resolveStudioSetup,
   studioSwitchProducts,
 } from "../utils/studio";
-import { buildRealStudioSetup, fetchCustomizableProducts, fetchStudioProduct } from "../utils/studioReal";
+import { buildRealStudioSetup, DEFAULT_COLOR_KEY, fetchCustomizableProducts, fetchStudioProduct } from "../utils/studioReal";
 import { hasPreviewKind, studioPlacementLabel } from "../utils/studioAssets";
 import styles from "./CustomizationStudio.module.css";
 
@@ -692,7 +692,13 @@ function StudioView({
             items: [
               {
                 productId: listing.id,
-                colorId: colorKey,
+                // DEFAULT_COLOR_KEY (utils/studioReal.js) is a synthetic
+                // stand-in for a product with no registered ProductColor
+                // rows — it isn't a real color slug, so the backend
+                // rightly rejects it ("Color 'default' is not available
+                // for this product."). Omit it rather than send a value
+                // that doesn't correspond to any real color.
+                colorId: colorKey === DEFAULT_COLOR_KEY ? undefined : colorKey,
                 quantity,
                 customizationData: {
                   front: {

@@ -21,12 +21,14 @@ export default function ProductCard({
     art,
     color,
     image,
+    imageAlt,
     price,
     priceType,
     priceNote,
     moq,
     unit,
     colors = [],
+    studioReady,
   } = product;
 
   const detailHref = detailsTo || `/products/${product.id}`;
@@ -53,7 +55,7 @@ export default function ProductCard({
             art={art}
             color={color}
             src={image}
-            alt={`${name} — product photography placeholder`}
+            alt={imageAlt || `${name} — product photography placeholder`}
             ratio="4 / 3.1"
             scale={0.96}
           />
@@ -106,7 +108,9 @@ export default function ProductCard({
       </div>
 
       {/* View Details leads; Try Your Logo stays available as an accent text
-          action so a grid of cards is not a wall of amber buttons */}
+          action so a grid of cards is not a wall of amber buttons. Only
+          shown when Studio will actually work for this product (Phase
+          6A.1 §19) — otherwise it's a dead end into the Unavailable page. */}
       <div className={styles.actions}>
         <Button
           as={Link}
@@ -118,19 +122,21 @@ export default function ProductCard({
         >
           View Details
         </Button>
-        {tryIsRoute ? (
-          <Link to={tryTo} className={styles.tryAction}>
-            <Icon name="upload" size={14} />
-            <span>Try logo</span>
-            <span className="visually-hidden"> on {name}</span>
-          </Link>
-        ) : (
-          <a href={tryHref} className={styles.tryAction}>
-            <Icon name="upload" size={14} />
-            <span>Try logo</span>
-            <span className="visually-hidden"> on {name}</span>
-          </a>
-        )}
+        {studioReady ? (
+          tryIsRoute ? (
+            <Link to={tryTo} className={styles.tryAction}>
+              <Icon name="upload" size={14} />
+              <span>Try logo</span>
+              <span className="visually-hidden"> on {name}</span>
+            </Link>
+          ) : (
+            <a href={tryHref} className={styles.tryAction}>
+              <Icon name="upload" size={14} />
+              <span>Try logo</span>
+              <span className="visually-hidden"> on {name}</span>
+            </a>
+          )
+        ) : null}
       </div>
     </article>
   );

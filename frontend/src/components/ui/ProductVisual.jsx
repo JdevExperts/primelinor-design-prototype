@@ -390,6 +390,7 @@ export default function ProductVisual({
   surface = "default",
   className = "",
   children,
+  priority = false,
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const light = !src && isLight(color);
@@ -403,7 +404,13 @@ export default function ProductVisual({
   if (src) {
     return (
       <div className={frameClass} style={{ "--visual-ratio": ratio }}>
-        <img className={styles.photo} src={src} alt={alt} loading="lazy" />
+        <img
+          className={styles.photo}
+          src={src}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+        />
         {children ? <div className={styles.overlay}>{children}</div> : null}
       </div>
     );

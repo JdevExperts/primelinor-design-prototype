@@ -9,9 +9,17 @@ import {
   studioFrontPlacements,
 } from "./studioAssets";
 
-/** Homepage demo ids → catalogue products the studio can price. */
+/**
+ * Homepage demo ids → catalogue products the studio can price. `tshirt`
+ * points at a real, Studio-ready product (Phase 6A.1 §9/§19) — the other
+ * three (polo/hoodie/tote) still point at real catalogue products that
+ * exist but have no configured customization photo/zones yet, which is
+ * honest: CustomizationStudio's real-data path (utils/studioReal.js)
+ * checks readiness itself and shows the existing graceful Unavailable
+ * screen for those rather than the old always-succeeds vector mockup.
+ */
 export const demoProductToCatalogue = {
-  tshirt: "cotton-round-neck",
+  tshirt: "biowash-round-neck-t-shirt",
   polo: "premium-polo",
   hoodie: "pullover-hoodie",
   tote: "canvas-tote",

@@ -13,6 +13,7 @@ export default function FilterDrawer({
   onClear,
   resultCount,
   onApply,
+  categories,
 }) {
   const panelRef = useFocusTrap(open, onClose);
 
@@ -53,6 +54,7 @@ export default function FilterDrawer({
             onToggle={onToggle}
             onCustomizable={onCustomizable}
             idPrefix="drawer-filter"
+            categories={categories}
           />
         </div>
 

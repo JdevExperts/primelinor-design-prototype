@@ -71,7 +71,16 @@ export function hasActiveFilters(filters) {
   return countActiveFilters(filters) > 0;
 }
 
-export function getActiveFilterChips(filters) {
+/**
+ * `categoryLabels`, when given, overrides the static (mock-catalogue-era)
+ * label map with real category names fetched from the live API —
+ * ProductListing.jsx passes its fetched categories through here so a
+ * filter chip for a category the mock list never knew about (e.g.
+ * "Uniforms") shows a proper label instead of falling back to the raw
+ * slug. Optional and defaults to the static map so any other caller keeps
+ * working unchanged.
+ */
+export function getActiveFilterChips(filters, categoryLabels = categoryLabelById) {
   const chips = [];
 
   filters.categories.forEach((id) => {
@@ -79,7 +88,7 @@ export function getActiveFilterChips(filters) {
       key: `categories:${id}`,
       group: "categories",
       id,
-      label: categoryLabelById[id] || id,
+      label: categoryLabels[id] || id,
     });
   });
 

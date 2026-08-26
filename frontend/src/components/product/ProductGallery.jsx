@@ -27,6 +27,7 @@ export default function ProductGallery({
           ratio="1 / 1"
           scale={viewProps(activeView).scale}
           surface={viewProps(activeView).surface}
+          priority
         />
         {activeView === "lifestyle" ? (
           <p className={styles.caption}>Branding example · placeholder visual</p>
