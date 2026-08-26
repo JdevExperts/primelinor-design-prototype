@@ -12,7 +12,12 @@ export default function ProductCard({
   product,
   showSwatches = false,
   detailsTo,
-  tryHref = "#try-your-logo",
+  // Every real caller passes an explicit per-product `/customize/:id`
+  // (Try Your Logo is product-level only now — Phase: homepage
+  // simplification). This default is only a safety net for a caller that
+  // forgets to; it must be a route that actually exists, never the old
+  // homepage anchor.
+  tryHref = "/products",
   compactMobile = false,
 }) {
   const {

@@ -15,6 +15,9 @@ function serializeCategoryAdmin(category) {
     parentCategoryId: category.parentCategoryId,
     active: category.active,
     sortOrder: category.sortOrder,
+    // storageKey stays internal (deletion-ownership bookkeeping only) —
+    // even the admin UI only ever needs url/alt to preview/manage it.
+    image: category.imageUrl ? { url: category.imageUrl, alt: category.imageAlt } : null,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
   };

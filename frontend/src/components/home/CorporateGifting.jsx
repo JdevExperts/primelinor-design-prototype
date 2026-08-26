@@ -72,9 +72,15 @@ export default function CorporateGifting() {
 
                   <div className={styles.cardBody}>
                     <h3 className={styles.cardTitle}>
-                      <button type="button" className={styles.trigger}>
+                      {/* No dedicated collection deep-links exist on
+                          /corporate-gifting yet (Phase: homepage
+                          simplification) — routes there rather than
+                          leaving a dead click, matching the same fallback
+                          Footer.jsx's footerLinkRoutes already uses for
+                          these exact same collection labels. */}
+                      <Link to="/corporate-gifting" className={styles.trigger}>
                         {collection.title}
-                      </button>
+                      </Link>
                     </h3>
                     <p className={styles.cardText}>{collection.description}</p>
                   </div>

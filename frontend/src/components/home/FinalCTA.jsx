@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { submitLead } from "../../api/leads";
 import QuoteModal from "../product/QuoteModal";
 import Button from "../ui/Button";
@@ -37,8 +38,11 @@ export default function FinalCTA() {
             <Button variant="primary" size="lg" onClick={() => setQuoteOpen(true)}>
               Request a Quote
             </Button>
-            <Button variant="accent" size="lg" icon="upload">
-              Try Your Logo
+            {/* Try Your Logo removed here (Phase: homepage simplification) —
+                it only ever belongs on a real, Studio-ready product's own
+                PDP/ProductCard now, not a generic homepage destination. */}
+            <Button as={Link} to="/products" variant="secondary" size="lg">
+              Browse Products
             </Button>
           </div>
 

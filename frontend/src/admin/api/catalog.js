@@ -35,6 +35,13 @@ export const deletePlacementZone = (productId, zoneId) =>
 export const listCategoriesAdmin = () => adminGet("/admin/catalog/categories");
 export const createCategoryAdmin = (payload) => adminPost("/admin/catalog/categories", payload);
 export const updateCategoryAdmin = (id, payload) => adminPatch(`/admin/catalog/categories/${id}`, payload);
+export const uploadCategoryImage = (categoryId, file, alt) => {
+  const form = new FormData();
+  form.append("file", file);
+  if (alt) form.append("alt", alt);
+  return adminUpload(`/admin/catalog/categories/${categoryId}/image`, form);
+};
+export const removeCategoryImage = (categoryId) => adminDelete(`/admin/catalog/categories/${categoryId}/image`);
 
 // ── Colors ───────────────────────────────────────────────────────────────────
 export const listColorsAdmin = () => adminGet("/admin/catalog/colors");

@@ -32,10 +32,16 @@ const categorySchema = z
     parentCategoryId: uuid.nullable().optional(),
     active: z.boolean().optional(),
     sortOrder: z.coerce.number().int().optional(),
+    // Editable here too (not just via the image upload endpoint) so an
+    // admin can fix alt text alone without re-uploading the image.
+    imageAlt: z.string().trim().max(300).nullable().optional(),
   })
   .strict();
 
 const updateCategorySchema = categorySchema.partial().strict();
+
+/** Multipart upload path — POST /admin/catalog/categories/:id/image. No `url` (set server-side after storing the file). */
+const categoryImageMetaSchema = z.object({ alt: z.string().trim().max(300).nullable().optional() }).strict();
 
 // ── Colors ───────────────────────────────────────────────────────────────────
 
@@ -294,6 +300,7 @@ module.exports = {
   productZoneIdParamSchema,
   categorySchema,
   updateCategorySchema,
+  categoryImageMetaSchema,
   colorSchema,
   updateColorSchema,
   tagSchema,

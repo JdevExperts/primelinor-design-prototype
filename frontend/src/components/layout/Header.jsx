@@ -156,7 +156,7 @@ export default function Header() {
                         </p>
                         <Button
                           as={Link}
-                          to={{ pathname: "/", hash: "#try-your-logo" }}
+                          to="/products"
                           variant="accent"
                           size="sm"
                           trailingIcon="arrowRight"
