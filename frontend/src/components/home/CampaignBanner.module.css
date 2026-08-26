@@ -112,6 +112,109 @@
   margin-inline: 2px;
 }
 
+/* ---------- Real-image copy overlay ---------- */
+/* Sits in the left-side negative space the campaign photography is shot
+   with — never over the subject. A very light scrim guarantees contrast
+   without visibly darkening the photo, since it only spans the copy
+   column, not the full tile. */
+.copy {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-8, 8px);
+  max-width: 50%;
+  padding: var(--space-24) var(--space-16) var(--space-24) var(--space-24);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.16) 70%, transparent 100%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-navy);
+  opacity: 0.62;
+}
+
+.headline {
+  font-size: var(--text-h4);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-heading);
+  line-height: 1.2;
+  color: var(--color-navy);
+}
+
+.copyPrimary .headline {
+  font-size: var(--text-h2);
+  max-width: 16ch;
+}
+
+/* Secondary tiles are intentionally minimal — a single headline block, no
+   eyebrow/subtitle/CTA, so the photography does the rest of the talking.
+   Kept narrow and modestly sized so it stays inside the negative space the
+   secondary photography was shot with (tighter than the primary's) rather
+   than reaching across into the people in the frame. */
+.copySecondary {
+  max-width: 44%;
+}
+
+.copySecondary .headline {
+  font-size: var(--text-h4);
+  max-width: 12ch;
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: rgba(15, 27, 45, 0.72);
+  max-width: 30ch;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  color: var(--color-navy);
+}
+
+@media (max-width: 1023px) {
+  .copyPrimary .headline {
+    font-size: var(--text-h3);
+  }
+
+  /* Stacked secondary tiles get very short in this range (as little as
+     ~120px tall — see Hero.module.css's clamp(240px, 34vw, 360px) grid
+     height) — the single headline block already fits comfortably at its
+     base size, this just tightens the padding to match. */
+  .copySecondary {
+    padding: var(--space-12) var(--space-12) var(--space-12) var(--space-16);
+  }
+}
+
+@media (max-width: 767px) {
+  .copy {
+    max-width: 62%;
+    padding: var(--space-16) var(--space-12) var(--space-16) var(--space-20);
+    gap: 4px;
+  }
+
+  .copySecondary {
+    max-width: 48%;
+  }
+
+  .copyPrimary .headline {
+    font-size: var(--text-h4);
+  }
+}
+
 /* ---------- Hover affordance ---------- */
 .affordance {
   position: absolute;

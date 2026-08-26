@@ -9,6 +9,21 @@ const LIST_INCLUDE = {
   category: { select: { id: true, slug: true, name: true } },
   priceTiers: { orderBy: { minQty: "asc" } },
   colors: { where: { active: true }, include: { color: true }, orderBy: { sortOrder: "asc" } },
+  // Just enough to compute `primaryImage` server-side (Phase 6A.1 §30/§31)
+  // — the summary shape never ships this raw array to the client, only
+  // the derived field serializeProductSummary computes from it.
+  assets: {
+    where: { active: true },
+    orderBy: { sortOrder: "asc" },
+    select: { type: true, url: true, alt: true, sortOrder: true },
+  },
+  // Existence-only, for `studioReady` (Phase 6A.1 §20/§36) — the summary
+  // shape never ships this, only the derived boolean.
+  placementZones: {
+    where: { active: true, view: "FRONT" },
+    select: { view: true },
+    take: 1,
+  },
 };
 
 const DETAIL_INCLUDE = {

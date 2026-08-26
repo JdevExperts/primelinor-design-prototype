@@ -1,0 +1,370 @@
+{
+  "legacyCategoriesFound": [
+    "Corporate",
+    "College T-Shirts",
+    "Custom T-Shirts",
+    "Sports",
+    "School Uniforms"
+  ],
+  "legacyProductsFound": 31,
+  "imported": [
+    {
+      "legacyName": "Sports tee",
+      "name": "Dry-Fit Performance T-Shirt",
+      "slug": "dry-fit-performance-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "Premium Cotton Terry 220 GSM",
+      "name": "Premium Terry Oversized T-Shirt",
+      "slug": "premium-terry-oversized-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 6
+    },
+    {
+      "legacyName": "Round Neck 114",
+      "name": "Dry-Fit Round Neck T-Shirt",
+      "slug": "dry-fit-round-neck-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "Kids Round Neck",
+      "name": "Kids Round Neck T-Shirt",
+      "slug": "kids-round-neck-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 6
+    },
+    {
+      "legacyName": "Polo Spun Matty 200 GSM",
+      "name": "Spun Matty Polo T-Shirt",
+      "slug": "spun-matty-polo-t-shirt",
+      "category": "polo-tshirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 6
+    },
+    {
+      "legacyName": "Polo Unisex Premium Sports & Casual Wear",
+      "name": "Premium Sports & Casual T-Shirt",
+      "slug": "premium-sports-casual-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 6
+    },
+    {
+      "legacyName": "Kids polyester t shirts",
+      "name": "Kids Polyester T-Shirt",
+      "slug": "kids-polyester-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 2
+    },
+    {
+      "legacyName": "Premium Micro Polo",
+      "name": "Premium Micro Polo T-Shirt",
+      "slug": "premium-micro-polo-t-shirt",
+      "category": "polo-tshirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "Premium PC Mattee",
+      "name": "Premium Matty Polo T-Shirt",
+      "slug": "premium-matty-polo-t-shirt",
+      "category": "polo-tshirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "Polo Sports",
+      "name": "Dry-Fit Sports T-Shirt",
+      "slug": "dry-fit-sports-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "PC MATTI 220 GSM",
+      "name": "School Uniform Polo T-Shirt",
+      "slug": "school-uniform-polo-t-shirt",
+      "category": "uniforms",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "Biowash Round Neck",
+      "name": "Biowash Round Neck T-Shirt",
+      "slug": "biowash-round-neck-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 8
+    },
+    {
+      "legacyName": "Premium Tipping Polo",
+      "name": "Premium Tipping Polo T-Shirt",
+      "slug": "premium-tipping-polo-t-shirt",
+      "category": "polo-tshirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 6
+    },
+    {
+      "legacyName": "Eco Polo Tipping",
+      "name": "Eco Polo T-Shirt",
+      "slug": "eco-polo-t-shirt",
+      "category": "polo-tshirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 5
+    },
+    {
+      "legacyName": "Honeycomb Matty",
+      "name": "Honeycomb Matty Polo T-Shirt",
+      "slug": "honeycomb-matty-polo-t-shirt",
+      "category": "polo-tshirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 6
+    },
+    {
+      "legacyName": "Oversized Tee Bio-Wash.",
+      "name": "Oversized T-Shirt",
+      "slug": "oversized-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 4
+    },
+    {
+      "legacyName": "Round Neck Cotton",
+      "name": "Cotton Round Neck T-Shirt (Value)",
+      "slug": "cotton-round-neck-t-shirt-value",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    },
+    {
+      "legacyName": "Round Neck 117",
+      "name": "Value Round Neck T-Shirt",
+      "slug": "value-round-neck-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 5
+    },
+    {
+      "legacyName": "College Batch Oversized Tee Bio-Wash.",
+      "name": "College Batch Oversized T-Shirt",
+      "slug": "college-batch-oversized-t-shirt",
+      "category": "t-shirts",
+      "moq": 50,
+      "tierCount": 3,
+      "imageCount": 7
+    }
+  ],
+  "generated": [
+    {
+      "name": "Pullover Hoodie",
+      "slug": "pullover-hoodie",
+      "category": "hoodies"
+    },
+    {
+      "name": "Zipper Hoodie",
+      "slug": "zipper-hoodie",
+      "category": "hoodies"
+    },
+    {
+      "name": "Corporate Staff Uniform T-Shirt",
+      "slug": "corporate-staff-uniform-tshirt",
+      "category": "uniforms"
+    },
+    {
+      "name": "Classic Cap",
+      "slug": "classic-cap",
+      "category": "caps"
+    },
+    {
+      "name": "Premium Cap",
+      "slug": "premium-cap",
+      "category": "caps"
+    },
+    {
+      "name": "Cotton Tote Bag",
+      "slug": "cotton-tote-bag",
+      "category": "tote-bags"
+    },
+    {
+      "name": "Laptop Backpack",
+      "slug": "laptop-backpack",
+      "category": "bags"
+    },
+    {
+      "name": "Drawstring Bag",
+      "slug": "drawstring-bag",
+      "category": "bags"
+    },
+    {
+      "name": "Vacuum Insulated Bottle",
+      "slug": "vacuum-insulated-bottle",
+      "category": "bottles"
+    },
+    {
+      "name": "Sipper / Tumbler",
+      "slug": "sipper-tumbler",
+      "category": "tumblers"
+    },
+    {
+      "name": "Ceramic Mug",
+      "slug": "ceramic-mug",
+      "category": "mugs"
+    },
+    {
+      "name": "Executive Notebook",
+      "slug": "executive-notebook",
+      "category": "notebooks"
+    },
+    {
+      "name": "A5 Notebook / Diary",
+      "slug": "a5-notebook-diary",
+      "category": "notebooks"
+    },
+    {
+      "name": "Metal Pen",
+      "slug": "metal-pen",
+      "category": "pens"
+    },
+    {
+      "name": "Plastic Promotional Pen",
+      "slug": "plastic-promotional-pen",
+      "category": "pens"
+    },
+    {
+      "name": "Executive Gift Set",
+      "slug": "executive-gift-set",
+      "category": "corporate-gifts"
+    },
+    {
+      "name": "Festival Gift Box",
+      "slug": "festival-gift-box",
+      "category": "corporate-gifts"
+    },
+    {
+      "name": "Conference Kit",
+      "slug": "conference-kit",
+      "category": "corporate-gifts"
+    },
+    {
+      "name": "Promotional Merchandise Kit",
+      "slug": "promotional-merchandise-kit",
+      "category": "promotional"
+    },
+    {
+      "name": "Event Essentials Kit",
+      "slug": "event-essentials-kit",
+      "category": "promotional"
+    }
+  ],
+  "skipped": [
+    {
+      "name": "Corporate Classic Round Neck",
+      "reason": "inactive in the legacy DB (is_active=false) and its only images are placehold.co placeholder graphics, not real product photos — also fully redundant with the several other active cotton round-neck entries imported."
+    },
+    {
+      "name": "Round Neck True Biowash",
+      "reason": "near-duplicate of 'Biowash Round Neck' — identical fabric (100% Cotton), identical GSM (180), identical style (Round Neck), same legacy category. Importing both would just be the same product twice under different internal names."
+    },
+    {
+      "name": "Round Neck 115",
+      "reason": "part of the same 'Round Neck 11x' duplicate series — see Round Neck 111's skip reason."
+    },
+    {
+      "name": "Round Neck 112",
+      "reason": "part of the same 'Round Neck 11x' duplicate series — see Round Neck 111's skip reason."
+    },
+    {
+      "name": "Round Neck 113",
+      "reason": "part of the same 'Round Neck 11x' duplicate series — see Round Neck 111's skip reason."
+    },
+    {
+      "name": "Premium Matti 240 GSM",
+      "reason": "near-duplicate of 'Premium PC Mattee' (renamed 'Premium Matty Polo T-Shirt') — same 240 GSM poly-cotton piqué polo under a different internal SKU name."
+    },
+    {
+      "name": "Round Neck 116",
+      "reason": "part of the same 'Round Neck 11x' duplicate series — see Round Neck 111's skip reason."
+    },
+    {
+      "name": "GIFT SET",
+      "reason": "mis-categorized: filed under the Corporate T-shirt category with a fabricated GSM (250), but its own description describes a notebook+metal-pen executive gift box — not apparel at all. Reused as the content basis for the new 'Executive Gift Set' Corporate Gifts product instead of importing it as a T-shirt."
+    },
+    {
+      "name": "Premium Polo 240 GSM",
+      "reason": "near-duplicate of 'Premium PC Mattee' (renamed 'Premium Matty Polo T-Shirt') — same 240 GSM poly-cotton polo under a third internal SKU name."
+    },
+    {
+      "name": "Round Neck 111",
+      "reason": "one of seven near-identical 'Round Neck 11x' SKUs (111–117) differing only in GSM/fabric-supplier micro-variants of the same polyester round-neck line. Consolidated down to two representative entries (114 → Dry-Fit Round Neck, 117 → Value Round Neck) rather than importing all seven as separate catalogue products."
+    },
+    {
+      "name": "Cotton Terry 210 GSM",
+      "reason": "near-duplicate of 'Premium Cotton Terry 220 GSM' (renamed 'Premium Terry Oversized T-Shirt') — both are terry-cotton oversized tees 10 GSM apart with the same style/category."
+    },
+    {
+      "name": "MAHAKAL COTTON KURTA",
+      "reason": "a religious/festival-wear kurta with devotional branding ('Mahadev devotees') — outside the scope of the redesigned B2B corporate-merchandise marketplace. Not representative catalogue content."
+    }
+  ],
+  "missingImage": [
+    "Pullover Hoodie",
+    "Zipper Hoodie",
+    "Corporate Staff Uniform T-Shirt",
+    "Classic Cap",
+    "Premium Cap",
+    "Cotton Tote Bag",
+    "Laptop Backpack",
+    "Drawstring Bag",
+    "Vacuum Insulated Bottle",
+    "Sipper / Tumbler",
+    "Ceramic Mug",
+    "Executive Notebook",
+    "A5 Notebook / Diary",
+    "Metal Pen",
+    "Plastic Promotional Pen",
+    "Executive Gift Set",
+    "Festival Gift Box",
+    "Conference Kit",
+    "Promotional Merchandise Kit",
+    "Event Essentials Kit"
+  ],
+  "missingPricing": [],
+  "inactiveProducts": [],
+  "customizationIncomplete": [],
+  "prototypeDerivedPricing": [],
+  "legacyImageReferencesReused": 116,
+  "legacyImageReferencesSkipped": [],
+  "warnings": [],
+  "phase5TestHandling": [
+    "deactivated product \"Premium Corporate Polo\" (premium-corporate-polo-p5) — Phase 5 verification test data, not real catalogue",
+    "deactivated category \"Apparel\" (apparel-p5test) — Phase 5 verification test data",
+    "deactivated category \"Polos\" (polos-p5test) — Phase 5 verification test data",
+    "deactivated color \"Navy\" (navy-p5test) — Phase 5 verification test data"
+  ]
+}

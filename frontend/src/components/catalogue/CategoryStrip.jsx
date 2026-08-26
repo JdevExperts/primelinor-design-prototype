@@ -1,11 +1,10 @@
-import { listingCategories } from "../../data/mockData";
 import styles from "./CategoryStrip.module.css";
 
-export default function CategoryStrip({ selected, onSelect }) {
+export default function CategoryStrip({ selected, onSelect, categories }) {
   return (
     <nav className={styles.strip} aria-label="Product categories">
       <ul className={styles.list}>
-        {listingCategories.map((item) => {
+        {categories.map((item) => {
           const isAll = item.id === "all";
           const active = isAll
             ? selected.length === 0

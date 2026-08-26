@@ -1,9 +1,5 @@
 import { useId, useState } from "react";
-import {
-  listingCategories,
-  listingFilterOptions,
-  productColors,
-} from "../../data/mockData";
+import { listingFilterOptions, productColors } from "../../data/mockData";
 import Icon from "../ui/Icon";
 import styles from "./FilterSidebar.module.css";
 
@@ -67,6 +63,7 @@ export default function FilterSidebar({
   onToggle,
   onCustomizable,
   idPrefix,
+  categories,
 }) {
   const reactId = useId();
   const prefix = idPrefix || reactId;
@@ -76,7 +73,7 @@ export default function FilterSidebar({
     setOpen((current) => ({ ...current, [key]: !current[key] }));
   };
 
-  const categoryOptions = listingCategories.filter((item) => item.id !== "all");
+  const categoryOptions = categories.filter((item) => item.id !== "all");
 
   return (
     <div className={styles.filters}>

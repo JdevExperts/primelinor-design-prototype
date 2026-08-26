@@ -1,4 +1,6 @@
 const { effectivePrice } = require("./pricing");
+const { selectPrimaryImage } = require("./productImageSelection");
+const { isStudioReady } = require("./studioReadiness");
 
 function serializeCategoryRef(category) {
   if (!category) return null;
@@ -64,7 +66,17 @@ function serializeProductSummary(product) {
     fixedPrice: product.fixedPrice != null ? Number(product.fixedPrice) : null,
     effectivePrice: effectivePrice(product),
     priceTiers: (product.priceTiers || []).map(serializeTier),
+    // Derived, not the raw asset collection (Phase 6A.1 §31) — full
+    // assets stay a detail-only concern (see serializeProductDetail).
+    primaryImage: selectPrimaryImage(product.assets),
+    // TIERED only — quantities at/above this are outside priced coverage and
+    // become quote-required (Phase 5 §23/§24). Null for every other mode.
+    quoteAboveQty: product.quoteAboveQty ?? null,
     customizable: product.customizable,
+    // Whether Studio will actually work for this product right now, not
+    // just whether it's flagged for eventual configuration (Phase 6A.1
+    // §7/§18/§20) — see services/studioReadiness.js.
+    studioReady: isStudioReady(product),
     colors: (product.colors || []).map(serializeColorRef),
     sortOrder: product.sortOrder,
     createdAt: product.createdAt,

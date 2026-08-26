@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getProducts } from "../api/catalog";
+import { getCategories, getProducts } from "../api/catalog";
 import CategoryStrip from "../components/catalogue/CategoryStrip";
 import FilterDrawer from "../components/catalogue/FilterDrawer";
 import FilterSidebar from "../components/catalogue/FilterSidebar";
@@ -22,6 +22,32 @@ import styles from "./ProductListing.module.css";
 
 const CHIP_LIMIT = 8;
 const DESKTOP_MQ = "(min-width: 1100px)";
+const ALL_PRODUCTS_OPTION = { id: "all", label: "All Products" };
+
+/**
+ * The category filter list previously came from a hardcoded array in
+ * catalogData.js — accurate only by coincidence while the dev DB had the
+ * same 5 categories that array happened to name. A real catalogue with a
+ * real taxonomy (parent categories like Apparel/Drinkware that aren't
+ * directly assigned to any product, only their children are) surfaced the
+ * gap: several real leaf categories (Uniforms, Tote Bags, ...) were
+ * simply invisible in this filter, and "Bottles & Drinkware" no longer
+ * matched the real category's name. Flattens to leaf-only options — the
+ * only categories any product can actually belong to — matching the
+ * filter UI's existing flat (non-nested) shape exactly, so nothing here
+ * changes visually.
+ */
+function flattenToLeafCategoryOptions(categories) {
+  const leaves = [];
+  for (const cat of categories) {
+    if (cat.children?.length) {
+      for (const child of cat.children) leaves.push({ id: child.slug, label: child.name });
+    } else {
+      leaves.push({ id: cat.slug, label: cat.name });
+    }
+  }
+  return [ALL_PRODUCTS_OPTION, ...leaves];
+}
 
 function applyLocationState(state, setQuery, setFilters) {
   if (!state) return;
@@ -64,6 +90,7 @@ export default function ProductListing() {
   const [products, setProducts] = useState([]);
   const [loadStatus, setLoadStatus] = useState("loading");
   const [loadError, setLoadError] = useState(null);
+  const [categoryOptions, setCategoryOptions] = useState([ALL_PRODUCTS_OPTION]);
 
   if (location.key !== navKey) {
     setNavKey(location.key);
@@ -97,6 +124,18 @@ export default function ProductListing() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    getCategories()
+      .then((fetched) => {
+        if (!cancelled) setCategoryOptions(flattenToLeafCategoryOptions(fetched));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const retryLoad = () => {
     setLoadStatus("loading");
     getProducts({ limit: 100 })
@@ -125,7 +164,11 @@ export default function ProductListing() {
 
   const start = total === 0 ? 0 : (currentPage - 1) * listingPageSize;
   const visible = filtered.slice(start, start + listingPageSize);
-  const chips = getActiveFilterChips(filters);
+  const categoryLabelById = useMemo(
+    () => Object.fromEntries(categoryOptions.map((item) => [item.id, item.label])),
+    [categoryOptions],
+  );
+  const chips = getActiveFilterChips(filters, categoryLabelById);
   const extraChips = Math.max(0, chips.length - CHIP_LIMIT);
   const visibleChips = extraChips > 0 ? chips.slice(0, CHIP_LIMIT) : chips;
   const filterCount = countActiveFilters(filters);
@@ -202,6 +245,7 @@ export default function ProductListing() {
         <CategoryStrip
           selected={filters.categories}
           onSelect={selectCategory}
+          categories={categoryOptions}
         />
 
         <div className={styles.controls}>
@@ -300,6 +344,7 @@ export default function ProductListing() {
                 onToggle={toggleFilter}
                 onCustomizable={toggleCustomizable}
                 idPrefix="desktop-filter"
+                categories={categoryOptions}
               />
             </aside>
           ) : null}
@@ -432,6 +477,7 @@ export default function ProductListing() {
         onClear={clearFilters}
         resultCount={total}
         onApply={() => setDrawerOpen(false)}
+        categories={categoryOptions}
       />
     </main>
   );

@@ -11,7 +11,7 @@
 /**
  * Admin-ready hero campaigns. Replacing a creative is a data change:
  * set `desktopImage` / `mobileImage` to a public path
- * (e.g. "/images/banners/apparel-desktop.webp") or an imported asset.
+ * (e.g. "/images/hero/hero-apparel-main.jpg") or an imported asset.
  *
  * Recommended creative ratios (design banners to match the slot, so
  * object-fit: cover does not crop embedded campaign text):
@@ -21,8 +21,18 @@
  *   mobile primary     ~2:1
  *   mobile secondary   ~1.7:1
  *
- * `title` is an internal/admin name, not rendered over the creative.
- * `altText` is the accessible description of the campaign.
+ * `title` doubles as the visible headline once an image is set (see
+ * CampaignBanner) — keep it short. `eyebrow`/`subtitle`/`ctaLabel` are
+ * real HTML copy rendered over the image (never baked into the creative
+ * itself). `renderMode: "image-only"` opts a banner OUT of all of that —
+ * eyebrow/title/subtitle/CTA — for a creative that already has its own
+ * marketing copy baked in (a finished design, not a photo); the image's
+ * `altText` becomes the accessible description in that mode instead of
+ * being decorative. Default (`renderMode` absent) renders the normal
+ * eyebrow/headline/subtitle/CTA copy for hero_primary, and a minimal
+ * single headline line for hero_secondary_* (see CampaignBanner).
+ * `altText` is also what's used as the accessible label when a banner has
+ * no image yet (placeholder state).
  * `objectPosition` is optional (CSS object-position) for later art direction.
  */
 export const heroCampaigns = [
@@ -30,34 +40,39 @@ export const heroCampaigns = [
     id: "hero-apparel",
     placement: "hero_primary",
     title: "Premium T-Shirts & Uniforms",
+    eyebrow: "Custom Apparel",
+    subtitle: "Custom apparel for teams, events and businesses.",
+    ctaLabel: "Explore Apparel",
     altText: "PrimeLinor customized T-shirts, polo T-shirts and corporate uniforms",
-    desktopImage: null,
+    desktopImage: "/images/hero/hero-apparel-main.jpg",
     mobileImage: null,
-    href: "#products",
+    href: "/products",
     isActive: true,
     sortOrder: 1,
     objectPosition: "center",
   },
   {
-    id: "hero-gifting",
+    id: "hero-sports",
     placement: "hero_secondary_1",
-    title: "Corporate Gifts",
-    altText: "PrimeLinor corporate gifts for teams and clients",
-    desktopImage: null,
+    title: "Sports",
+    renderMode: "image-only",
+    altText: "Custom sports teamwear and jerseys",
+    desktopImage: "/images/hero/hero-sports-teamwear.jpg",
     mobileImage: null,
-    href: "#corporate-gifting",
+    href: "/products",
     isActive: true,
     sortOrder: 2,
     objectPosition: "center",
   },
   {
-    id: "hero-kits",
+    id: "hero-visiting-cards",
     placement: "hero_secondary_2",
-    title: "Employee Welcome Kits",
-    altText: "PrimeLinor employee welcome kits and onboarding gifts",
-    desktopImage: null,
+    title: "Visiting Cards",
+    renderMode: "image-only",
+    altText: "Visiting cards and business print products",
+    desktopImage: "/images/hero/hero-visiting-cards.jpg",
     mobileImage: null,
-    href: "#solutions",
+    href: "/products",
     isActive: true,
     sortOrder: 3,
     objectPosition: "center",
@@ -107,15 +122,54 @@ export const creationTypes = [
 /* Shop by category                                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Homepage "Shop by category" tiles. `targetCategory` is a real backend
+ * Category slug (verified against the live catalogue, not the old mock
+ * list — "Gift Kits" was pointing at a slug ("gift-kits") the real
+ * catalogue has never used; the real slug is "kits") — CategoryCard hands
+ * it to Product Listing via the same `location.state` pattern Solutions
+ * pages already use, so clicking a tile actually filters to real products
+ * instead of landing on an unfiltered or empty listing.
+ *
+ * `image`/`alt` are real-photo slots, data-driven rather than hardcoded
+ * per card (CategoryCard just renders whatever's here). None of these 8
+ * have dedicated category photography yet — `image: null` keeps the
+ * existing vector/`art`+`color` fallback (intentional, not a broken
+ * image) until real photos land. Expected path convention to match, so
+ * dropping files in requires no code change:
+ * `/images/categories/<id>.jpg` (e.g. `/images/categories/tshirts.jpg`).
+ */
 export const categories = [
-  { id: "tshirts", name: "T-Shirts", art: "tshirt", color: "#e3e6eb", image: null },
-  { id: "polo", name: "Polo T-Shirts", art: "polo", color: "#22304a", image: null },
-  { id: "bags", name: "Bags", art: "tote", color: "#e3ddd0", image: null },
-  { id: "bottles", name: "Bottles & Drinkware", art: "bottle", color: "#dfe3e8", image: null },
-  { id: "notebooks", name: "Notebooks & Diaries", art: "notebook", color: "#2b2b33", image: null },
-  { id: "promotional", name: "Promotional Products", art: "pen", color: "#22304a", image: null },
-  { id: "corporate-gifts", name: "Corporate Gifts", art: "giftbox", color: "#3c4a63", image: null },
-  { id: "gift-kits", name: "Gift Kits", art: "kit", color: "#dde1e8", image: null },
+  { id: "tshirts", name: "T-Shirts", targetCategory: "tshirts", art: "tshirt", color: "#e3e6eb", image: null, alt: "T-Shirts" },
+  { id: "polo", name: "Polo T-Shirts", targetCategory: "polo", art: "polo", color: "#22304a", image: null, alt: "Polo T-Shirts" },
+  { id: "bags", name: "Bags", targetCategory: "bags", art: "tote", color: "#e3ddd0", image: null, alt: "Bags" },
+  { id: "bottles", name: "Bottles & Drinkware", targetCategory: "bottles", art: "bottle", color: "#dfe3e8", image: null, alt: "Bottles & Drinkware" },
+  { id: "notebooks", name: "Notebooks & Diaries", targetCategory: "notebooks", art: "notebook", color: "#2b2b33", image: null, alt: "Notebooks & Diaries" },
+  { id: "promotional", name: "Promotional Products", targetCategory: "promotional", art: "pen", color: "#22304a", image: null, alt: "Promotional Products" },
+  { id: "corporate-gifts", name: "Corporate Gifts", targetCategory: "corporate-gifts", art: "giftbox", color: "#3c4a63", image: null, alt: "Corporate Gifts" },
+  { id: "gift-kits", name: "Gift Kits", targetCategory: "kits", art: "kit", color: "#dde1e8", image: null, alt: "Gift Kits" },
+  // Not a real category/product yet (verified: no Category or Product row
+  // exists for it) — the tile still appears (brief §2D) but routes to
+  // Contact rather than a Product Listing filter that could never return
+  // anything, which would misleadingly look like "we searched and found
+  // nothing" rather than "we don't offer this yet, ask us". A real photo
+  // already exists at /images/hero/hero-visiting-cards.jpg (separate hero
+  // work) but it's composed as a wide banner with its own baked-in
+  // headline text — cropping it into this card's 4:2.9 tile truncates
+  // that text mid-word, which reads as more broken than the vector
+  // fallback it would replace. Needs its own tile-shaped crop (no text
+  // baked in) at the same /images/categories/<id>.jpg convention as the
+  // other 8 before wiring a real photo here.
+  {
+    id: "visiting-cards",
+    name: "Visiting Cards",
+    targetCategory: null,
+    href: "/contact",
+    art: "notebook",
+    color: "#f2ede3",
+    image: null,
+    alt: "Visiting Cards",
+  },
 ];
 
 /* ------------------------------------------------------------------ */

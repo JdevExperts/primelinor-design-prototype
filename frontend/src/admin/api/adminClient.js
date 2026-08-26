@@ -15,10 +15,14 @@ export class AdminApiError extends Error {
 
 async function request(path, options = {}) {
   let response;
+  // A FormData body (product image uploads) must NOT get a manual
+  // Content-Type — the browser sets its own multipart boundary, which a
+  // forced "application/json" header would silently break.
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       credentials: "include",
-      headers: options.body ? { "Content-Type": "application/json" } : undefined,
+      headers: options.body && !isFormData ? { "Content-Type": "application/json" } : undefined,
       ...options,
     });
   } catch {
@@ -57,4 +61,13 @@ export function adminPost(path, payload) {
 
 export function adminPatch(path, payload) {
   return request(path, { method: "PATCH", body: JSON.stringify(payload ?? {}) });
+}
+
+export function adminDelete(path) {
+  return request(path, { method: "DELETE" });
+}
+
+/** `formData` — a FormData instance; see request()'s isFormData branch. */
+export function adminUpload(path, formData) {
+  return request(path, { method: "POST", body: formData });
 }

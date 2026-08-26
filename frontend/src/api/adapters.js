@@ -106,12 +106,11 @@ function sizeGuideFor(product) {
  * PDP/Studio asset unification: PDP's gallery is now built from the same
  * canonical ProductAsset TYPE taxonomy Studio already uses, instead of the
  * old disconnected `galleryViews` template with `image` always null. No
- * seeded product has real assets yet, so every view still falls back to
- * the vector illustration today — but the thumbnail row is wired to real
- * data the moment ProductAsset rows exist, with no further PDP changes.
+ * `front` entry here — that slot uses `product.primaryImage` directly
+ * (see `galleryFor` below) so it can never drift from the card/listing
+ * image.
  */
 const ASSET_TYPES_BY_GALLERY_VIEW = {
-  front: ["GALLERY_FRONT", "CATALOG"],
   back: ["GALLERY_BACK"],
   detail: ["DETAIL"],
   lifestyle: ["LIFESTYLE", "MODEL", "TEAM"],
@@ -126,11 +125,26 @@ function assetUrlForGalleryView(assets, viewId) {
   return null;
 }
 
+/**
+ * The "front" gallery slot — PDP's default, initially-visible image
+ * (ProductDetail.jsx opens with `view: "front"`) — must be the exact same
+ * image as every card surface (Phase 6A.1 follow-up: image consistency).
+ * It reuses `product.primaryImage` (computed once, backend-side, by
+ * services/productImageSelection.js — the same field `image` on the
+ * listing shape already uses) instead of independently re-deriving a
+ * "front" pick via `ASSET_TYPES_BY_GALLERY_VIEW`, whose CATALOG/
+ * GALLERY_FRONT priority had drifted from the canonical rule (GALLERY_FRONT
+ * preferred over CATALOG here, the reverse of primaryImage's CATALOG-first
+ * rule) — the exact cause of a product's card and PDP showing two
+ * different photos. Every other view (back/detail/lifestyle) is a
+ * genuinely separate concern from "the" primary image and keeps its own
+ * per-type resolution.
+ */
 function galleryFor(product) {
   const assets = product.assets || [];
   return galleryViews.map((view) => ({
     ...view,
-    image: assetUrlForGalleryView(assets, view.id),
+    image: view.id === "front" ? product.primaryImage?.url || null : assetUrlForGalleryView(assets, view.id),
   }));
 }
 
@@ -142,7 +156,13 @@ export function mapApiProductToListingShape(product) {
     spec: specFromProduct(product),
     art: artForProduct(product),
     color: tintForProduct(product),
-    image: null,
+    // The backend computes this with the same CATALOG→GALLERY_FRONT→
+    // first-active priority everywhere (services/productImageSelection.js)
+    // — every card using this shape (Homepage, Listing, Related Products,
+    // Corporate Gifting) gets a real photo the moment one exists, with no
+    // per-surface image logic here (Phase 6A.1 §2/§4).
+    image: product.primaryImage?.url || null,
+    imageAlt: product.primaryImage?.alt || null,
     priceType: priceTypeFromMode(product.priceMode),
     price: product.effectivePrice,
     priceNote: priceNoteFromTiers(product),
@@ -161,6 +181,12 @@ export function mapApiProductToListingShape(product) {
     colors: (product.colors || []).map((c) => c.slug),
     useCases: product.tags || [],
     customizable: product.customizable,
+    // Whether Try Your Logo will actually work for this product, not just
+    // whether it's flagged for eventual configuration (Phase 6A.1 §18/§19
+    // — see backend services/studioReadiness.js, the single source of
+    // truth this mirrors). Every CTA that offers Try Your Logo — PDP,
+    // ProductCard, related products — must gate on this, not `customizable`.
+    studioReady: Boolean(product.studioReady),
     active: product.active !== false,
     recommended: product.sortOrder,
     added: new Date(product.createdAt).getTime(),

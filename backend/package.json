@@ -13,7 +13,9 @@
     "prisma:deploy": "prisma migrate deploy",
     "seed": "node prisma/seed.js",
     "cleanup:artwork": "node scripts/cleanupExpiredArtwork.js",
-    "staff:create": "node prisma/createStaffUser.js"
+    "staff:create": "node prisma/createStaffUser.js",
+    "catalog:images": "node scripts/uploadCatalogImages.js",
+    "catalog:promote-s3": "node scripts/promoteProductAssetsToS3.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

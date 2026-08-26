@@ -5,15 +5,16 @@ import Icon from "../ui/Icon";
 import ProductCard from "../ui/ProductCard";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
-import {
-  catalogueProducts,
-  explorerMobilePageSize,
-  explorerPageSize,
-} from "../../data/mockData";
+import { getProducts } from "../../api/catalog";
+import { explorerMobilePageSize, explorerPageSize } from "../../data/mockData";
 import styles from "./ProductExplorer.module.css";
 
-const TOTAL = catalogueProducts.length;
 const MOBILE_MQ = "(max-width: 767px)";
+// One fetch, sorted recommended (active products by sortOrder — Phase 5
+// §56), then paginated locally exactly as before — a cap generous enough
+// to cover any real catalogue size for a while without turning this into
+// a full server-paginated listing (that's the Product Listing page's job).
+const FETCH_LIMIT = 100;
 
 function pageSizeForViewport() {
   if (typeof window === "undefined") return explorerPageSize;
@@ -30,7 +31,20 @@ function pageSizeForViewport() {
 export default function ProductExplorer() {
   const [pageSize, setPageSize] = useState(pageSizeForViewport);
   const [page, setPage] = useState(1);
+  const [products, setProducts] = useState([]);
   const gridRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getProducts({ limit: FETCH_LIMIT, sort: "recommended" })
+      .then(({ products: list }) => !cancelled && setProducts(list))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const total = products.length;
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_MQ);
@@ -38,18 +52,20 @@ export default function ProductExplorer() {
       const next = mq.matches ? explorerMobilePageSize : explorerPageSize;
       setPageSize(next);
       setPage((current) => {
-        const pages = Math.ceil(TOTAL / next);
+        const pages = Math.ceil(total / next) || 1;
         return Math.min(current, pages);
       });
     };
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
-  }, []);
+  }, [total]);
 
-  const pages = Math.ceil(TOTAL / pageSize);
+  if (!total) return null;
+
+  const pages = Math.ceil(total / pageSize);
   const start = (page - 1) * pageSize;
-  const visible = catalogueProducts.slice(start, start + pageSize);
+  const visible = products.slice(start, start + pageSize);
   const pageNumbers = Array.from({ length: pages }, (_, i) => i + 1);
 
   const goTo = (next) => {
@@ -97,7 +113,7 @@ export default function ProductExplorer() {
 
       <div className={styles.footer}>
         <p className={styles.count} aria-live="polite">
-          Showing {start + 1}–{start + visible.length} of {TOTAL} products
+          Showing {start + 1}–{start + visible.length} of {total} products
         </p>
 
         <nav className={styles.pager} aria-label="Product pages">

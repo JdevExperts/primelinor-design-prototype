@@ -1,14 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getProductBySlug } from "../../api/catalog";
 import ProductCard from "../ui/ProductCard";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
-import { listingProducts } from "../../data/mockData";
 import styles from "./SolutionProducts.module.css";
 
+/**
+ * `recommendedProductIds` are real catalogue slugs (Phase 6A.1 §28) —
+ * this used to resolve them against the static 5-product `listingProducts`
+ * mock, which is why a solution page could only ever recommend one of
+ * those 5 regardless of what its config listed, and silently dropped any
+ * id that didn't happen to be in that array. Fetching each by slug from
+ * the real Catalog API means every solution page's recommendations track
+ * the live catalogue — a slug the API doesn't have (yet) is simply
+ * omitted, same `.filter(Boolean)` behavior as before, just against real
+ * data instead of a 5-item fixture.
+ */
 export default function SolutionProducts({ solution }) {
-  const products = solution.recommendedProductIds
-    .map((id) => listingProducts.find((item) => item.id === id))
-    .filter(Boolean);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(solution.recommendedProductIds.map((slug) => getProductBySlug(slug)))
+      .then((results) => {
+        if (!cancelled) setProducts(results.filter(Boolean));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [solution.recommendedProductIds]);
+
+  if (!products.length) return null;
 
   return (
     <Section ariaLabelledBy="solution-products-title">
