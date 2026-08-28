@@ -11,6 +11,12 @@
  * the homepage campaign banners and the Corporate Gifting hero: null today
  * renders a composed ProductVisual placeholder; a real photo later is a
  * data change only.
+ *
+ * Order below is the intended /solutions hub merchandising order (Solutions
+ * Phase 1) — not alphabetical. The homepage's curated subset is a separate,
+ * shorter slug list (see `homeSolutionSlugs` in homeData.js) that resolves
+ * against this same canonical array, so homepage and hub never duplicate
+ * solution content.
  */
 
 export const solutions = [
@@ -53,7 +59,7 @@ export const solutions = [
       "cotton-round-neck",
       "corporate-bottle",
       "laptop-backpack",
-      "executive-diary",
+      "executive-notebook",
     ],
     recommendedCategories: [
       { id: "tshirts", label: "T-Shirts" },
@@ -118,8 +124,8 @@ export const solutions = [
 
   {
     slug: "startups",
-    label: "Startups",
-    eyebrow: "STARTUPS",
+    label: "Startups & Small Businesses",
+    eyebrow: "STARTUPS & SMALL BUSINESSES",
     art: "tshirt",
     color: "#e3e6eb",
     hubDescription: "Launch merchandise and team apparel at founder-friendly quantities.",
@@ -149,10 +155,10 @@ export const solutions = [
     ],
 
     recommendedProductIds: [
-      "slim-fit-tee",
+      "oversized-t-shirt",
       "pullover-hoodie",
       "canvas-tote",
-      "premium-notebook",
+      "a5-notebook-diary",
       "metal-pen",
     ],
     recommendedCategories: [
@@ -215,98 +221,102 @@ export const solutions = [
   },
 
   {
-    slug: "events-conferences",
-    label: "Events & Conferences",
-    eyebrow: "EVENTS & CONFERENCES",
-    art: "cap",
-    color: "#2b2b33",
-    hubDescription: "Event merchandise and attendee kits, planned around your date.",
-    categoryHints: ["T-Shirts", "Caps", "Bags", "Bottles"],
+    slug: "restaurants-hospitality",
+    label: "Restaurants & Hospitality",
+    eyebrow: "RESTAURANTS & HOSPITALITY",
+    art: "polo",
+    color: "#5c2733",
+    hubDescription: "Staff apparel that looks the part, for cafés, restaurants and hotel teams.",
+    categoryHints: ["Polos", "T-Shirts", "Caps", "Bottles"],
 
-    heroTitle: "Merchandise Ready Before Your Event Date",
+    heroTitle: "Staff Apparel That Looks the Part",
     heroCopy:
-      "Event T-shirts, caps, bags and attendee kits — branded consistently and planned around your date.",
+      "Branded polos, tees and caps for front-of-house and back-of-house teams — consistent across every shift and every location.",
     heroImage: null,
     mobileHeroImage: null,
-    heroAlt: "Event and conference merchandise composition, photography placeholder",
+    heroAlt: "Restaurant and hospitality staff apparel composition, photography placeholder",
 
-    challengeTitle: "Events Run on Fixed Dates",
+    challengeTitle: "Your Team Is the First Thing Guests Notice",
     challengeCopy:
-      "Merchandise for an event has to be ready on time, consistent across every attendee, and confirmed well before the day. We plan production around your date, not the other way round.",
+      "Cafés, restaurants and hotels need staff who look put-together from opening to close, across every outlet. We keep the look consistent without a complicated order process.",
     challengePoints: [
-      "A fixed event date",
-      "Consistent merchandise across attendees",
-      "Multiple product types in one order",
-      "Dispatch that lines up with your schedule",
+      "Consistent look across shifts and outlets",
+      "Comfortable, durable everyday fabric",
+      "Full size ranges for every team member",
+      "Reorders that match your existing look",
     ],
     useCases: [
-      "Attendee kits",
-      "Staff and volunteer wear",
-      "Speaker gifts",
-      "Booth giveaways",
+      "Front-of-house staff",
+      "Kitchen and back-of-house teams",
+      "Multi-outlet chains",
+      "Seasonal and event staffing",
     ],
 
+    /**
+     * Honest V1 substitution (Solutions Phase 1 §14/§31): the catalogue has
+     * no purpose-built apron, chef coat or kitchen uniform yet, so this
+     * only recommends real generalist apparel — do not add those claims
+     * until a matching product actually exists.
+     */
     recommendedProductIds: [
-      "dry-fit-tee",
-      "event-cap",
-      "sipper-bottle",
-      "canvas-tote",
-      "lanyard",
+      "premium-polo",
+      "cotton-round-neck",
+      "classic-cap",
+      "corporate-bottle",
+      "corporate-staff-uniform-tshirt",
     ],
     recommendedCategories: [
+      { id: "polo", label: "Polo T-Shirts" },
       { id: "tshirts", label: "T-Shirts" },
       { id: "caps", label: "Caps" },
-      { id: "bags", label: "Bags" },
       { id: "bottles", label: "Bottles & Drinkware" },
     ],
 
     benefits: [
-      { title: "Planned Around Your Date", description: "We work backwards from your event date, not a generic lead time." },
-      { title: "Consistent Merchandise", description: "The same branding across every attendee kit." },
-      { title: "Multiple Product Types", description: "Apparel, bags, drinkware and lanyards in one order." },
-      { title: "PAN India Supply", description: "Delivered to your venue or team, wherever it is." },
+      { title: "Consistent Branding", description: "The same look across every outlet and every shift." },
+      { title: "Full Size Ranges", description: "Sized for a whole team, not a sample set." },
+      { title: "Flexible Quantities", description: "Order for one outlet or several." },
+      { title: "PAN India Supply", description: "Delivered wherever your locations are." },
     ],
 
     processSteps: [
-      { title: "Share your event date", description: "Tell us when and how many attendees." },
-      { title: "Choose products", description: "Apparel, bags, drinkware or a full kit." },
-      { title: "Preview your branding", description: "Confirm the look before production." },
-      { title: "Confirm quantity", description: "Adjust for final headcount." },
-      { title: "Receive quotation", description: "Pricing and a dispatch timeline that fits your date." },
+      { title: "Tell us what you need", description: "Share your outlets, roles and rough quantities." },
+      { title: "Choose products", description: "Pick from polos, tees, caps and drinkware." },
+      { title: "Preview your branding", description: "See your logo before you order." },
+      { title: "Confirm quantity", description: "Adjust per outlet or role." },
+      { title: "Receive quotation", description: "Our team confirms pricing and dispatch." },
     ],
 
     featureSections: [
       {
-        id: "deadline-friendly-kits",
-        title: "Deadline-Friendly Event Kits",
-        description:
-          "A curated kit — apparel, bag and drinkware — planned against your event date, not an open-ended timeline.",
-        art: "kit",
-        color: "#22304a",
-        ctaLabel: "Explore Conference Kits",
-        ctaTo: "/products/conference-kit",
+        id: "front-of-house-apparel",
+        title: "Front-of-House Apparel",
+        description: "Polos and tees that keep your team looking consistent for every guest.",
+        art: "polo",
+        color: "#3c4a63",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
       },
       {
-        id: "attendee-merchandise",
-        title: "Attendee Merchandise",
-        description: "Give every attendee something they'll actually use after the event ends.",
-        art: "tote",
-        color: "#3c4a63",
+        id: "multi-outlet-ordering",
+        title: "Multi-Outlet Ordering",
+        description: "The same look across every location, ordered and delivered together.",
+        art: "cap",
+        color: "#5c2733",
         ctaLabel: "Explore Products",
         ctaTo: "/products",
       },
     ],
 
-    /** Matches trust.testimonials[id] in mockData.js — reused, not duplicated. */
-    proofTestimonialId: "t2",
+    proofTestimonialId: null,
 
     primaryCtaLabel: "Request a Quote",
     secondaryCtaLabel: "Explore Products",
     secondaryCtaTo: "/products",
 
     finalCta: {
-      title: "Planning an Event?",
-      subtitle: "Tell us your date and quantity — we'll plan production around it.",
+      title: "Outfitting a Restaurant or Hospitality Team?",
+      subtitle: null,
       ctas: [
         { type: "quote", label: "Request a Quote" },
         { type: "link", label: "Browse Products", to: "/products" },
@@ -347,10 +357,10 @@ export const solutions = [
     ],
 
     recommendedProductIds: [
-      "cotton-polo",
+      "school-uniform-polo-t-shirt",
       "cotton-round-neck",
+      "college-batch-oversized-t-shirt",
       "pullover-hoodie",
-      "corporate-bottle",
       "laptop-backpack",
     ],
     recommendedCategories: [
@@ -413,85 +423,89 @@ export const solutions = [
   },
 
   {
-    slug: "marketing-campaigns",
-    label: "Marketing Campaigns",
-    eyebrow: "MARKETING CAMPAIGNS",
-    art: "pen",
-    color: "#22304a",
-    hubDescription: "Promotional products and giveaways that keep your brand in hand.",
-    categoryHints: ["Totes", "Bottles", "Pens", "Notebooks"],
+    slug: "delivery-field-teams",
+    label: "Delivery & Field Teams",
+    eyebrow: "DELIVERY & FIELD TEAMS",
+    art: "backpack",
+    color: "#3c4a63",
+    hubDescription: "Branded gear for teams who are always on the move.",
+    categoryHints: ["T-Shirts", "Polos", "Caps", "Bags"],
 
-    heroTitle: "Branded Products That Stay Visible",
+    heroTitle: "Branded Gear Built for Teams on the Move",
     heroCopy:
-      "Promotional products, campaign giveaways and event merchandise that keep your brand in hand after the campaign ends.",
+      "T-shirts, polos, caps and bags for delivery, installation and field service teams — comfortable, consistent and easy to reorder.",
     heroImage: null,
     mobileHeroImage: null,
-    heroAlt: "Marketing campaign promotional products composition, photography placeholder",
+    heroAlt: "Delivery and field team apparel composition, photography placeholder",
 
-    challengeTitle: "A Giveaway Only Works If It's Kept",
+    challengeTitle: "Your Team Represents You at Every Doorstep",
     challengeCopy:
-      "Campaign merchandise needs to be useful enough to keep and consistent enough to be recognisable. We help you pick products people actually use again.",
+      "Delivery and field teams are the face of your brand outside the office. We help you keep that look consistent, comfortable and easy to reorder as your team grows.",
     challengePoints: [
-      "Products people keep and use",
-      "Consistent branding across items",
-      "Quantities that match campaign reach",
-      "Timelines that match campaign dates",
+      "Comfortable apparel for long shifts",
+      "Consistent branding across every team member",
+      "Easy reordering as headcount changes",
+      "Full size ranges",
     ],
     useCases: [
-      "Giveaways",
-      "Product launches",
-      "Campaign kits",
-      "Booth and event promotions",
+      "Delivery riders and drivers",
+      "Field service and installation teams",
+      "Service crews",
+      "New hire kits",
     ],
 
+    /**
+     * Honest V1 substitution (Solutions Phase 1 §16/§31): the catalogue has
+     * no hi-vis PPE, rainwear or industrial workwear yet — only real
+     * generalist apparel is recommended until a matching product exists.
+     */
     recommendedProductIds: [
-      "canvas-tote",
-      "sipper-bottle",
-      "metal-pen",
-      "baseball-cap",
-      "premium-notebook",
-      "promotional-badge",
+      "dry-fit-round-neck-t-shirt",
+      "premium-polo",
+      "classic-cap",
+      "vacuum-insulated-bottle",
+      "drawstring-bag",
     ],
     recommendedCategories: [
+      { id: "tshirts", label: "T-Shirts" },
+      { id: "polo", label: "Polo T-Shirts" },
+      { id: "caps", label: "Caps" },
       { id: "bags", label: "Bags" },
-      { id: "bottles", label: "Bottles & Drinkware" },
-      { id: "pens", label: "Pens" },
-      { id: "promotional", label: "Promotional Products" },
     ],
 
     benefits: [
-      { title: "Products People Keep", description: "Useful items, not disposable giveaways." },
-      { title: "Consistent Branding", description: "The same look across every touchpoint." },
-      { title: "Flexible Quantities", description: "From a single launch event to a full campaign rollout." },
-      { title: "PAN India Supply", description: "Delivered wherever your campaign runs." },
+      { title: "Comfortable for Long Shifts", description: "Breathable fabrics built for teams on the move." },
+      { title: "Consistent Branding", description: "The same look across every team member." },
+      { title: "Flexible Quantities", description: "Order for a small crew or a full fleet." },
+      { title: "PAN India Supply", description: "Delivered wherever your teams are based." },
     ],
 
     processSteps: [
-      { title: "Tell us about your campaign", description: "Share the occasion and rough reach." },
-      { title: "Choose products", description: "Pick items people will actually keep." },
-      { title: "Preview your branding", description: "Confirm the look before production." },
-      { title: "Confirm quantity", description: "Match it to your campaign reach." },
-      { title: "Receive quotation", description: "Pricing that fits your campaign timeline." },
+      { title: "Tell us what you need", description: "Share your crew size and rough quantities." },
+      { title: "Choose products", description: "Pick from tees, polos, caps and bags." },
+      { title: "Preview your branding", description: "See your logo before you order." },
+      { title: "Confirm quantity", description: "Adjust as your team changes." },
+      { title: "Receive quotation", description: "Our team confirms pricing and dispatch." },
     ],
 
     featureSections: [
       {
-        id: "campaign-giveaways",
-        title: "Campaign Giveaways",
-        description: "Practical, branded items built for a single campaign moment.",
-        art: "giftbox",
-        color: "#3c4a63",
+        id: "everyday-field-apparel",
+        title: "Everyday Field Apparel",
+        description: "Comfortable tees and polos built for teams that are on their feet all day.",
+        art: "tshirt",
+        color: "#22304a",
         ctaLabel: "Explore Products",
         ctaTo: "/products",
       },
       {
-        id: "event-promotions",
-        title: "Event Promotions",
-        description: "Merchandise for launches, booths and on-ground activations.",
+        id: "team-essentials",
+        title: "Team Essentials",
+        description: "Caps and bags that round out a consistent, practical field kit.",
         art: "cap",
-        color: "#22304a",
-        ctaLabel: "Explore Events Solution",
-        ctaTo: "/solutions/events-conferences",
+        color: "#3c4a63",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
       },
     ],
 
@@ -502,7 +516,210 @@ export const solutions = [
     secondaryCtaTo: "/products",
 
     finalCta: {
-      title: "Planning a Campaign?",
+      title: "Outfitting a Delivery or Field Team?",
+      subtitle: null,
+      ctas: [
+        { type: "quote", label: "Request a Quote" },
+        { type: "link", label: "Browse Products", to: "/products" },
+      ],
+    },
+  },
+
+  {
+    slug: "events-conferences",
+    label: "Events & Conferences",
+    eyebrow: "EVENTS & CONFERENCES",
+    art: "cap",
+    color: "#2b2b33",
+    hubDescription: "Event merchandise and attendee kits, planned around your date.",
+    categoryHints: ["T-Shirts", "Caps", "Bags", "Bottles"],
+
+    heroTitle: "Merchandise Ready Before Your Event Date",
+    heroCopy:
+      "Event T-shirts, caps, bags and attendee kits — branded consistently and planned around your date.",
+    heroImage: null,
+    mobileHeroImage: null,
+    heroAlt: "Event and conference merchandise composition, photography placeholder",
+
+    challengeTitle: "Events Run on Fixed Dates",
+    challengeCopy:
+      "Merchandise for an event has to be ready on time, consistent across every attendee, and confirmed well before the day. We plan production around your date, not the other way round.",
+    challengePoints: [
+      "A fixed event date",
+      "Consistent merchandise across attendees",
+      "Multiple product types in one order",
+      "Dispatch that lines up with your schedule",
+    ],
+    useCases: [
+      "Attendee kits",
+      "Staff and volunteer wear",
+      "Speaker gifts",
+      "Booth giveaways",
+    ],
+
+    recommendedProductIds: [
+      "dry-fit-sports-t-shirt",
+      "classic-cap",
+      "corporate-bottle",
+      "canvas-tote",
+      "conference-kit",
+    ],
+    recommendedCategories: [
+      { id: "tshirts", label: "T-Shirts" },
+      { id: "caps", label: "Caps" },
+      { id: "bags", label: "Bags" },
+      { id: "bottles", label: "Bottles & Drinkware" },
+    ],
+
+    benefits: [
+      { title: "Planned Around Your Date", description: "We work backwards from your event date, not a generic lead time." },
+      { title: "Consistent Merchandise", description: "The same branding across every attendee kit." },
+      { title: "Multiple Product Types", description: "Apparel, bags, drinkware and event kits in one order." },
+      { title: "PAN India Supply", description: "Delivered to your venue or team, wherever it is." },
+    ],
+
+    processSteps: [
+      { title: "Share your event date", description: "Tell us when and how many attendees." },
+      { title: "Choose products", description: "Apparel, bags, drinkware or a full kit." },
+      { title: "Preview your branding", description: "Confirm the look before production." },
+      { title: "Confirm quantity", description: "Adjust for final headcount." },
+      { title: "Receive quotation", description: "Pricing and a dispatch timeline that fits your date." },
+    ],
+
+    featureSections: [
+      {
+        id: "deadline-friendly-kits",
+        title: "Deadline-Friendly Event Kits",
+        description:
+          "A curated kit — apparel, bag and drinkware — planned against your event date, not an open-ended timeline.",
+        art: "kit",
+        color: "#22304a",
+        ctaLabel: "Explore Conference Kits",
+        ctaTo: "/products/conference-kit",
+      },
+      {
+        id: "attendee-merchandise",
+        title: "Attendee Merchandise",
+        description: "Give every attendee something they'll actually use after the event ends.",
+        art: "tote",
+        color: "#3c4a63",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
+      },
+    ],
+
+    /** Matches trust.testimonials[id] in mockData.js — reused, not duplicated. */
+    proofTestimonialId: "t2",
+
+    primaryCtaLabel: "Request a Quote",
+    secondaryCtaLabel: "Explore Products",
+    secondaryCtaTo: "/products",
+
+    finalCta: {
+      title: "Planning an Event?",
+      subtitle: "Tell us your date and quantity — we'll plan production around it.",
+      ctas: [
+        { type: "quote", label: "Request a Quote" },
+        { type: "link", label: "Browse Products", to: "/products" },
+      ],
+    },
+  },
+
+  {
+    slug: "sports-teams-clubs",
+    label: "Sports Teams & Clubs",
+    eyebrow: "SPORTS TEAMS & CLUBS",
+    art: "tshirt",
+    color: "#22304a",
+    hubDescription: "Performance apparel and team essentials for sports teams and clubs.",
+    categoryHints: ["Dry-Fit T-Shirts", "Caps", "Bottles", "Bags"],
+
+    heroTitle: "Performance Apparel for Your Team",
+    heroCopy:
+      "Dry-fit T-shirts, caps and bottles branded for your team, club or squad — comfortable enough for practice and consistent enough for match day.",
+    heroImage: null,
+    mobileHeroImage: null,
+    heroAlt: "Sports team apparel and drinkware composition, photography placeholder",
+
+    challengeTitle: "Every Team Wants to Look Like One",
+    challengeCopy:
+      "Sports teams and clubs need apparel that performs and looks consistent across every player. We keep sizing and branding uniform across the whole squad.",
+    challengePoints: [
+      "Consistent look across the whole squad",
+      "Performance fabric for practice and play",
+      "Full size ranges",
+      "Simple reordering as the roster changes",
+    ],
+    useCases: [
+      "Practice and training kits",
+      "Club and society merchandise",
+      "School and college sports teams",
+      "Recreational and community leagues",
+    ],
+
+    /**
+     * Honest V1 substitution (Solutions Phase 1 §18/§31): the catalogue has
+     * no numbered jerseys or full match-day team kits — only real dry-fit
+     * apparel and team essentials are recommended and described as such.
+     */
+    recommendedProductIds: [
+      "dry-fit-sports-t-shirt",
+      "dry-fit-performance-t-shirt",
+      "premium-sports-casual-t-shirt",
+      "classic-cap",
+      "vacuum-insulated-bottle",
+    ],
+    recommendedCategories: [
+      { id: "tshirts", label: "T-Shirts" },
+      { id: "caps", label: "Caps" },
+      { id: "bottles", label: "Bottles & Drinkware" },
+      { id: "bags", label: "Bags" },
+    ],
+
+    benefits: [
+      { title: "Performance Fabric", description: "Dry-fit apparel built for practice and play." },
+      { title: "Consistent Team Look", description: "The same branding and sizing across the whole squad." },
+      { title: "Flexible Quantities", description: "From a small club to a full league." },
+      { title: "PAN India Supply", description: "Delivered wherever your team trains or plays." },
+    ],
+
+    processSteps: [
+      { title: "Tell us what you need", description: "Share your squad size and rough quantities." },
+      { title: "Choose products", description: "Pick from dry-fit tees, caps, bottles and bags." },
+      { title: "Preview your branding", description: "See your logo before you order." },
+      { title: "Confirm quantity", description: "Adjust as the roster changes." },
+      { title: "Receive quotation", description: "Our team confirms pricing and dispatch." },
+    ],
+
+    featureSections: [
+      {
+        id: "performance-apparel",
+        title: "Performance Apparel",
+        description: "Dry-fit T-shirts built for practice, training and match day.",
+        art: "tshirt",
+        color: "#3c4a63",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
+      },
+      {
+        id: "team-essentials",
+        title: "Team Essentials",
+        description: "Caps, bottles and bags that round out a consistent team kit.",
+        art: "cap",
+        color: "#22304a",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
+      },
+    ],
+
+    proofTestimonialId: null,
+
+    primaryCtaLabel: "Request a Quote",
+    secondaryCtaLabel: "Explore Products",
+    secondaryCtaTo: "/products",
+
+    finalCta: {
+      title: "Outfitting a Team or Club?",
       subtitle: null,
       ctas: [
         { type: "quote", label: "Request a Quote" },
@@ -546,12 +763,12 @@ export const solutions = [
     recommendedProductIds: [
       "welcome-kit",
       "corporate-bottle",
-      "executive-diary",
+      "executive-notebook",
       "laptop-backpack",
       "executive-gift-set",
     ],
     recommendedCategories: [
-      { id: "gifts", label: "Corporate Gifts" },
+      { id: "corporate-gifts", label: "Corporate Gifts" },
       { id: "kits", label: "Gift Kits" },
       { id: "bottles", label: "Bottles & Drinkware" },
       { id: "notebooks", label: "Notebooks & Diaries" },
@@ -611,6 +828,207 @@ export const solutions = [
       ctas: [
         { type: "link", label: "Explore Corporate Gifting", to: "/corporate-gifting" },
         { type: "link", label: "Build Your Kit", to: { pathname: "/corporate-gifting", hash: "#build-kit" } },
+      ],
+    },
+  },
+
+  {
+    slug: "retail-store-staff",
+    label: "Retail & Store Staff",
+    eyebrow: "RETAIL & STORE STAFF",
+    art: "polo",
+    color: "#dde1e8",
+    hubDescription: "A consistent team look across every shift, store and counter.",
+    categoryHints: ["Polos", "T-Shirts", "Caps", "Uniforms"],
+
+    heroTitle: "A Consistent Look Across Every Shift",
+    heroCopy:
+      "Branded polos, tees and caps for retail and store teams — the same look at every counter, outlet and shift.",
+    heroImage: null,
+    mobileHeroImage: null,
+    heroAlt: "Retail store staff apparel composition, photography placeholder",
+
+    challengeTitle: "Every Store Should Look Like the Same Brand",
+    challengeCopy:
+      "Retail teams need a consistent look across stores, shifts and new hires, without reordering from scratch each time. We keep sizing and branding consistent as your team grows.",
+    challengePoints: [
+      "Consistent look across stores and shifts",
+      "Easy reordering for new hires",
+      "Full size ranges",
+      "Simple, repeatable branding",
+    ],
+    useCases: [
+      "Store and counter staff",
+      "Multi-store chains",
+      "Seasonal and festive staffing",
+      "New hire onboarding",
+    ],
+
+    /**
+     * Honest V1 substitution (Solutions Phase 1 §20/§31): the catalogue has
+     * no dedicated apron or name-badge line yet — only real polo/tee/cap/
+     * uniform apparel is recommended.
+     */
+    recommendedProductIds: [
+      "premium-polo",
+      "eco-polo-t-shirt",
+      "cotton-round-neck",
+      "classic-cap",
+      "corporate-staff-uniform-tshirt",
+    ],
+    recommendedCategories: [
+      { id: "polo", label: "Polo T-Shirts" },
+      { id: "tshirts", label: "T-Shirts" },
+      { id: "caps", label: "Caps" },
+      { id: "uniforms", label: "Uniforms" },
+    ],
+
+    benefits: [
+      { title: "Consistent Branding", description: "The same look across every store and shift." },
+      { title: "Full Size Ranges", description: "Sized for a whole team, not a sample set." },
+      { title: "Easy Reordering", description: "Add new hires without starting from scratch." },
+      { title: "PAN India Supply", description: "Delivered to every store, wherever it is." },
+    ],
+
+    processSteps: [
+      { title: "Tell us what you need", description: "Share your store count, roles and rough quantities." },
+      { title: "Choose products", description: "Pick from polos, tees, caps and uniforms." },
+      { title: "Preview your branding", description: "See your logo before you order." },
+      { title: "Confirm quantity", description: "Adjust per store or role." },
+      { title: "Receive quotation", description: "Our team confirms pricing and dispatch." },
+    ],
+
+    featureSections: [
+      {
+        id: "store-staff-apparel",
+        title: "Store Staff Apparel",
+        description: "Polos and tees built for a full day on the floor.",
+        art: "polo",
+        color: "#3c4a63",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
+      },
+      {
+        id: "multi-store-ordering",
+        title: "Multi-Store Ordering",
+        description: "The same look across every store, ordered together.",
+        art: "cap",
+        color: "#22304a",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
+      },
+    ],
+
+    proofTestimonialId: null,
+
+    primaryCtaLabel: "Request a Quote",
+    secondaryCtaLabel: "Explore Products",
+    secondaryCtaTo: "/products",
+
+    finalCta: {
+      title: "Outfitting a Retail or Store Team?",
+      subtitle: null,
+      ctas: [
+        { type: "quote", label: "Request a Quote" },
+        { type: "link", label: "Browse Products", to: "/products" },
+      ],
+    },
+  },
+
+  {
+    slug: "marketing-campaigns",
+    label: "Marketing Campaigns",
+    eyebrow: "MARKETING CAMPAIGNS",
+    art: "pen",
+    color: "#22304a",
+    hubDescription: "Promotional products and giveaways that keep your brand in hand.",
+    categoryHints: ["Totes", "Bottles", "Pens", "Notebooks"],
+
+    heroTitle: "Branded Products That Stay Visible",
+    heroCopy:
+      "Promotional products, campaign giveaways and event merchandise that keep your brand in hand after the campaign ends.",
+    heroImage: null,
+    mobileHeroImage: null,
+    heroAlt: "Marketing campaign promotional products composition, photography placeholder",
+
+    challengeTitle: "A Giveaway Only Works If It's Kept",
+    challengeCopy:
+      "Campaign merchandise needs to be useful enough to keep and consistent enough to be recognisable. We help you pick products people actually use again.",
+    challengePoints: [
+      "Products people keep and use",
+      "Consistent branding across items",
+      "Quantities that match campaign reach",
+      "Timelines that match campaign dates",
+    ],
+    useCases: [
+      "Giveaways",
+      "Product launches",
+      "Campaign kits",
+      "Booth and event promotions",
+    ],
+
+    recommendedProductIds: [
+      "canvas-tote",
+      "sipper-tumbler",
+      "metal-pen",
+      "a5-notebook-diary",
+      "promotional-merchandise-kit",
+    ],
+    recommendedCategories: [
+      { id: "bags", label: "Bags" },
+      { id: "bottles", label: "Bottles & Drinkware" },
+      { id: "pens", label: "Pens" },
+      { id: "promotional", label: "Promotional Products" },
+    ],
+
+    benefits: [
+      { title: "Products People Keep", description: "Useful items, not disposable giveaways." },
+      { title: "Consistent Branding", description: "The same look across every touchpoint." },
+      { title: "Flexible Quantities", description: "From a single launch event to a full campaign rollout." },
+      { title: "PAN India Supply", description: "Delivered wherever your campaign runs." },
+    ],
+
+    processSteps: [
+      { title: "Tell us about your campaign", description: "Share the occasion and rough reach." },
+      { title: "Choose products", description: "Pick items people will actually keep." },
+      { title: "Preview your branding", description: "Confirm the look before production." },
+      { title: "Confirm quantity", description: "Match it to your campaign reach." },
+      { title: "Receive quotation", description: "Pricing that fits your campaign timeline." },
+    ],
+
+    featureSections: [
+      {
+        id: "campaign-giveaways",
+        title: "Campaign Giveaways",
+        description: "Practical, branded items built for a single campaign moment.",
+        art: "giftbox",
+        color: "#3c4a63",
+        ctaLabel: "Explore Products",
+        ctaTo: "/products",
+      },
+      {
+        id: "event-promotions",
+        title: "Event Promotions",
+        description: "Merchandise for launches, booths and on-ground activations.",
+        art: "cap",
+        color: "#22304a",
+        ctaLabel: "Explore Events Solution",
+        ctaTo: "/solutions/events-conferences",
+      },
+    ],
+
+    proofTestimonialId: null,
+
+    primaryCtaLabel: "Request a Quote",
+    secondaryCtaLabel: "Explore Products",
+    secondaryCtaTo: "/products",
+
+    finalCta: {
+      title: "Planning a Campaign?",
+      subtitle: null,
+      ctas: [
+        { type: "quote", label: "Request a Quote" },
+        { type: "link", label: "Browse Products", to: "/products" },
       ],
     },
   },

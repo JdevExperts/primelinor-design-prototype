@@ -80,196 +80,57 @@ export const heroCampaigns = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* What are you creating today?                                        */
-/* ------------------------------------------------------------------ */
-
-export const creationTypes = [
-  {
-    id: "apparel",
-    title: "Apparel",
-    description: "T-shirts, polos, hoodies and uniforms.",
-    art: "tshirt",
-    color: "#e3e6eb",
-    image: null,
-  },
-  {
-    id: "corporate-gifts",
-    title: "Corporate Gifts",
-    description: "Premium gifts for teams and clients.",
-    art: "giftbox",
-    color: "#22304a",
-    image: null,
-  },
-  {
-    id: "events",
-    title: "Events & Promotions",
-    description: "Merchandise that travels well.",
-    art: "cap",
-    color: "#2b2b33",
-    image: null,
-  },
-  {
-    id: "kits",
-    title: "Corporate Kits",
-    description: "Curated multi-product kits.",
-    art: "kit",
-    color: "#e3ddd0",
-    image: null,
-  },
-];
-
-/* ------------------------------------------------------------------ */
 /* Shop by category                                                    */
 /* ------------------------------------------------------------------ */
 
 /**
- * Homepage "Shop by category" tiles. `targetCategory` is a real backend
- * Category slug (verified against the live catalogue, not the old mock
- * list — "Gift Kits" was pointing at a slug ("gift-kits") the real
- * catalogue has never used; the real slug is "kits") — CategoryCard hands
- * it to Product Listing via the same `location.state` pattern Solutions
- * pages already use, so clicking a tile actually filters to real products
- * instead of landing on an unfiltered or empty listing.
+ * Homepage "Shop by category" curated merchandising list — deliberately
+ * NOT a duplicate of category records (name/image/alt intentionally live
+ * only in the backend now, fetched at render time and merged in by
+ * slug — see CategoryGrid.jsx). This list only decides three frontend-only
+ * things a Category row has no concept of: which categories to feature,
+ * in what order, and the `art`/`color` vector fallback to show if a
+ * category's real image hasn't been set (or hasn't loaded yet).
  *
- * `image`/`alt` are real-photo slots, data-driven rather than hardcoded
- * per card (CategoryCard just renders whatever's here). None of these 8
- * have dedicated category photography yet — `image: null` keeps the
- * existing vector/`art`+`color` fallback (intentional, not a broken
- * image) until real photos land. Expected path convention to match, so
- * dropping files in requires no code change:
- * `/images/categories/<id>.jpg` (e.g. `/images/categories/tshirts.jpg`).
+ * `targetCategory` is a real backend Category slug — CategoryGrid hands it
+ * to Product Listing via the same `location.state` pattern Solutions
+ * pages already use. All 9 (including Visiting Cards) are now real
+ * catalogue categories with real S3-backed images (see
+ * backend/scripts/backfillCategoryImages.js) — nothing here should need a
+ * `href` override to a non-catalogue destination anymore.
  */
 export const categories = [
-  { id: "tshirts", name: "T-Shirts", targetCategory: "tshirts", art: "tshirt", color: "#e3e6eb", image: null, alt: "T-Shirts" },
-  { id: "polo", name: "Polo T-Shirts", targetCategory: "polo", art: "polo", color: "#22304a", image: null, alt: "Polo T-Shirts" },
-  { id: "bags", name: "Bags", targetCategory: "bags", art: "tote", color: "#e3ddd0", image: null, alt: "Bags" },
-  { id: "bottles", name: "Bottles & Drinkware", targetCategory: "bottles", art: "bottle", color: "#dfe3e8", image: null, alt: "Bottles & Drinkware" },
-  { id: "notebooks", name: "Notebooks & Diaries", targetCategory: "notebooks", art: "notebook", color: "#2b2b33", image: null, alt: "Notebooks & Diaries" },
-  { id: "promotional", name: "Promotional Products", targetCategory: "promotional", art: "pen", color: "#22304a", image: null, alt: "Promotional Products" },
-  { id: "corporate-gifts", name: "Corporate Gifts", targetCategory: "corporate-gifts", art: "giftbox", color: "#3c4a63", image: null, alt: "Corporate Gifts" },
-  { id: "gift-kits", name: "Gift Kits", targetCategory: "kits", art: "kit", color: "#dde1e8", image: null, alt: "Gift Kits" },
-  // Not a real category/product yet (verified: no Category or Product row
-  // exists for it) — the tile still appears (brief §2D) but routes to
-  // Contact rather than a Product Listing filter that could never return
-  // anything, which would misleadingly look like "we searched and found
-  // nothing" rather than "we don't offer this yet, ask us". A real photo
-  // already exists at /images/hero/hero-visiting-cards.jpg (separate hero
-  // work) but it's composed as a wide banner with its own baked-in
-  // headline text — cropping it into this card's 4:2.9 tile truncates
-  // that text mid-word, which reads as more broken than the vector
-  // fallback it would replace. Needs its own tile-shaped crop (no text
-  // baked in) at the same /images/categories/<id>.jpg convention as the
-  // other 8 before wiring a real photo here.
-  {
-    id: "visiting-cards",
-    name: "Visiting Cards",
-    targetCategory: null,
-    href: "/contact",
-    art: "notebook",
-    color: "#f2ede3",
-    image: null,
-    alt: "Visiting Cards",
-  },
+  { id: "tshirts", targetCategory: "tshirts", art: "tshirt", color: "#e3e6eb" },
+  { id: "polo", targetCategory: "polo", art: "polo", color: "#22304a" },
+  { id: "bags", targetCategory: "bags", art: "tote", color: "#e3ddd0" },
+  { id: "bottles", targetCategory: "bottles", art: "bottle", color: "#dfe3e8" },
+  { id: "notebooks", targetCategory: "notebooks", art: "notebook", color: "#2b2b33" },
+  { id: "promotional", targetCategory: "promotional", art: "pen", color: "#22304a" },
+  { id: "corporate-gifts", targetCategory: "corporate-gifts", art: "giftbox", color: "#3c4a63" },
+  { id: "gift-kits", targetCategory: "kits", art: "kit", color: "#dde1e8" },
+  { id: "visiting-cards", targetCategory: "visiting-cards", art: "notebook", color: "#f2ede3" },
 ];
 
 /* ------------------------------------------------------------------ */
-/* Made for your business                                              */
+/* Solutions for every team (homepage curated preview)                */
 /* ------------------------------------------------------------------ */
 
-export const businessUseCases = [
-  {
-    id: "corporate-teams",
-    title: "Corporate Teams",
-    description: "Branded apparel and desk essentials for large teams.",
-    art: "polo",
-    color: "#22304a",
-    image: null,
-    solutionSlug: "corporate-teams",
-  },
-  {
-    id: "startups",
-    title: "Startups",
-    description: "Small batches to launch your brand without overcommitting.",
-    art: "tshirt",
-    color: "#e3e6eb",
-    image: null,
-    solutionSlug: "startups",
-  },
-  {
-    id: "events",
-    title: "Events",
-    description: "Merchandise and giveaways ready before your event date.",
-    art: "cap",
-    color: "#2b2b33",
-    image: null,
-    solutionSlug: "events-conferences",
-  },
-  {
-    id: "schools",
-    title: "Schools & Colleges",
-    description: "Uniforms, fest merchandise and department kits.",
-    art: "hoodie",
-    color: "#3c4a63",
-    image: null,
-    solutionSlug: "schools-colleges",
-  },
-  {
-    id: "marketing",
-    title: "Marketing Campaigns",
-    description: "Promotional products that keep your brand in hand.",
-    art: "pen",
-    color: "#22304a",
-    image: null,
-    solutionSlug: "marketing-campaigns",
-  },
-  {
-    id: "employee-gifting",
-    title: "Employee Gifting",
-    description: "Welcome kits, milestones and festival gifting.",
-    art: "kit",
-    color: "#e3ddd0",
-    image: null,
-    solutionSlug: "employee-gifting",
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/* Corporate gifting                                                   */
-/* ------------------------------------------------------------------ */
-
-export const giftingCollections = [
-  {
-    id: "welcome-kits",
-    title: "Employee Welcome Kits",
-    description: "Make day one feel considered.",
-    art: "kit",
-    color: "#e3ddd0",
-    image: null,
-  },
-  {
-    id: "festival",
-    title: "Festival Gifting",
-    description: "Seasonal gifting at team scale.",
-    art: "giftbox",
-    color: "#5c2733",
-    image: null,
-  },
-  {
-    id: "conference",
-    title: "Conference Kits",
-    description: "Everything an attendee needs.",
-    art: "tote",
-    color: "#22304a",
-    image: null,
-  },
-  {
-    id: "client-gifts",
-    title: "Client Gifts",
-    description: "Premium pieces worth keeping.",
-    art: "notebook",
-    color: "#2b2b33",
-    image: null,
-  },
+/**
+ * Homepage merchandising order — a deliberate subset of the canonical
+ * `solutions` array in solutionsData.js, not the first N entries (Solutions
+ * Phase 1 §3/§23/§24). The homepage never duplicates solution title/copy;
+ * it only owns which slugs to feature and resolves the rest of the card
+ * (title, description, art, link) from solutionsData.js via `getSolution`.
+ */
+export const homeSolutionSlugs = [
+  "corporate-teams",
+  "restaurants-hospitality",
+  "schools-colleges",
+  "delivery-field-teams",
+  "startups",
+  "events-conferences",
+  "sports-teams-clubs",
+  "employee-gifting",
 ];
 
 /* ------------------------------------------------------------------ */

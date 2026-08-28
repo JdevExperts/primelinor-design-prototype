@@ -18,7 +18,7 @@ export const primaryNav = [
   { id: "products", label: "Products", href: "/products", hasMegaMenu: true },
   { id: "solutions", label: "Solutions", href: "/solutions" },
   { id: "gifting", label: "Corporate Gifting", href: "/corporate-gifting" },
-  { id: "try-logo", label: "Try Your Logo", href: "/#try-your-logo" },
+  { id: "try-logo", label: "Try Your Logo", href: "/products" },
   { id: "about", label: "About", href: "/about" },
 ];
 
@@ -171,7 +171,7 @@ export const footerLinkRoutes = {
   "Client Gifts": "/corporate-gifting",
   "Build Your Kit": { pathname: "/corporate-gifting", hash: "#build-kit" },
 
-  "Try Your Logo": { pathname: "/", hash: "#try-your-logo" },
+  "Try Your Logo": "/products",
 
   "About PrimeLinor": "/about",
   Contact: "/contact",

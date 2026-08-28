@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
-import { listCategoriesAdmin, createCategoryAdmin, updateCategoryAdmin } from "../../api/catalog";
+import { useEffect, useRef, useState } from "react";
+import {
+  listCategoriesAdmin,
+  createCategoryAdmin,
+  updateCategoryAdmin,
+  uploadCategoryImage,
+  removeCategoryImage,
+} from "../../api/catalog";
 import { useAdminAuth } from "../../context/useAdminAuth";
 import { slugify } from "./productEditor/fieldSets";
 import tableStyles from "../../components/adminTable.module.css";
@@ -64,6 +70,128 @@ function CreateForm({ categories, onCreated }) {
   );
 }
 
+/**
+ * Inline image management (Phase: category image infrastructure) — no
+ * dedicated category detail page exists (unlike products), so this stays
+ * an inline table-row control, matching the sortOrder/active fields'
+ * existing inline-edit pattern rather than introducing a second UI shape.
+ * Upload/replace/remove are ADMIN-only client-side too, but the real
+ * enforcement is server-side (requireRole("ADMIN") on the route) —
+ * SALES simply never sees these controls rendered.
+ */
+function ImageCell({ category, onUpdated, isAdmin }) {
+  const inputRef = useRef(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const { category: updated } = await uploadCategoryImage(category.id, file, category.image?.alt || category.name);
+      onUpdated(updated);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const handleRemove = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const { category: updated } = await removeCategoryImage(category.id);
+      onUpdated(updated);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const patchAlt = async (alt) => {
+    if (alt === (category.image?.alt || "")) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const { category: updated } = await updateCategoryAdmin(category.id, { imageAlt: alt || null });
+      onUpdated(updated);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+      {category.image ? (
+        <img
+          src={category.image.url}
+          alt={category.image.alt || category.name}
+          width={40}
+          height={40}
+          style={{ objectFit: "cover", borderRadius: 4, border: "1px solid #e5e7eb", flexShrink: 0 }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 4,
+            border: "1px dashed #d0d5dd",
+            display: "grid",
+            placeItems: "center",
+            fontSize: 9,
+            color: "#98a2b3",
+            flexShrink: 0,
+          }}
+        >
+          None
+        </div>
+      )}
+      {isAdmin ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 140 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <label style={{ fontSize: 11, cursor: saving ? "default" : "pointer", color: "#1d4ed8" }}>
+              {saving ? "Saving…" : category.image ? "Replace" : "Upload"}
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                style={{ display: "none" }}
+                disabled={saving}
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+            </label>
+            {category.image ? (
+              <button
+                type="button"
+                onClick={handleRemove}
+                disabled={saving}
+                style={{ fontSize: 11, color: "#b42318", border: "none", background: "none", cursor: "pointer", padding: 0 }}
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+          <input
+            style={{ fontSize: 11, padding: "2px 4px", border: "1px solid #e5e7eb", borderRadius: 3, width: 130 }}
+            placeholder="Alt text"
+            defaultValue={category.image?.alt || ""}
+            disabled={saving}
+            onBlur={(e) => patchAlt(e.target.value.trim())}
+          />
+          {error ? <span style={{ fontSize: 10, color: "#b42318" }}>{error}</span> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function CategoryRow({ category, categories, onUpdated, isAdmin }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -86,6 +214,9 @@ function CategoryRow({ category, categories, onUpdated, isAdmin }) {
   return (
     <tr>
       <td>{category.name}</td>
+      <td>
+        <ImageCell category={category} onUpdated={onUpdated} isAdmin={isAdmin} />
+      </td>
       <td className={tableStyles.muted}>{category.slug}</td>
       <td className={tableStyles.muted}>{parent ? parent.name : "—"}</td>
       <td>
@@ -155,6 +286,7 @@ export default function CategoriesAdmin() {
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Image</th>
                 <th>Slug</th>
                 <th>Parent</th>
                 <th>Sort Order</th>

@@ -1,6 +1,33 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { serializeProductAdminSummary, serializeProductAdminDetail } = require("../src/services/serializeCatalogAdmin");
+const {
+  serializeProductAdminSummary,
+  serializeProductAdminDetail,
+  serializeCategoryAdmin,
+} = require("../src/services/serializeCatalogAdmin");
+
+test("serializeCategoryAdmin: image is null when the category has no imageUrl", () => {
+  const category = { id: "c1", name: "Bags", slug: "bags", parentCategoryId: null, active: true, sortOrder: 1, imageUrl: null, imageStorageKey: null, imageAlt: null };
+  assert.equal(serializeCategoryAdmin(category).image, null);
+});
+
+test("serializeCategoryAdmin: image is {url, alt} when set, and never exposes imageStorageKey", () => {
+  const category = {
+    id: "c1",
+    name: "Bags",
+    slug: "bags",
+    parentCategoryId: null,
+    active: true,
+    sortOrder: 1,
+    imageUrl: "https://bucket.s3.amazonaws.com/categories/c1/bags.png",
+    imageStorageKey: "categories/c1/bags.png",
+    imageAlt: "Bags",
+  };
+  const result = serializeCategoryAdmin(category);
+  assert.deepEqual(result.image, { url: "https://bucket.s3.amazonaws.com/categories/c1/bags.png", alt: "Bags" });
+  assert.equal("imageStorageKey" in result, false);
+  assert.equal(JSON.stringify(result).includes("imageStorageKey"), false);
+});
 
 test("serializeProductAdminSummary: priceSummary is 'Quote Only' for QUOTE_ONLY", () => {
   const product = { priceMode: "QUOTE_ONLY", priceTiers: [], assets: [] };

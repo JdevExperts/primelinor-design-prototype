@@ -106,7 +106,11 @@ export default function ProductExplorer() {
       >
         {visible.map((product) => (
           <li key={product.id} className={styles.item}>
-            <ProductCard product={product} />
+            <ProductCard
+              product={product}
+              detailsTo={`/products/${product.id}`}
+              tryHref={`/customize/${product.id}`}
+            />
           </li>
         ))}
       </ul>

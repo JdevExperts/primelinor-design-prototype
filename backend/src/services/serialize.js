@@ -103,17 +103,29 @@ function serializeProductDetail(product) {
   };
 }
 
+/** Customer-safe image shape — never `imageStorageKey` (deletion-ownership bookkeeping only). */
+function serializeCategoryImage(category) {
+  return category.imageUrl ? { url: category.imageUrl, alt: category.imageAlt } : null;
+}
+
 function serializeCategory(category) {
   return {
     id: category.id,
     slug: category.slug,
     name: category.name,
     sortOrder: category.sortOrder,
+    image: serializeCategoryImage(category),
     children: (category.children || [])
       .filter((child) => child.active)
       .slice()
       .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((child) => ({ id: child.id, slug: child.slug, name: child.name, sortOrder: child.sortOrder })),
+      .map((child) => ({
+        id: child.id,
+        slug: child.slug,
+        name: child.name,
+        sortOrder: child.sortOrder,
+        image: serializeCategoryImage(child),
+      })),
   };
 }
 

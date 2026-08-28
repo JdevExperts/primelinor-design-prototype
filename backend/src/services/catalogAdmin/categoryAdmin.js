@@ -50,6 +50,7 @@ async function createCategory(data) {
       parentCategoryId: data.parentCategoryId ?? null,
       active: data.active ?? true,
       sortOrder: data.sortOrder ?? 0,
+      imageAlt: data.imageAlt ?? null,
     },
   });
 }
@@ -73,6 +74,7 @@ async function updateCategory(id, data) {
       ...(data.parentCategoryId !== undefined && { parentCategoryId: data.parentCategoryId }),
       ...(data.active !== undefined && { active: data.active }),
       ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+      ...(data.imageAlt !== undefined && { imageAlt: data.imageAlt }),
     },
   });
 }

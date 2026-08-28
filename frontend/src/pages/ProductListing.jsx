@@ -8,6 +8,7 @@ import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
 import ProductCard from "../components/ui/ProductCard";
 import { listingPageSize, listingSortOptions } from "../data/mockData";
+import { flattenToLeafCategories } from "../utils/categories";
 import {
   EMPTY_FILTERS,
   countActiveFilters,
@@ -35,17 +36,12 @@ const ALL_PRODUCTS_OPTION = { id: "all", label: "All Products" };
  * matched the real category's name. Flattens to leaf-only options — the
  * only categories any product can actually belong to — matching the
  * filter UI's existing flat (non-nested) shape exactly, so nothing here
- * changes visually.
+ * changes visually. Tree-walking itself lives in utils/categories.js,
+ * shared with the Homepage category section — this just adapts that
+ * shared leaf list into the filter UI's `{id, label}` shape.
  */
 function flattenToLeafCategoryOptions(categories) {
-  const leaves = [];
-  for (const cat of categories) {
-    if (cat.children?.length) {
-      for (const child of cat.children) leaves.push({ id: child.slug, label: child.name });
-    } else {
-      leaves.push({ id: cat.slug, label: cat.name });
-    }
-  }
+  const leaves = flattenToLeafCategories(categories).map((c) => ({ id: c.slug, label: c.name }));
   return [ALL_PRODUCTS_OPTION, ...leaves];
 }
 
