@@ -112,103 +112,25 @@ export const categories = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Made for your business                                              */
+/* Solutions for every team (homepage curated preview)                */
 /* ------------------------------------------------------------------ */
 
-export const businessUseCases = [
-  {
-    id: "corporate-teams",
-    title: "Corporate Teams",
-    description: "Branded apparel and desk essentials for large teams.",
-    art: "polo",
-    color: "#22304a",
-    image: null,
-    solutionSlug: "corporate-teams",
-  },
-  {
-    id: "startups",
-    title: "Startups",
-    description: "Small batches to launch your brand without overcommitting.",
-    art: "tshirt",
-    color: "#e3e6eb",
-    image: null,
-    solutionSlug: "startups",
-  },
-  {
-    id: "events",
-    title: "Events",
-    description: "Merchandise and giveaways ready before your event date.",
-    art: "cap",
-    color: "#2b2b33",
-    image: null,
-    solutionSlug: "events-conferences",
-  },
-  {
-    id: "schools",
-    title: "Schools & Colleges",
-    description: "Uniforms, fest merchandise and department kits.",
-    art: "hoodie",
-    color: "#3c4a63",
-    image: null,
-    solutionSlug: "schools-colleges",
-  },
-  {
-    id: "marketing",
-    title: "Marketing Campaigns",
-    description: "Promotional products that keep your brand in hand.",
-    art: "pen",
-    color: "#22304a",
-    image: null,
-    solutionSlug: "marketing-campaigns",
-  },
-  {
-    id: "employee-gifting",
-    title: "Employee Gifting",
-    description: "Welcome kits, milestones and festival gifting.",
-    art: "kit",
-    color: "#e3ddd0",
-    image: null,
-    solutionSlug: "employee-gifting",
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/* Corporate gifting                                                   */
-/* ------------------------------------------------------------------ */
-
-export const giftingCollections = [
-  {
-    id: "welcome-kits",
-    title: "Employee Welcome Kits",
-    description: "Make day one feel considered.",
-    art: "kit",
-    color: "#e3ddd0",
-    image: null,
-  },
-  {
-    id: "festival",
-    title: "Festival Gifting",
-    description: "Seasonal gifting at team scale.",
-    art: "giftbox",
-    color: "#5c2733",
-    image: null,
-  },
-  {
-    id: "conference",
-    title: "Conference Kits",
-    description: "Everything an attendee needs.",
-    art: "tote",
-    color: "#22304a",
-    image: null,
-  },
-  {
-    id: "client-gifts",
-    title: "Client Gifts",
-    description: "Premium pieces worth keeping.",
-    art: "notebook",
-    color: "#2b2b33",
-    image: null,
-  },
+/**
+ * Homepage merchandising order — a deliberate subset of the canonical
+ * `solutions` array in solutionsData.js, not the first N entries (Solutions
+ * Phase 1 §3/§23/§24). The homepage never duplicates solution title/copy;
+ * it only owns which slugs to feature and resolves the rest of the card
+ * (title, description, art, link) from solutionsData.js via `getSolution`.
+ */
+export const homeSolutionSlugs = [
+  "corporate-teams",
+  "restaurants-hospitality",
+  "schools-colleges",
+  "delivery-field-teams",
+  "startups",
+  "events-conferences",
+  "sports-teams-clubs",
+  "employee-gifting",
 ];
 
 /* ------------------------------------------------------------------ */
