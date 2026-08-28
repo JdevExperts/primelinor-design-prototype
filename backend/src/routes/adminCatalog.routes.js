@@ -12,5 +12,6 @@ router.use("/products", require("./adminCatalogProducts.routes"));
 router.use("/categories", require("./adminCatalogCategories.routes"));
 router.use("/colors", require("./adminCatalogColors.routes"));
 router.use("/tags", require("./adminCatalogTags.routes"));
+router.use("/solutions", require("./adminCatalogSolutions.routes"));
 
 module.exports = router;

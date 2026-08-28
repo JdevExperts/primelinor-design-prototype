@@ -162,11 +162,18 @@ export function filterProducts(products, filters, query) {
   const needle = query.trim().toLowerCase();
 
   return products.filter((product) => {
-    if (
-      filters.categories.length &&
-      !filters.categories.includes(product.category)
-    ) {
-      return false;
+    if (filters.categories.length) {
+      // Matches through ANY of the product's category memberships (primary
+      // or secondary), not only its primary category. `product.categories`
+      // is {slug, sortOrder}[] (adapters.js); falls back to the single
+      // `category` string for any caller that hasn't been updated to pass
+      // the full array (e.g. a mock-fixture product record).
+      const productCategorySlugs = product.categories
+        ? product.categories.map((c) => c.slug)
+        : product.category
+          ? [product.category]
+          : [];
+      if (!filters.categories.some((id) => productCategorySlugs.includes(id))) return false;
     }
 
     if (
@@ -220,10 +227,25 @@ export function filterProducts(products, filters, query) {
   });
 }
 
-export function sortProducts(products, sortId) {
+/** This product's ProductCategory.sortOrder for ONE specific category slug, or null if not mapped to it. */
+function categoryMembershipSortOrder(product, categorySlug) {
+  const match = (product.categories || []).find((c) => c.slug === categorySlug);
+  return match ? match.sortOrder : null;
+}
+
+/**
+ * `activeCategoryIds` — the currently-selected category filter chips.
+ * Merchandising order (ProductCategory.sortOrder) only applies when
+ * exactly one category is selected — the same category-specific ordering
+ * GET /products?category=X already applies server-side (Category
+ * Merchandising Audit §5/§6). Multiple categories selected, or none, falls
+ * back to the product's own global `recommended` rank, unchanged.
+ */
+export function sortProducts(products, sortId, activeCategoryIds) {
   const list = [...products];
 
   const byName = (a, b) => a.name.localeCompare(b.name);
+  const singleCategory = activeCategoryIds?.length === 1 ? activeCategoryIds[0] : null;
 
   switch (sortId) {
     case "price-asc":
@@ -248,6 +270,13 @@ export function sortProducts(products, sortId) {
       );
     case "recommended":
     default:
+      if (singleCategory) {
+        return list.sort((a, b) => {
+          const ca = categoryMembershipSortOrder(a, singleCategory) ?? Infinity;
+          const cb = categoryMembershipSortOrder(b, singleCategory) ?? Infinity;
+          return ca - cb || (a.recommended || 99) - (b.recommended || 99) || byName(a, b);
+        });
+      }
       return list.sort(
         (a, b) =>
           (a.recommended || 99) - (b.recommended || 99) || byName(a, b),

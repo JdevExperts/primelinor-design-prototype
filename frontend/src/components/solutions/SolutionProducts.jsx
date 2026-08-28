@@ -1,38 +1,20 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getProductBySlug } from "../../api/catalog";
+import Button from "../ui/Button";
 import ProductCard from "../ui/ProductCard";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
 import styles from "./SolutionProducts.module.css";
 
 /**
- * `recommendedProductIds` are real catalogue slugs (Phase 6A.1 §28) —
- * this used to resolve them against the static 5-product `listingProducts`
- * mock, which is why a solution page could only ever recommend one of
- * those 5 regardless of what its config listed, and silently dropped any
- * id that didn't happen to be in that array. Fetching each by slug from
- * the real Catalog API means every solution page's recommendations track
- * the live catalogue — a slug the API doesn't have (yet) is simply
- * omitted, same `.filter(Boolean)` behavior as before, just against real
- * data instead of a 5-item fixture.
+ * `solution.products` arrives already resolved by the backend (Solutions
+ * Phase A §19/§20 — a real ordered SolutionProduct mapping, ACTIVE products
+ * only), mapped through the same product-listing adapter every other
+ * ProductCard uses. No per-slug fetch here anymore — the old
+ * `recommendedProductIds.map(getProductBySlug)` approach did one request
+ * per product; this reads a single already-fetched array instead.
  */
 export default function SolutionProducts({ solution }) {
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all(solution.recommendedProductIds.map((slug) => getProductBySlug(slug)))
-      .then((results) => {
-        if (!cancelled) setProducts(results.filter(Boolean));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [solution.recommendedProductIds]);
-
-  if (!products.length) return null;
+  const products = solution.products || [];
 
   return (
     <Section ariaLabelledBy="solution-products-title">
@@ -42,19 +24,34 @@ export default function SolutionProducts({ solution }) {
         title={`Popular for ${solution.label}`}
       />
 
-      <ul className={styles.grid}>
-        {products.map((product) => (
-          <li key={product.id}>
-            <ProductCard
-              product={product}
-              showSwatches
-              compactMobile
-              detailsTo={`/products/${product.id}`}
-              tryHref={`/customize/${product.id}`}
-            />
-          </li>
-        ))}
-      </ul>
+      {products.length ? (
+        <ul className={styles.grid}>
+          {products.map((product) => (
+            <li key={product.id}>
+              <ProductCard
+                product={product}
+                showSwatches
+                compactMobile
+                detailsTo={`/products/${product.id}`}
+                tryHref={`/customize/${product.id}`}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        // The backend rejects an ACTIVE Solution with zero active products
+        // (Solutions Phase A §5/§21), so this should never render in
+        // practice — this is defensive-only, never a silent blank section.
+        <div className={styles.empty}>
+          <p className={styles.emptyTitle}>Products for this solution are being updated.</p>
+          <p className={styles.emptyCopy}>Tell us what you need and we&rsquo;ll help you find the right fit.</p>
+          <div className={styles.emptyActions}>
+            <Button as={Link} to="/products" variant="secondary" size="md">
+              Browse Products
+            </Button>
+          </div>
+        </div>
+      )}
 
       {solution.recommendedCategories?.length ? (
         <div className={styles.categories}>

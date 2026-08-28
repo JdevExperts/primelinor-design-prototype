@@ -11,7 +11,7 @@ import SolutionHero from "../components/solutions/SolutionHero";
 import SolutionProcess from "../components/solutions/SolutionProcess";
 import SolutionProducts from "../components/solutions/SolutionProducts";
 import SolutionProof from "../components/solutions/SolutionProof";
-import { getSolution } from "../data/solutionsData";
+import { getSolutionBySlug } from "../api/catalog";
 import styles from "./SolutionDetail.module.css";
 
 function SolutionNotFound() {
@@ -43,9 +43,10 @@ function SolutionNotFound() {
 
 /**
  * ONE reusable template for every solution — nothing here is per-slug JSX.
- * Everything visible comes from `solutionsData.js`; feature blocks render
- * only when a solution defines them, and the proof section renders only
- * when a solution points at a real reserved testimonial.
+ * Everything visible comes from the Solution API (Solutions Phase A/D);
+ * feature blocks render only when a solution defines them, and the proof
+ * section renders only when a solution points at a real reserved
+ * testimonial.
  */
 function SolutionDetailView({ solution }) {
   const [quoteOpen, setQuoteOpen] = useState(false);
@@ -99,9 +100,40 @@ function SolutionDetailView({ solution }) {
   );
 }
 
+function SolutionLoading() {
+  return (
+    <main id="main" className={styles.missingPage}>
+      <div className={`container ${styles.missing}`}>
+        <p className="eyebrow">Solutions</p>
+        <p className={styles.missingCopy}>Loading…</p>
+      </div>
+    </main>
+  );
+}
+
 export default function SolutionDetail() {
   const { slug } = useParams();
-  const solution = getSolution(slug);
-  if (!solution) return <SolutionNotFound />;
+  const [status, setStatus] = useState("loading");
+  const [solution, setSolution] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("loading");
+    getSolutionBySlug(slug)
+      .then((result) => {
+        if (cancelled) return;
+        setSolution(result);
+        setStatus(result ? "ready" : "not-found");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  if (status === "loading") return <SolutionLoading />;
+  if (status !== "ready" || !solution) return <SolutionNotFound />;
   return <SolutionDetailView key={solution.slug} solution={solution} />;
 }

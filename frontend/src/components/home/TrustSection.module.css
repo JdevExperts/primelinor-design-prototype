@@ -1,261 +1,117 @@
-.top {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 2.1fr);
-  gap: var(--space-20);
-  align-items: stretch;
-}
-
-.moduleLabel {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.moduleNote {
-  font-size: var(--text-caption);
-  line-height: 1.5;
-  color: #9aa1ad;
-}
-
-/* ---------- Rating placeholder ---------- */
-.ratingCard {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: var(--space-24);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.ratingSource {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.ratingValue {
+/* ---------- Rating summary ---------- */
+.summary {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-8) var(--space-12);
-  margin-top: var(--space-12);
-}
-
-/* Neutral, never amber — amber stars would read as an earned rating */
-.stars {
-  display: inline-flex;
-  gap: 3px;
-  color: #c6ccd6;
-}
-
-.ratingPending {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.02em;
-  color: #9aa1ad;
-}
-
-.ratingNote {
-  margin-top: var(--space-12);
-  padding-top: var(--space-12);
-  border-top: 1px dashed var(--color-border-strong);
-  font-size: var(--text-caption);
-  line-height: 1.55;
-  color: var(--color-text-muted);
-}
-
-/* ---------- Company logo placeholders ---------- */
-.logos {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
-  padding: var(--space-24);
+  gap: var(--space-12) var(--space-16);
+  margin-top: var(--space-4);
+  padding: var(--space-20) var(--space-24);
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 }
 
-.logoGrid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--space-12);
-}
-
-.logoSlot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60px;
-  padding: var(--space-8);
-  text-align: center;
-  font-size: 10px;
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #aab1bc;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background-color: var(--color-offwhite);
-}
-
-/* ---------- Testimonials ---------- */
-.testimonials {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-20);
-  margin-top: var(--space-20);
-}
-
-.testimonial,
-.reserved {
-  position: relative;
-  height: 100%;
-  margin: 0;
-  padding: var(--space-32) var(--space-24) var(--space-24);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-/* Reserved slots stay visibly unfilled without looking broken */
-.reserved {
-  background-color: transparent;
-  border-style: dashed;
-  border-color: var(--color-border-strong);
-}
-
-.quoteMark {
-  position: absolute;
-  top: 6px;
-  left: var(--space-24);
-  font-size: 2.75rem;
-  line-height: 1;
-  color: var(--color-amber);
-  opacity: 0.45;
-}
-
-.reserved .quoteMark {
-  color: #c6ccd6;
-  opacity: 1;
-}
-
-.reservedTitle {
-  font-size: var(--text-body);
+.summaryScore {
+  font-size: var(--text-h3);
   font-weight: var(--weight-semibold);
   color: var(--color-navy);
 }
 
-.reservedContext {
-  margin-top: var(--space-4);
+/* Real, earned rating — amber, not the neutral placeholder gray */
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--color-amber);
+}
+
+.summaryCount {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.reservedNote {
-  margin-top: var(--space-16);
-  font-size: var(--text-caption);
-  color: #9aa1ad;
-}
-
-.quote {
-  margin: 0;
-  font-size: var(--text-body);
-  line-height: 1.65;
+  font-weight: var(--weight-medium);
   color: var(--color-text);
 }
 
-.attribution {
+.summarySource {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Review cards ---------- */
+.reviews {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-20);
+  margin-top: var(--space-20);
+}
+
+.review {
   display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  margin-top: var(--space-24);
-  padding-top: var(--space-20);
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: var(--space-20);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.reviewText {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.reviewMeta {
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
+  padding-top: var(--space-12);
   border-top: 1px solid var(--color-border);
 }
 
-.avatar {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--color-navy-light);
-  border: 1px dashed var(--color-border-strong);
-}
-
-.name {
-  display: block;
+.reviewName {
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--color-navy);
 }
 
-.role {
-  display: block;
+.reviewTime {
   font-size: var(--text-caption);
   color: var(--color-text-muted);
 }
 
-/* ---------- Order photography ---------- */
-.gallery {
-  margin-top: var(--space-20);
+.reviewSource {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  color: #9aa1ad;
 }
 
-.galleryHead {
+/* ---------- CTA ---------- */
+.cta {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-4) var(--space-16);
-  margin-bottom: var(--space-16);
-}
-
-.galleryGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-16);
-}
-
-.galleryItem {
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-white);
+  justify-content: center;
+  margin-top: var(--space-32);
 }
 
 @media (max-width: 1023px) {
-  .top {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .logoGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .testimonials {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .galleryGrid {
+  .reviews {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 520px) {
-  .logoGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-8);
+@media (max-width: 640px) {
+  .reviews {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .logoSlot {
-    min-height: 52px;
-  }
-
-  .ratingCard,
-  .logos {
-    padding: var(--space-20);
+  .summary {
+    padding: var(--space-16) var(--space-20);
   }
 }

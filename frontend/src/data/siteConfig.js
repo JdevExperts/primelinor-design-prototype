@@ -190,4 +190,23 @@ export const footerPolicies = [
   "Return & Replacement Policy",
 ];
 
-export const socialPlaceholders = ["Instagram", "LinkedIn", "YouTube"];
+/**
+ * Real, official PrimeLinor social profiles. Only a network with a real
+ * URL belongs here — Footer renders exactly this list, so an unconfigured
+ * network (e.g. Facebook, LinkedIn) simply isn't shown rather than
+ * linking nowhere.
+ */
+export const socialLinks = [
+  {
+    name: "Instagram",
+    url: "https://www.instagram.com/primelinor.bulk?igsi=a2ppbDMzMGx0cGsw",
+    icon: "instagram",
+    ariaLabel: "PrimeLinor on Instagram",
+  },
+  {
+    name: "YouTube",
+    url: "https://youtube.com/@primelinor-bulk?si=645NgDThlRiNOr0t",
+    icon: "youtube",
+    ariaLabel: "PrimeLinor on YouTube",
+  },
+];

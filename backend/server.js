@@ -8,6 +8,7 @@ require("dotenv").config();
 
 const productsRoutes = require("./src/routes/products.routes");
 const categoriesRoutes = require("./src/routes/categories.routes");
+const solutionsRoutes = require("./src/routes/solutions.routes");
 const leadsRoutes = require("./src/routes/leads.routes");
 const rfqsRoutes = require("./src/routes/rfqs.routes");
 const uploadsRoutes = require("./src/routes/uploads.routes");
@@ -88,6 +89,7 @@ app.use(
 
 app.use("/api/v1/products", noCache, productsRoutes);
 app.use("/api/v1/categories", noCache, categoriesRoutes);
+app.use("/api/v1/solutions", noCache, solutionsRoutes);
 app.use("/api/v1/leads", writeLimiter, leadsRoutes);
 app.use("/api/v1/rfqs", writeLimiter, rfqsRoutes);
 app.use("/api/v1/uploads", uploadLimiter, uploadsRoutes);

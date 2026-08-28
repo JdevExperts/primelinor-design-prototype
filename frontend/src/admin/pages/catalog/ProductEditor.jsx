@@ -73,7 +73,12 @@ export default function ProductEditor() {
     listCategoriesAdmin().then(({ categories: list }) => setCategories(list)).catch(() => {});
     listColorsAdmin().then(({ colors: list }) => setColors(list)).catch(() => {});
     listTagsAdmin().then(({ tags: list }) => setTags(list)).catch(() => {});
-    listProductsAdmin({ limit: 500, sort: "name" })
+    // Admin list query caps `limit` at 100 (adminListProductsQuerySchema) —
+    // 500 was silently rejected with a 400, swallowed by .catch(() => {}),
+    // which meant the Related Products picker below always showed zero
+    // candidates (discovered while building the Solutions Products tab,
+    // which copied this exact call shape).
+    listProductsAdmin({ limit: 100, sort: "name" })
       .then(({ products: list }) => setAllProducts(list))
       .catch(() => {});
   }, []);

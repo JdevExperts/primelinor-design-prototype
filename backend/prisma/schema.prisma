@@ -53,63 +53,101 @@ model Category {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  parent   Category?  @relation("CategoryChildren", fields: [parentCategoryId], references: [id], onDelete: SetNull)
-  children Category[] @relation("CategoryChildren")
-  products Product[]
+  parent             Category?         @relation("CategoryChildren", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  children           Category[]        @relation("CategoryChildren")
+  // Products for which THIS is the canonical/breadcrumb category — a
+  // subset of `productMemberships` below (Product↔Category M2M, Solutions
+  // Phase 0). Every primary-category product also has a matching
+  // ProductCategory row; this relation exists only so admin/public queries
+  // that specifically need "canonical category → products" (breadcrumb,
+  // legacy single-category consumers) don't have to filter the M2M table.
+  primaryProducts    Product[]         @relation("ProductPrimaryCategory")
+  productMemberships ProductCategory[]
 
   @@index([parentCategoryId])
   @@map("categories")
 }
 
 // ── Product ──────────────────────────────────────────────────────────────────
+// Product↔Category is many-to-many (ProductCategory), with one membership
+// distinguished as the canonical/breadcrumb category via primaryCategoryId
+// (Solutions Phase 0 — audit found the original one-Category-per-product
+// design too rigid once a product can legitimately serve more than one
+// merchandising category, e.g. a dry-fit tee that's both T-Shirts and a
+// Sports Teams & Clubs staple). `primaryCategoryId` is NOT NULL and always
+// backed by a same-category `ProductCategory` row — enforced in
+// src/services/catalogAdmin/productAdmin.js, not at the DB level (Prisma
+// has no cross-table CHECK constraint for "this FK value must also exist
+// as a row in that join table").
 
 model Product {
-  id               String    @id @default(uuid())
-  slug             String    @unique
-  name             String
-  categoryId       String    @map("category_id")
-  active           Boolean   @default(true)
-  sortOrder        Int       @default(0) @map("sort_order")
-  description      String
-  longSpec         String?   @map("long_spec")
-  material         String?
-  gsm              Int?
-  moq              Int
-  unit             String    @default("piece")
-  priceMode        PriceMode @map("price_mode")
-  fixedPrice       Decimal?  @map("fixed_price") @db.Decimal(10, 2)
+  id                String    @id @default(uuid())
+  slug              String    @unique
+  name              String
+  primaryCategoryId String    @map("primary_category_id")
+  active            Boolean   @default(true)
+  sortOrder         Int       @default(0) @map("sort_order")
+  description       String
+  longSpec          String?   @map("long_spec")
+  material          String?
+  gsm               Int?
+  moq               Int
+  unit              String    @default("piece")
+  priceMode         PriceMode @map("price_mode")
+  fixedPrice        Decimal?  @map("fixed_price") @db.Decimal(10, 2)
   // TIERED only. Quantities at/above this are outside priced tier coverage
   // and become quote-required even though the product otherwise has tiered
   // pricing (Phase 5 §23) — e.g. priced tiers up to 4999, "5000+ Request
   // Quote". Null means the priced tiers are the only coverage rule (no
   // separate quote-above cutoff).
-  quoteAboveQty    Int?      @map("quote_above_qty")
-  customizable     Boolean   @default(false)
-  variantType      String?   @map("variant_type")
-  dispatchEstimate String?   @map("dispatch_estimate")
-  seoTitle         String?   @map("seo_title")
-  seoDescription   String?   @map("seo_description")
-  createdByUserId  String?   @map("created_by_user_id")
-  updatedByUserId  String?   @map("updated_by_user_id")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  quoteAboveQty     Int?      @map("quote_above_qty")
+  customizable      Boolean   @default(false)
+  variantType       String?   @map("variant_type")
+  dispatchEstimate  String?   @map("dispatch_estimate")
+  seoTitle          String?   @map("seo_title")
+  seoDescription    String?   @map("seo_description")
+  createdByUserId   String?   @map("created_by_user_id")
+  updatedByUserId   String?   @map("updated_by_user_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  category       Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  createdByUser  StaffUser?             @relation("ProductCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  updatedByUser  StaffUser?             @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
-  priceTiers     ProductPriceTier[]
-  colors         ProductColor[]
-  variants       ProductVariant[]
-  specifications ProductSpecification[]
-  assets         ProductAsset[]
-  placementZones PlacementZone[]
-  tags           ProductTag[]
-  relatedFrom    ProductRelated[]       @relation("ProductRelatedFrom")
-  relatedTo      ProductRelated[]       @relation("ProductRelatedTo")
+  primaryCategory Category               @relation("ProductPrimaryCategory", fields: [primaryCategoryId], references: [id], onDelete: Restrict)
+  categories      ProductCategory[]
+  createdByUser   StaffUser?             @relation("ProductCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser   StaffUser?             @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  priceTiers      ProductPriceTier[]
+  colors          ProductColor[]
+  variants        ProductVariant[]
+  specifications  ProductSpecification[]
+  assets          ProductAsset[]
+  placementZones  PlacementZone[]
+  tags            ProductTag[]
+  relatedFrom     ProductRelated[]       @relation("ProductRelatedFrom")
+  relatedTo       ProductRelated[]       @relation("ProductRelatedTo")
+  solutions       SolutionProduct[]
 
-  @@index([categoryId])
+  @@index([primaryCategoryId])
   @@index([active])
   @@map("products")
+}
+
+// Ordered M2M — precedent: SolutionProduct/ProductRelated. `sortOrder` lets
+// Admin control the display order of a product's "also shown under"
+// categories; the primary category's own membership row still exists here
+// too (its sortOrder is not load-bearing — primaryCategoryId is what makes
+// it canonical, not its position in this list).
+model ProductCategory {
+  id         String @id @default(uuid())
+  productId  String @map("product_id")
+  categoryId String @map("category_id")
+  sortOrder  Int    @default(0) @map("sort_order")
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([categoryId])
+  @@map("product_categories")
 }
 
 // Catalog estimate pricing only — NOT negotiated quotation pricing (that's a
@@ -295,6 +333,85 @@ model ProductTag {
   @@unique([productId, tagId])
   @@index([tagId])
   @@map("product_tags")
+}
+
+// ── Solutions (use-case merchandising pages) ────────────────────────────────
+// First-class managed data replacing the frontend-only solutionsData.js
+// config (Solutions Phase 1). `active` mirrors Category/Product's plain
+// boolean rather than a DRAFT/ACTIVE/INACTIVE enum — the only business rule
+// ("an ACTIVE Solution needs >=1 ACTIVE mapped Product") is enforced in
+// src/services/catalogAdmin/solutionAdmin.js, not at the DB level, the same
+// way an empty-but-active leaf Category is rejected in categoryAdmin.js
+// rather than via a DB constraint. The richer per-page content (challenge
+// points, benefits, process steps, feature blocks, final CTA) is kept as
+// Json rather than normalized into their own tables — a pragmatic V1 that
+// avoids building a general CMS for content that has no independent
+// existence outside its one Solution and is always edited as a whole
+// section, never queried/filtered on its own.
+model Solution {
+  id                 String   @id @default(uuid())
+  slug               String   @unique
+  name               String
+  eyebrow            String?
+  hubDescription     String
+  heroTitle          String
+  heroCopy           String
+  challengeTitle     String?
+  challengeCopy      String?
+  challengePoints    Json?
+  useCases           Json?
+  benefits           Json?
+  processSteps       Json?
+  featureSections    Json?
+  finalCta           Json?
+  primaryCtaLabel    String?
+  secondaryCtaLabel  String?
+  secondaryCtaTo     String?
+  proofTestimonialId String?  @map("proof_testimonial_id")
+  // Vector-illustration fallback (ProductVisual `art`/`color`) shown until a
+  // real photo is uploaded — same convention already used for Category's
+  // homepage card fallback (frontend homeData.js), not a new concept.
+  art                String?
+  color              String?
+  active             Boolean  @default(false)
+  featuredOnHome     Boolean  @default(false) @map("featured_on_home")
+  // Hub order (/solutions, all active solutions) — the full curated
+  // merchandising order. Independent of `homeSortOrder` below: the
+  // homepage's featured subset has its OWN deliberate order (verified
+  // against solutionsData.js/homeData.js — "startups" sits 2nd in the hub
+  // order but 5th on the homepage), so one field can't drive both.
+  sortOrder          Int      @default(0) @map("sort_order")
+  // Homepage order — only meaningful among featuredOnHome=true rows.
+  homeSortOrder      Int      @default(0) @map("home_sort_order")
+  // Same managed-image trio as Category — one hero image, not a gallery.
+  imageUrl           String?  @map("image_url")
+  imageStorageKey    String?  @map("image_storage_key")
+  imageAlt           String?  @map("image_alt")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  products SolutionProduct[]
+
+  @@index([active])
+  @@map("solutions")
+}
+
+// Ordered M2M — precedent: ProductRelated. A Product can appear in many
+// Solutions; a Solution's product list has a deterministic order via
+// sortOrder, independent of the Product's own catalogue sortOrder.
+model SolutionProduct {
+  id         String  @id @default(uuid())
+  solutionId String  @map("solution_id")
+  productId  String  @map("product_id")
+  sortOrder  Int     @default(0) @map("sort_order")
+  featured   Boolean @default(false)
+
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([solutionId, productId])
+  @@index([productId])
+  @@map("solution_products")
 }
 
 // ═════════════════════════════════════════════════════════════════════════

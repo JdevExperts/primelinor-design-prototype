@@ -105,7 +105,15 @@ const specificationInputSchema = z
 const productBasicsFields = {
   name: z.string().trim().min(1).max(200),
   slug,
-  categoryId: uuid,
+  // Product<->Category is many-to-many (Solutions Phase 0) — `categoryIds`
+  // is the product's full category membership set, `primaryCategoryId`
+  // must be one of them (checked in productAdmin.js, not expressible in
+  // Zod alone since it's a cross-field relational rule). categoryIds is
+  // required (min 1) on create; on update it's optional — omitting it
+  // leaves the product's existing category memberships untouched, same
+  // "only touch what this tab sent" convention as colorIds/tagIds/etc.
+  primaryCategoryId: uuid,
+  categoryIds: z.array(uuid).min(1).max(20),
   description: z.string().trim().min(1).max(2000),
   longSpec: z.string().trim().max(500).nullable().optional(),
   material: z.string().trim().max(80).nullable().optional(),
@@ -181,6 +189,17 @@ function checkPricingShape(data, ctx) {
 // are optional at creation time (Phase 5 §44 — assets/placement zones are
 // always separate subresource calls, since they involve file uploads).
 
+/** primaryCategoryId must be one of categoryIds whenever both are present in this request (Solutions Phase 0 §E: "prevent removing the primary category without selecting another primary" starts here). */
+function checkPrimaryCategoryIncluded(data, ctx) {
+  if (data.primaryCategoryId !== undefined && data.categoryIds !== undefined && !data.categoryIds.includes(data.primaryCategoryId)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "primaryCategoryId must be one of categoryIds.",
+      path: ["primaryCategoryId"],
+    });
+  }
+}
+
 const createProductSchema = z
   .object({
     ...productBasicsFields,
@@ -192,7 +211,8 @@ const createProductSchema = z
     tagIds: z.array(uuid).max(30).optional(),
   })
   .strict()
-  .superRefine(checkPricingShape);
+  .superRefine(checkPricingShape)
+  .superRefine(checkPrimaryCategoryIncluded);
 
 // ── Update product ───────────────────────────────────────────────────────────
 // Fully partial — a tab in the editor saves only the section it owns. Any
@@ -214,7 +234,8 @@ const updateProductSchema = z
   .strict()
   .superRefine((data, ctx) => {
     if (data.priceMode !== undefined) checkPricingShape(data, ctx);
-  });
+  })
+  .superRefine(checkPrimaryCategoryIncluded);
 
 const duplicateProductSchema = z.object({ slug: slug.optional() }).strict();
 
@@ -279,6 +300,111 @@ const placementZoneSchema = z
 
 const updatePlacementZoneSchema = placementZoneSchema.partial().strict();
 
+// ── Solutions ────────────────────────────────────────────────────────────────
+// Rich per-page content (challenge points, benefits, process steps, feature
+// blocks, final CTA) is stored as Json — validated here for shape so the
+// Solution Admin's repeatable-row forms (never raw JSON, Solutions Phase A
+// §15) always write something the frontend template components can render,
+// without normalizing this content into its own relational tables.
+
+const ctaLinkTarget = z.union([
+  z.string().trim().min(1).max(300),
+  z.object({ pathname: z.string().trim().min(1).max(300), hash: z.string().trim().max(100).optional() }).strict(),
+]);
+
+const finalCtaButtonSchema = z
+  .object({
+    type: z.enum(["quote", "link"]),
+    label: z.string().trim().min(1).max(80),
+    to: ctaLinkTarget.optional(),
+  })
+  .strict()
+  .refine((data) => data.type !== "link" || data.to !== undefined, {
+    message: "A link CTA requires `to`.",
+    path: ["to"],
+  });
+
+const finalCtaSchema = z
+  .object({
+    title: z.string().trim().min(1).max(160),
+    subtitle: z.string().trim().max(300).nullable().optional(),
+    ctas: z.array(finalCtaButtonSchema).min(1).max(4),
+  })
+  .strict();
+
+const titleDescriptionRowSchema = z
+  .object({
+    title: z.string().trim().min(1).max(120),
+    description: z.string().trim().min(1).max(400),
+  })
+  .strict();
+
+const featureSectionSchema = z
+  .object({
+    id: z.string().trim().min(1).max(60).regex(SLUG_RE, "Use lowercase letters, numbers and hyphens only."),
+    title: z.string().trim().min(1).max(120),
+    description: z.string().trim().min(1).max(400),
+    art: z.string().trim().max(40).nullable().optional(),
+    color: z.string().regex(HEX_RE, "Use a 6-digit hex value, e.g. #1A2B3C.").nullable().optional(),
+    ctaLabel: z.string().trim().max(80).nullable().optional(),
+    ctaTo: z.string().trim().max(300).nullable().optional(),
+  })
+  .strict();
+
+const solutionContentFields = {
+  eyebrow: z.string().trim().max(80).nullable().optional(),
+  hubDescription: z.string().trim().min(1).max(300),
+  heroTitle: z.string().trim().min(1).max(160),
+  heroCopy: z.string().trim().min(1).max(500),
+  challengeTitle: z.string().trim().max(160).nullable().optional(),
+  challengeCopy: z.string().trim().max(500).nullable().optional(),
+  challengePoints: z.array(z.string().trim().min(1).max(200)).max(20).nullable().optional(),
+  useCases: z.array(z.string().trim().min(1).max(120)).max(20).nullable().optional(),
+  benefits: z.array(titleDescriptionRowSchema).max(12).nullable().optional(),
+  processSteps: z.array(titleDescriptionRowSchema).max(12).nullable().optional(),
+  featureSections: z.array(featureSectionSchema).max(6).nullable().optional(),
+  finalCta: finalCtaSchema.nullable().optional(),
+  primaryCtaLabel: z.string().trim().max(80).nullable().optional(),
+  secondaryCtaLabel: z.string().trim().max(80).nullable().optional(),
+  secondaryCtaTo: z.string().trim().max(300).nullable().optional(),
+  proofTestimonialId: z.string().trim().max(60).nullable().optional(),
+  art: z.string().trim().max(40).nullable().optional(),
+  color: z.string().regex(HEX_RE, "Use a 6-digit hex value, e.g. #1A2B3C.").nullable().optional(),
+};
+
+const solutionBasicsFields = {
+  name: z.string().trim().min(1).max(160),
+  slug,
+  active: z.boolean().optional(),
+  featuredOnHome: z.boolean().optional(),
+  sortOrder: z.coerce.number().int().optional(),
+  homeSortOrder: z.coerce.number().int().optional(),
+};
+
+const createSolutionSchema = z
+  .object({ ...solutionBasicsFields, ...solutionContentFields })
+  .strict();
+
+const updateSolutionSchema = z
+  .object({
+    ...Object.fromEntries(Object.entries(solutionBasicsFields).map(([k, v]) => [k, v.optional()])),
+    ...Object.fromEntries(Object.entries(solutionContentFields).map(([k, v]) => [k, v.optional()])),
+  })
+  .strict();
+
+/** Multipart upload path — POST /admin/catalog/solutions/:id/image. No `url` (set server-side after storing the file). */
+const solutionImageMetaSchema = z.object({ alt: z.string().trim().max(300).nullable().optional() }).strict();
+
+const solutionProductParamSchema = z.object({ id: uuid, productId: uuid }).strict();
+
+const addSolutionProductSchema = z
+  .object({ productId: uuid, sortOrder: z.coerce.number().int().optional(), featured: z.boolean().optional() })
+  .strict();
+
+const updateSolutionProductSchema = z
+  .object({ sortOrder: z.coerce.number().int().optional(), featured: z.boolean().optional() })
+  .strict();
+
 // ── Admin list query ─────────────────────────────────────────────────────────
 
 const adminListProductsQuerySchema = z
@@ -313,6 +439,12 @@ module.exports = {
   placementZoneSchema,
   updatePlacementZoneSchema,
   adminListProductsQuerySchema,
+  createSolutionSchema,
+  updateSolutionSchema,
+  solutionImageMetaSchema,
+  solutionProductParamSchema,
+  addSolutionProductSchema,
+  updateSolutionProductSchema,
   ASSET_TYPES,
   PLACEMENT_VIEWS,
   PRICE_MODES,

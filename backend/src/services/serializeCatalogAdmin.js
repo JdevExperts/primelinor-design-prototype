@@ -18,6 +18,13 @@ function serializeCategoryAdmin(category) {
     // storageKey stays internal (deletion-ownership bookkeeping only) —
     // even the admin UI only ever needs url/alt to preview/manage it.
     image: category.imageUrl ? { url: category.imageUrl, alt: category.imageAlt } : null,
+    // Only present when the caller (categoryAdmin.listCategoriesAdmin)
+    // computed them — Category Admin completeness improvements (Solutions
+    // Phase A §22): direct active product count and leaf/parent state, so
+    // the list can badge "an active leaf has no products" without a second
+    // round trip.
+    isLeaf: category.isLeaf,
+    activeProductCount: category.activeProductCount,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
   };
@@ -64,12 +71,18 @@ function priceSummary(product) {
   return `₹${Number(entry.unitPrice).toFixed(0)}–₹${cheapest.toFixed(0)}`;
 }
 
+function serializeCategoryRefAdmin(category) {
+  if (!category) return null;
+  return { id: category.id, slug: category.slug, name: category.name, active: category.active };
+}
+
 function serializeProductAdminSummary(product) {
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    category: product.category ? { id: product.category.id, slug: product.category.slug, name: product.category.name } : null,
+    primaryCategory: serializeCategoryRefAdmin(product.primaryCategory),
+    categoryCount: (product.categories || []).length,
     thumbnail: pickThumbnail(product),
     priceMode: product.priceMode,
     priceSummary: priceSummary(product),
@@ -133,7 +146,15 @@ function serializeProductAdminDetail(product) {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    category: product.category,
+    primaryCategoryId: product.primaryCategoryId,
+    primaryCategory: serializeCategoryRefAdmin(product.primaryCategory),
+    // Every ProductCategory membership (primary included), ordered — the
+    // Product Editor's "Primary Category" single-select + "Additional
+    // Categories" checkbox list (Solutions Phase 0 §E) is built from this.
+    categories: (product.categories || [])
+      .slice()
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((pc) => ({ categoryId: pc.categoryId, sortOrder: pc.sortOrder, category: serializeCategoryRefAdmin(pc.category) })),
     description: product.description,
     longSpec: product.longSpec,
     material: product.material,
@@ -189,6 +210,68 @@ function serializeProductAdminDetail(product) {
   };
 }
 
+/** List row — enough for the Solutions Admin list (name, status, mapped active product count, featured, image, sort). */
+function serializeSolutionAdminSummary(solution) {
+  return {
+    id: solution.id,
+    slug: solution.slug,
+    name: solution.name,
+    active: solution.active,
+    featuredOnHome: solution.featuredOnHome,
+    sortOrder: solution.sortOrder,
+    homeSortOrder: solution.homeSortOrder,
+    image: solution.imageUrl ? { url: solution.imageUrl, alt: solution.imageAlt } : null,
+    activeProductCount: solution.activeProductCount,
+    mappedProductCount: (solution.products || []).length,
+  };
+}
+
+/** Full editor shape — every field the Basics/Content/Image/Products tabs read or write. */
+function serializeSolutionAdminDetail(solution) {
+  const mappedProducts = (solution.products || []).map((sp) => ({
+    productId: sp.productId,
+    sortOrder: sp.sortOrder,
+    featured: sp.featured,
+    product: sp.product
+      ? { id: sp.product.id, slug: sp.product.slug, name: sp.product.name, active: sp.product.active }
+      : null,
+  }));
+
+  return {
+    id: solution.id,
+    slug: solution.slug,
+    name: solution.name,
+    eyebrow: solution.eyebrow,
+    hubDescription: solution.hubDescription,
+    heroTitle: solution.heroTitle,
+    heroCopy: solution.heroCopy,
+    challengeTitle: solution.challengeTitle,
+    challengeCopy: solution.challengeCopy,
+    challengePoints: solution.challengePoints || [],
+    useCases: solution.useCases || [],
+    benefits: solution.benefits || [],
+    processSteps: solution.processSteps || [],
+    featureSections: solution.featureSections || [],
+    finalCta: solution.finalCta,
+    primaryCtaLabel: solution.primaryCtaLabel,
+    secondaryCtaLabel: solution.secondaryCtaLabel,
+    secondaryCtaTo: solution.secondaryCtaTo,
+    proofTestimonialId: solution.proofTestimonialId,
+    art: solution.art,
+    color: solution.color,
+    active: solution.active,
+    featuredOnHome: solution.featuredOnHome,
+    sortOrder: solution.sortOrder,
+    homeSortOrder: solution.homeSortOrder,
+    // storageKey stays internal, same rule as serializeCategoryAdmin.
+    image: solution.imageUrl ? { url: solution.imageUrl, alt: solution.imageAlt } : null,
+    products: mappedProducts,
+    activeProductCount: mappedProducts.filter((p) => p.product?.active).length,
+    createdAt: solution.createdAt,
+    updatedAt: solution.updatedAt,
+  };
+}
+
 module.exports = {
   serializeCategoryAdmin,
   serializeColorAdmin,
@@ -197,4 +280,6 @@ module.exports = {
   serializeProductAdminDetail,
   serializeAssetAdmin,
   serializePlacementZoneAdmin,
+  serializeSolutionAdminSummary,
+  serializeSolutionAdminDetail,
 };

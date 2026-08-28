@@ -12,6 +12,7 @@ const CATALOGUE_NAV_ITEMS = [
   { to: "/admin/catalog/products", label: "Products" },
   { to: "/admin/catalog/categories", label: "Categories" },
   { to: "/admin/catalog/colors", label: "Colors" },
+  { to: "/admin/catalog/solutions", label: "Solutions" },
 ];
 
 export default function AdminLayout() {

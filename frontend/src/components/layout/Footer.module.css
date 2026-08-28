@@ -114,19 +114,28 @@
 .policies,
 .social {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-20);
+  align-items: center;
+  gap: var(--space-16);
 }
 
-.policyLink,
-.socialLink {
+.policyLink {
   font-size: var(--text-caption);
   color: rgba(255, 255, 255, 0.6);
   transition: color var(--duration) var(--ease);
 }
 
-.policyLink:hover,
-.socialLink:hover {
+.policyLink:hover {
+  color: var(--color-white);
+}
+
+.socialLink {
+  display: inline-flex;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color var(--duration) var(--ease);
+}
+
+.socialLink:hover,
+.socialLink:focus-visible {
   color: var(--color-white);
 }
 

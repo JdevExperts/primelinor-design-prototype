@@ -10,7 +10,8 @@ const {
 const BASE_PRODUCT = {
   name: "Test Product",
   slug: "test-product",
-  categoryId: "11111111-1111-4111-8111-111111111111",
+  primaryCategoryId: "11111111-1111-4111-8111-111111111111",
+  categoryIds: ["11111111-1111-4111-8111-111111111111"],
   description: "A test product.",
   moq: 10,
   unit: "piece",
@@ -33,6 +34,31 @@ test("colorSchema: rejects a malformed hex value", () => {
 
 test("colorSchema: accepts a valid 6-digit hex", () => {
   const result = colorSchema.safeParse({ name: "Navy", slug: "navy", hex: "#22304A" });
+  assert.equal(result.success, true);
+});
+
+test("createProductSchema: rejects an empty categoryIds array", () => {
+  const result = createProductSchema.safeParse({ ...BASE_PRODUCT, categoryIds: [], priceMode: "QUOTE_ONLY" });
+  assert.equal(result.success, false);
+});
+
+test("createProductSchema: rejects primaryCategoryId not present in categoryIds", () => {
+  const result = createProductSchema.safeParse({
+    ...BASE_PRODUCT,
+    primaryCategoryId: "22222222-2222-4222-8222-222222222222",
+    categoryIds: ["11111111-1111-4111-8111-111111111111"],
+    priceMode: "QUOTE_ONLY",
+  });
+  assert.equal(result.success, false);
+});
+
+test("createProductSchema: accepts primaryCategoryId among multiple categoryIds", () => {
+  const result = createProductSchema.safeParse({
+    ...BASE_PRODUCT,
+    primaryCategoryId: "11111111-1111-4111-8111-111111111111",
+    categoryIds: ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"],
+    priceMode: "QUOTE_ONLY",
+  });
   assert.equal(result.success, true);
 });
 

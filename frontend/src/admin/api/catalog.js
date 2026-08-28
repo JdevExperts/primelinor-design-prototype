@@ -51,3 +51,21 @@ export const updateColorAdmin = (id, payload) => adminPatch(`/admin/catalog/colo
 // ── Tags ─────────────────────────────────────────────────────────────────────
 export const listTagsAdmin = () => adminGet("/admin/catalog/tags");
 export const createTagAdmin = (payload) => adminPost("/admin/catalog/tags", payload);
+
+// ── Solutions ────────────────────────────────────────────────────────────────
+export const listSolutionsAdmin = () => adminGet("/admin/catalog/solutions");
+export const getSolutionAdmin = (id) => adminGet(`/admin/catalog/solutions/${id}`);
+export const createSolutionAdmin = (payload) => adminPost("/admin/catalog/solutions", payload);
+export const updateSolutionAdmin = (id, payload) => adminPatch(`/admin/catalog/solutions/${id}`, payload);
+export const uploadSolutionImage = (solutionId, file, alt) => {
+  const form = new FormData();
+  form.append("file", file);
+  if (alt) form.append("alt", alt);
+  return adminUpload(`/admin/catalog/solutions/${solutionId}/image`, form);
+};
+export const removeSolutionImage = (solutionId) => adminDelete(`/admin/catalog/solutions/${solutionId}/image`);
+export const addSolutionProduct = (solutionId, payload) => adminPost(`/admin/catalog/solutions/${solutionId}/products`, payload);
+export const updateSolutionProduct = (solutionId, productId, payload) =>
+  adminPatch(`/admin/catalog/solutions/${solutionId}/products/${productId}`, payload);
+export const removeSolutionProduct = (solutionId, productId) =>
+  adminDelete(`/admin/catalog/solutions/${solutionId}/products/${productId}`);

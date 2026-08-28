@@ -1,20 +1,34 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
 import SolutionCard from "../solutions/SolutionCard";
-import { homeSolutionSlugs } from "../../data/homeData";
-import { getSolution } from "../../data/solutionsData";
+import { getSolutions } from "../../api/catalog";
 import styles from "./SolutionsForEveryTeam.module.css";
 
 /**
  * Homepage preview of the real Solutions system, not a second concept
- * (Solutions Phase 1 §2/§23). Reuses the same `SolutionCard` the /solutions
- * hub renders, resolved against the canonical `solutions` data by slug —
- * title, copy, art and the `/solutions/:slug` link all come from one place.
+ * (Solutions Phase A §17). Backend is now the source of truth for which
+ * Solutions are featured on the homepage and in what order (`featured=true`
+ * → active && featuredOnHome, ordered by homeSortOrder) — no frontend
+ * `homeSolutionSlugs` config to keep in sync anymore.
  */
 export default function SolutionsForEveryTeam() {
-  const solutions = homeSolutionSlugs.map(getSolution).filter(Boolean);
+  const [solutions, setSolutions] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSolutions({ featured: true })
+      .then((list) => {
+        if (!cancelled) setSolutions(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   if (!solutions.length) return null;
 
   return (

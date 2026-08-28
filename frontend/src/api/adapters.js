@@ -27,7 +27,7 @@ const CATEGORY_ART_FALLBACK = {
   promotional: "pen",
   pens: "pen",
   gifts: "giftbox",
-  "corporate-gifts": "giftbox",
+  calendars: "notebook",
   kits: "kit",
   "gift-kits": "kit",
 };
@@ -175,7 +175,24 @@ export function mapApiProductToListingShape(product) {
           price: Number(tier.unitPrice),
         }))
       : null,
+    // `category` stays the PRIMARY slug (breadcrumb/canonical identity,
+    // Solutions Phase 0 §I — never changes meaning). `categories` is the
+    // product's full ProductCategory membership set (primary + secondary)
+    // — filterProducts.js matches against this so a category filter finds
+    // a product through ANY of its mapped categories, not only the primary
+    // (Category Merchandising Audit §13: the whole reason a customer
+    // filtering by "Promotional Products" should see a cross-listed cap or
+    // pen, not just the two products that happen to primary there).
     category: product.category?.slug,
+    // Kept as {slug, sortOrder} pairs (not bare strings) so the frontend
+    // can also honor ProductCategory.sortOrder for merchandising order
+    // when a single category filter is active (Category Merchandising
+    // Audit §5/§6) — sortOrder here isn't provided by the public API today
+    // (serializeProductCategories intentionally drops it, same privacy
+    // reasoning as not exposing internal join-row ids), so this always
+    // reads as 0 until/unless that's added; filtering by membership still
+    // works correctly regardless.
+    categories: (product.categories || []).map((c) => ({ slug: c.slug, sortOrder: c.sortOrder ?? 0 })),
     material: product.material,
     gsm: product.gsm,
     colors: (product.colors || []).map((c) => c.slug),
@@ -218,5 +235,47 @@ export function mapApiProductToDetailShape(product) {
     neck: null,
     assets: product.assets || [],
     placementZones: product.placementZones || [],
+  };
+}
+
+/**
+ * Bridges the backend's Solution shape onto the view-shape every existing
+ * SolutionCard/SolutionHero/SolutionChallenge/SolutionBenefits/
+ * SolutionProcess/SolutionFeature/SolutionFinalCta/SolutionProof component
+ * already expects (Solutions Phase A/D) — the exact record shape
+ * frontend/src/data/solutionsData.js used to provide, so none of those
+ * presentational components needed to change. Works for both the list
+ * shape (no `products`) and the full detail shape.
+ */
+export function mapApiSolutionToViewShape(solution) {
+  return {
+    slug: solution.slug,
+    label: solution.name,
+    eyebrow: solution.eyebrow,
+    art: solution.art,
+    color: solution.color,
+    hubDescription: solution.hubDescription,
+    categoryHints: (solution.categories || []).map((c) => c.name),
+    heroTitle: solution.heroTitle,
+    heroCopy: solution.heroCopy,
+    heroImage: solution.image?.url || null,
+    heroAlt: solution.image?.alt || `${solution.name} — photography placeholder`,
+    challengeTitle: solution.challengeTitle,
+    challengeCopy: solution.challengeCopy,
+    challengePoints: solution.challengePoints || [],
+    useCases: solution.useCases || [],
+    recommendedCategories: (solution.categories || []).map((c) => ({ id: c.slug, label: c.name })),
+    benefits: solution.benefits || [],
+    processSteps: solution.processSteps || [],
+    featureSections: solution.featureSections || [],
+    finalCta: solution.finalCta,
+    proofTestimonialId: solution.proofTestimonialId,
+    primaryCtaLabel: solution.primaryCtaLabel,
+    secondaryCtaLabel: solution.secondaryCtaLabel,
+    secondaryCtaTo: solution.secondaryCtaTo,
+    // Only present on the detail response — already resolved server-side
+    // (no per-product N+1 fetch, Solutions Phase A §19), mapped through the
+    // same listing-shape adapter every other product card uses.
+    products: solution.products ? solution.products.map(mapApiProductToListingShape) : undefined,
   };
 }

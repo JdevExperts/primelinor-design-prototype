@@ -106,31 +106,9 @@ export const categories = [
   { id: "bottles", targetCategory: "bottles", art: "bottle", color: "#dfe3e8" },
   { id: "notebooks", targetCategory: "notebooks", art: "notebook", color: "#2b2b33" },
   { id: "promotional", targetCategory: "promotional", art: "pen", color: "#22304a" },
-  { id: "corporate-gifts", targetCategory: "corporate-gifts", art: "giftbox", color: "#3c4a63" },
+  { id: "calendars", targetCategory: "calendars", art: "notebook", color: "#3c4a63" },
   { id: "gift-kits", targetCategory: "kits", art: "kit", color: "#dde1e8" },
   { id: "visiting-cards", targetCategory: "visiting-cards", art: "notebook", color: "#f2ede3" },
-];
-
-/* ------------------------------------------------------------------ */
-/* Solutions for every team (homepage curated preview)                */
-/* ------------------------------------------------------------------ */
-
-/**
- * Homepage merchandising order — a deliberate subset of the canonical
- * `solutions` array in solutionsData.js, not the first N entries (Solutions
- * Phase 1 §3/§23/§24). The homepage never duplicates solution title/copy;
- * it only owns which slugs to feature and resolves the rest of the card
- * (title, description, art, link) from solutionsData.js via `getSolution`.
- */
-export const homeSolutionSlugs = [
-  "corporate-teams",
-  "restaurants-hospitality",
-  "schools-colleges",
-  "delivery-field-teams",
-  "startups",
-  "events-conferences",
-  "sports-teams-clubs",
-  "employee-gifting",
 ];
 
 /* ------------------------------------------------------------------ */
@@ -146,26 +124,77 @@ export const howItWorks = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Trust — all placeholder, replace with verified data                 */
+/* Trust — real, verified Google Reviews content for PrimeLinor         */
 /* ------------------------------------------------------------------ */
 
 export const trust = {
   rating: {
     source: "Google Reviews",
-    value: null, // placeholder — connect to real reviews
-    label: "Verified rating and reviews will appear here once our Google listing is connected.",
+    value: 4.8,
+    count: 28,
+    url: "https://www.google.com/maps/place/PrimeLinor/@28.5891563,77.3319841,17z/data=!3m1!4b1!4m6!3m5!1s0x390ce5dc2bce1395:0xeb94b99601375e18!8m2!3d28.5891563!4d77.3319841!16s%2Fg%2F11nbn1qdkb?hl=en-IN&entry=ttu&g_ep=EgoyMDI2MDgyNS4wIKXMDSoASAFQAw%3D%3D",
+    label: "Rated 4.8 on Google by 28 customers for print quality, fabric quality and service.",
   },
-  companies: ["Logo 1", "Logo 2", "Logo 3", "Logo 4", "Logo 5", "Logo 6"],
   /**
-   * Reserved slots, not sample quotes. `quote` stays null until a verified
-   * customer story is supplied; TrustSection renders the real testimonial
-   * automatically once quote/name/company are filled in.
+   * Real, verified Google reviews for PrimeLinor — no invented quotes.
+   * `featuredOnHome` marks the 4 shown on the homepage; Naveen Kumar is
+   * kept here for future reuse (e.g. a dedicated reviews page) without
+   * being rendered on the homepage right now.
+   */
+  reviews: [
+    {
+      id: "sakshi-gupta",
+      name: "Sakshi Gupta",
+      rating: 5,
+      timeAgo: "4 months ago",
+      text: "We placed a bulk order and the quality exceeded our expectations. The printing is clean and the fabric is very comfortable. Great service!",
+      featuredOnHome: true,
+    },
+    {
+      id: "asif-raja",
+      name: "Asif Raja",
+      rating: 5,
+      timeAgo: "4 months ago",
+      text: "excellent print quality, fast service, good finishing",
+      featuredOnHome: true,
+    },
+    {
+      id: "rohan-tiwari",
+      name: "Rohan Tiwari",
+      rating: 5,
+      timeAgo: "3 months ago",
+      text: "Best quality production they have at reasonable rates. Must try them. They are best.",
+      featuredOnHome: true,
+    },
+    {
+      id: "pradyumn-aggarwal",
+      name: "Pradyumn Aggarwal",
+      rating: 5,
+      timeAgo: "a month ago",
+      text: "Good quality t shirt with Nice print",
+      featuredOnHome: true,
+    },
+    {
+      id: "naveen-kumar",
+      name: "Naveen Kumar",
+      rating: 5,
+      timeAgo: "2 months ago",
+      text: "Best quality best price thank you prime Linor",
+      featuredOnHome: false,
+    },
+  ],
+  /**
+   * Reserved slots, not sample quotes — used by the Corporate Gifting page
+   * (GiftingTrust) and Solution detail pages (SolutionProof), not by the
+   * homepage trust section above. `quote` stays null until a verified
+   * customer story is supplied for that specific context.
    */
   testimonials: [
     { id: "t1", context: "Employee welcome kits", quote: null, name: null, role: null, company: null },
     { id: "t2", context: "Event and conference merchandise", quote: null, name: null, role: null, company: null },
     { id: "t3", context: "Festival and client gifting", quote: null, name: null, role: null, company: null },
   ],
+  /** Reserved order-photography slots — used by the Corporate Gifting page. */
   gallery: [
     { id: "g1", art: "tshirt", color: "#22304a", label: "Completed order photo placeholder", image: null },
     { id: "g2", art: "bottle", color: "#2b2b33", label: "Completed order photo placeholder", image: null },

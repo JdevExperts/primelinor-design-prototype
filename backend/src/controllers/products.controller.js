@@ -6,7 +6,11 @@ const { effectivePrice, compareByEffectivePrice } = require("../services/pricing
 const { serializeProductSummary, serializeProductDetail } = require("../services/serialize");
 
 const LIST_INCLUDE = {
-  category: { select: { id: true, slug: true, name: true } },
+  primaryCategory: { select: { id: true, slug: true, name: true, active: true } },
+  categories: {
+    include: { category: { select: { id: true, slug: true, name: true, active: true } } },
+    orderBy: { sortOrder: "asc" },
+  },
   priceTiers: { orderBy: { minQty: "asc" } },
   colors: { where: { active: true }, include: { color: true }, orderBy: { sortOrder: "asc" } },
   // Just enough to compute `primaryImage` server-side (Phase 6A.1 §30/§31)
@@ -41,7 +45,10 @@ const DETAIL_INCLUDE = {
 
 function buildWhere(query) {
   const where = { active: true };
-  if (query.category) where.category = { slug: query.category };
+  // Matches ANY category membership, not only the primary (Solutions Phase
+  // 0 §H) — a dry-fit tee whose primary is T-Shirts but is also mapped to
+  // Sports Teams & Clubs shows up when filtering by either category.
+  if (query.category) where.categories = { some: { category: { slug: query.category } } };
   if (query.material) where.material = { equals: query.material, mode: "insensitive" };
   if (query.customizable !== undefined) where.customizable = query.customizable;
   if (query.color) where.colors = { some: { active: true, color: { slug: query.color } } };
@@ -80,7 +87,28 @@ function applyPriceRange(products, { minPrice, maxPrice }) {
   });
 }
 
-function sortProducts(products, sortKey) {
+/**
+ * This product's ProductCategory.sortOrder for ONE specific category (its
+ * merchandising rank within that category's listing), or null if the
+ * product isn't found to have been included in `categories` (shouldn't
+ * happen when called from a category-filtered query, but never trusted).
+ * Pure — exported for unit testing without a database.
+ */
+function categoryMembershipSortOrder(product, categorySlug) {
+  if (!categorySlug) return null;
+  const membership = (product.categories || []).find((pc) => pc.category?.slug === categorySlug);
+  return membership ? membership.sortOrder : null;
+}
+
+/**
+ * `categorySlug` — the active `?category=` filter, if any. Only the
+ * "recommended" (default) sort is merchandising-controlled per category;
+ * an explicit sort choice (price/moq/newest) stays a literal, category-
+ * independent ordering regardless of which category filter is active
+ * (Solutions/Catalogue Merchandising Audit §5/§6) — this never touches PDP
+ * or primaryCategory semantics, only the LIST endpoint's default order.
+ */
+function sortProducts(products, sortKey, categorySlug) {
   const list = [...products];
   const byName = (a, b) => a.name.localeCompare(b.name);
 
@@ -95,6 +123,13 @@ function sortProducts(products, sortKey) {
       return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt) || byName(a, b));
     case "recommended":
     default:
+      if (categorySlug) {
+        return list.sort((a, b) => {
+          const ca = categoryMembershipSortOrder(a, categorySlug) ?? Infinity;
+          const cb = categoryMembershipSortOrder(b, categorySlug) ?? Infinity;
+          return ca - cb || a.sortOrder - b.sortOrder || byName(a, b);
+        });
+      }
       return list.sort((a, b) => a.sortOrder - b.sortOrder || byName(a, b));
   }
 }
@@ -106,7 +141,7 @@ exports.getProducts = asyncHandler(async (req, res) => {
 
   const all = await prisma.product.findMany({ where, include: LIST_INCLUDE });
   const priceFiltered = applyPriceRange(all, query);
-  const sorted = sortProducts(priceFiltered, query.sort);
+  const sorted = sortProducts(priceFiltered, query.sort, query.category);
 
   const total = sorted.length;
   const start = (query.page - 1) * query.limit;
@@ -136,3 +171,4 @@ exports.getProductBySlug = asyncHandler(async (req, res) => {
 exports.buildWhere = buildWhere;
 exports.applyPriceRange = applyPriceRange;
 exports.sortProducts = sortProducts;
+exports.categoryMembershipSortOrder = categoryMembershipSortOrder;

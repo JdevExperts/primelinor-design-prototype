@@ -34,6 +34,8 @@ const NewProduct = lazy(() => import("./admin/pages/catalog/NewProduct"));
 const ProductEditor = lazy(() => import("./admin/pages/catalog/ProductEditor"));
 const CategoriesAdmin = lazy(() => import("./admin/pages/catalog/CategoriesAdmin"));
 const ColorsAdmin = lazy(() => import("./admin/pages/catalog/ColorsAdmin"));
+const SolutionsAdmin = lazy(() => import("./admin/pages/catalog/SolutionsAdmin"));
+const SolutionEditor = lazy(() => import("./admin/pages/catalog/SolutionEditor"));
 
 // Token-gated customer quotation page — its own lightweight branded shell,
 // never the customer SiteLayout (Header/Footer) or the admin shell (Phase
@@ -75,6 +77,8 @@ export default function App() {
                 <Route path="catalog/products/:id" element={<ProductEditor />} />
                 <Route path="catalog/categories" element={<CategoriesAdmin />} />
                 <Route path="catalog/colors" element={<ColorsAdmin />} />
+                <Route path="catalog/solutions" element={<SolutionsAdmin />} />
+                <Route path="catalog/solutions/:id" element={<SolutionEditor />} />
               </Route>
             </Route>
           </Route>

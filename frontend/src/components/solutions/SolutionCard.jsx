@@ -10,7 +10,8 @@ export default function SolutionCard({ solution }) {
         <ProductVisual
           art={solution.art}
           color={solution.color}
-          alt={`${solution.label} — photography placeholder`}
+          src={solution.heroImage}
+          alt={solution.heroImage ? solution.heroAlt : `${solution.label} — photography placeholder`}
           ratio="4 / 2.8"
           scale={0.94}
         />
