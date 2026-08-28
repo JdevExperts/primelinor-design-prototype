@@ -1,25 +1,23 @@
 /**
- * SOLUTIONS — page-specific mock data.
+ * One-time backfill source for the 10 launch Solutions (Solutions Phase A
+ * §9/§37) — the historical content of what used to be
+ * frontend/src/data/solutionsData.js + frontend/src/data/homeData.js's
+ * `homeSolutionSlugs`, before Solutions became backend-managed data (§20).
+ * Moved here (backend-owned, CommonJS) rather than left in the frontend,
+ * same reasoning backfillLegacyCatalog.js keeps its own historical source
+ * data (../../primelinorbulk_backup.sql) permanently in the repo: this file
+ * is scripts/backfillSolutions.js's only source of truth and needs to stay
+ * re-runnable against a fresh database, even though the live frontend no
+ * longer imports Solution content from a static file at all.
  *
- * One reusable template (SolutionDetail) renders whichever solution this
- * data describes. Content, imagery, recommended products, benefits,
- * process steps, feature blocks and CTA copy are all data-driven so a real
- * backend/CMS can eventually replace this file without touching page
- * structure — see individual field comments below.
- *
- * `heroImage` / `mobileHeroImage` follow the same admin-ready convention as
- * the homepage campaign banners and the Corporate Gifting hero: null today
- * renders a composed ProductVisual placeholder; a real photo later is a
- * data change only.
- *
- * Order below is the intended /solutions hub merchandising order (Solutions
- * Phase 1) — not alphabetical. The homepage's curated subset is a separate,
- * shorter slug list (see `homeSolutionSlugs` in homeData.js) that resolves
- * against this same canonical array, so homepage and hub never duplicate
- * solution content.
+ * Order below is the intended /solutions hub merchandising order — not
+ * alphabetical (becomes Solution.sortOrder). `homeSolutionSlugs`'s order is
+ * a SEPARATE, independently-curated homepage order (becomes
+ * Solution.homeSortOrder) — verified to genuinely differ from the hub order
+ * for "startups" (2nd in the hub, 5th on the homepage).
  */
 
-export const solutions = [
+const solutions = [
   {
     slug: "corporate-teams",
     label: "Corporate Teams",
@@ -28,14 +26,10 @@ export const solutions = [
     color: "#22304a",
     hubDescription:
       "Branded apparel and everyday work essentials for teams of every size.",
-    categoryHints: ["T-Shirts", "Polos", "Bottles", "Bags"],
 
     heroTitle: "Branded Essentials Your Team Will Actually Use",
     heroCopy:
       "Create coordinated apparel, drinkware and work essentials with flexible quantities and consistent branding.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Coordinated corporate team apparel and drinkware, photography placeholder",
 
     challengeTitle: "Outfitting a Team Shouldn't Be Complicated",
     challengeCopy:
@@ -60,12 +54,6 @@ export const solutions = [
       "corporate-bottle",
       "laptop-backpack",
       "executive-notebook",
-    ],
-    recommendedCategories: [
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "polo", label: "Polo T-Shirts" },
-      { id: "bottles", label: "Bottles & Drinkware" },
-      { id: "bags", label: "Bags" },
     ],
 
     benefits: [
@@ -129,14 +117,10 @@ export const solutions = [
     art: "tshirt",
     color: "#e3e6eb",
     hubDescription: "Launch merchandise and team apparel at founder-friendly quantities.",
-    categoryHints: ["T-Shirts", "Hoodies", "Totes", "Notebooks"],
 
     heroTitle: "Small Quantities Without Looking Small",
     heroCopy:
       "Start with 5–25 pieces, preview your logo in minutes, and scale up as your team grows.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Small-batch startup team apparel, photography placeholder",
 
     challengeTitle: "You Don't Need a Warehouse of Merch Yet",
     challengeCopy:
@@ -160,12 +144,6 @@ export const solutions = [
       "canvas-tote",
       "a5-notebook-diary",
       "metal-pen",
-    ],
-    recommendedCategories: [
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "hoodies", label: "Hoodies" },
-      { id: "bags", label: "Bags" },
-      { id: "notebooks", label: "Notebooks & Diaries" },
     ],
 
     benefits: [
@@ -227,14 +205,10 @@ export const solutions = [
     art: "polo",
     color: "#5c2733",
     hubDescription: "Staff apparel that looks the part, for cafés, restaurants and hotel teams.",
-    categoryHints: ["Polos", "T-Shirts", "Caps", "Bottles"],
 
     heroTitle: "Staff Apparel That Looks the Part",
     heroCopy:
       "Branded polos, tees and caps for front-of-house and back-of-house teams — consistent across every shift and every location.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Restaurant and hospitality staff apparel composition, photography placeholder",
 
     challengeTitle: "Your Team Is the First Thing Guests Notice",
     challengeCopy:
@@ -252,24 +226,12 @@ export const solutions = [
       "Seasonal and event staffing",
     ],
 
-    /**
-     * Honest V1 substitution (Solutions Phase 1 §14/§31): the catalogue has
-     * no purpose-built apron, chef coat or kitchen uniform yet, so this
-     * only recommends real generalist apparel — do not add those claims
-     * until a matching product actually exists.
-     */
     recommendedProductIds: [
       "premium-polo",
       "cotton-round-neck",
       "classic-cap",
       "corporate-bottle",
       "corporate-staff-uniform-tshirt",
-    ],
-    recommendedCategories: [
-      { id: "polo", label: "Polo T-Shirts" },
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "caps", label: "Caps" },
-      { id: "bottles", label: "Bottles & Drinkware" },
     ],
 
     benefits: [
@@ -331,14 +293,10 @@ export const solutions = [
     art: "hoodie",
     color: "#3c4a63",
     hubDescription: "Uniforms, department apparel and fest merchandise for campuses of any size.",
-    categoryHints: ["Polos", "T-Shirts", "Hoodies", "Bags"],
 
     heroTitle: "Uniforms and Campus Merchandise, Handled at Scale",
     heroCopy:
       "Uniforms, house and department apparel, and fest merchandise — ordered consistently across a full campus.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "School and college uniform and merchandise composition, photography placeholder",
 
     challengeTitle: "Campus Orders Are Bigger Than They Look",
     challengeCopy:
@@ -362,12 +320,6 @@ export const solutions = [
       "college-batch-oversized-t-shirt",
       "pullover-hoodie",
       "laptop-backpack",
-    ],
-    recommendedCategories: [
-      { id: "polo", label: "Polo T-Shirts" },
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "hoodies", label: "Hoodies" },
-      { id: "bags", label: "Bags" },
     ],
 
     benefits: [
@@ -429,14 +381,10 @@ export const solutions = [
     art: "backpack",
     color: "#3c4a63",
     hubDescription: "Branded gear for teams who are always on the move.",
-    categoryHints: ["T-Shirts", "Polos", "Caps", "Bags"],
 
     heroTitle: "Branded Gear Built for Teams on the Move",
     heroCopy:
       "T-shirts, polos, caps and bags for delivery, installation and field service teams — comfortable, consistent and easy to reorder.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Delivery and field team apparel composition, photography placeholder",
 
     challengeTitle: "Your Team Represents You at Every Doorstep",
     challengeCopy:
@@ -454,23 +402,12 @@ export const solutions = [
       "New hire kits",
     ],
 
-    /**
-     * Honest V1 substitution (Solutions Phase 1 §16/§31): the catalogue has
-     * no hi-vis PPE, rainwear or industrial workwear yet — only real
-     * generalist apparel is recommended until a matching product exists.
-     */
     recommendedProductIds: [
       "dry-fit-round-neck-t-shirt",
       "premium-polo",
       "classic-cap",
       "vacuum-insulated-bottle",
       "drawstring-bag",
-    ],
-    recommendedCategories: [
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "polo", label: "Polo T-Shirts" },
-      { id: "caps", label: "Caps" },
-      { id: "bags", label: "Bags" },
     ],
 
     benefits: [
@@ -532,14 +469,10 @@ export const solutions = [
     art: "cap",
     color: "#2b2b33",
     hubDescription: "Event merchandise and attendee kits, planned around your date.",
-    categoryHints: ["T-Shirts", "Caps", "Bags", "Bottles"],
 
     heroTitle: "Merchandise Ready Before Your Event Date",
     heroCopy:
       "Event T-shirts, caps, bags and attendee kits — branded consistently and planned around your date.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Event and conference merchandise composition, photography placeholder",
 
     challengeTitle: "Events Run on Fixed Dates",
     challengeCopy:
@@ -563,12 +496,6 @@ export const solutions = [
       "corporate-bottle",
       "canvas-tote",
       "conference-kit",
-    ],
-    recommendedCategories: [
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "caps", label: "Caps" },
-      { id: "bags", label: "Bags" },
-      { id: "bottles", label: "Bottles & Drinkware" },
     ],
 
     benefits: [
@@ -608,7 +535,6 @@ export const solutions = [
       },
     ],
 
-    /** Matches trust.testimonials[id] in mockData.js — reused, not duplicated. */
     proofTestimonialId: "t2",
 
     primaryCtaLabel: "Request a Quote",
@@ -632,14 +558,10 @@ export const solutions = [
     art: "tshirt",
     color: "#22304a",
     hubDescription: "Performance apparel and team essentials for sports teams and clubs.",
-    categoryHints: ["Dry-Fit T-Shirts", "Caps", "Bottles", "Bags"],
 
     heroTitle: "Performance Apparel for Your Team",
     heroCopy:
       "Dry-fit T-shirts, caps and bottles branded for your team, club or squad — comfortable enough for practice and consistent enough for match day.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Sports team apparel and drinkware composition, photography placeholder",
 
     challengeTitle: "Every Team Wants to Look Like One",
     challengeCopy:
@@ -657,23 +579,12 @@ export const solutions = [
       "Recreational and community leagues",
     ],
 
-    /**
-     * Honest V1 substitution (Solutions Phase 1 §18/§31): the catalogue has
-     * no numbered jerseys or full match-day team kits — only real dry-fit
-     * apparel and team essentials are recommended and described as such.
-     */
     recommendedProductIds: [
       "dry-fit-sports-t-shirt",
       "dry-fit-performance-t-shirt",
       "premium-sports-casual-t-shirt",
       "classic-cap",
       "vacuum-insulated-bottle",
-    ],
-    recommendedCategories: [
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "caps", label: "Caps" },
-      { id: "bottles", label: "Bottles & Drinkware" },
-      { id: "bags", label: "Bags" },
     ],
 
     benefits: [
@@ -735,14 +646,10 @@ export const solutions = [
     art: "kit",
     color: "#e3ddd0",
     hubDescription: "Welcome kits, milestones and festival gifting for your team.",
-    categoryHints: ["Welcome Kits", "Gift Sets", "Bottles", "Notebooks"],
 
     heroTitle: "Gifts That Mark the Moment",
     heroCopy:
       "Welcome kits, milestones, recognition and festival gifting — curated and branded for your team.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Employee gifting kit composition, photography placeholder",
 
     challengeTitle: "Not Every Gift Needs a New Catalogue Search",
     challengeCopy:
@@ -767,12 +674,6 @@ export const solutions = [
       "laptop-backpack",
       "executive-gift-set",
     ],
-    recommendedCategories: [
-      { id: "corporate-gifts", label: "Corporate Gifts" },
-      { id: "kits", label: "Gift Kits" },
-      { id: "bottles", label: "Bottles & Drinkware" },
-      { id: "notebooks", label: "Notebooks & Diaries" },
-    ],
 
     benefits: [
       { title: "Curated, Not Generic", description: "Ready combinations for common gifting moments." },
@@ -789,12 +690,6 @@ export const solutions = [
       { title: "Receive quotation", description: "Pricing confirmed by our team." },
     ],
 
-    /**
-     * Employee Gifting is intent-specific (onboarding / recognition /
-     * milestones), unlike the broad Corporate Gifting page — so both
-     * feature blocks link prominently into it rather than duplicating its
-     * collections here.
-     */
     featureSections: [
       {
         id: "welcome-kits",
@@ -827,7 +722,7 @@ export const solutions = [
       subtitle: null,
       ctas: [
         { type: "link", label: "Explore Corporate Gifting", to: "/corporate-gifting" },
-        { type: "link", label: "Build Your Kit", to: { pathname: "/corporate-gifting", hash: "#build-kit" } },
+        { type: "link", label: "Build Your Kit", to: "/corporate-gifting#build-kit" },
       ],
     },
   },
@@ -839,14 +734,10 @@ export const solutions = [
     art: "polo",
     color: "#dde1e8",
     hubDescription: "A consistent team look across every shift, store and counter.",
-    categoryHints: ["Polos", "T-Shirts", "Caps", "Uniforms"],
 
     heroTitle: "A Consistent Look Across Every Shift",
     heroCopy:
       "Branded polos, tees and caps for retail and store teams — the same look at every counter, outlet and shift.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Retail store staff apparel composition, photography placeholder",
 
     challengeTitle: "Every Store Should Look Like the Same Brand",
     challengeCopy:
@@ -864,23 +755,12 @@ export const solutions = [
       "New hire onboarding",
     ],
 
-    /**
-     * Honest V1 substitution (Solutions Phase 1 §20/§31): the catalogue has
-     * no dedicated apron or name-badge line yet — only real polo/tee/cap/
-     * uniform apparel is recommended.
-     */
     recommendedProductIds: [
       "premium-polo",
       "eco-polo-t-shirt",
       "cotton-round-neck",
       "classic-cap",
       "corporate-staff-uniform-tshirt",
-    ],
-    recommendedCategories: [
-      { id: "polo", label: "Polo T-Shirts" },
-      { id: "tshirts", label: "T-Shirts" },
-      { id: "caps", label: "Caps" },
-      { id: "uniforms", label: "Uniforms" },
     ],
 
     benefits: [
@@ -942,14 +822,10 @@ export const solutions = [
     art: "pen",
     color: "#22304a",
     hubDescription: "Promotional products and giveaways that keep your brand in hand.",
-    categoryHints: ["Totes", "Bottles", "Pens", "Notebooks"],
 
     heroTitle: "Branded Products That Stay Visible",
     heroCopy:
       "Promotional products, campaign giveaways and event merchandise that keep your brand in hand after the campaign ends.",
-    heroImage: null,
-    mobileHeroImage: null,
-    heroAlt: "Marketing campaign promotional products composition, photography placeholder",
 
     challengeTitle: "A Giveaway Only Works If It's Kept",
     challengeCopy:
@@ -973,12 +849,6 @@ export const solutions = [
       "metal-pen",
       "a5-notebook-diary",
       "promotional-merchandise-kit",
-    ],
-    recommendedCategories: [
-      { id: "bags", label: "Bags" },
-      { id: "bottles", label: "Bottles & Drinkware" },
-      { id: "pens", label: "Pens" },
-      { id: "promotional", label: "Promotional Products" },
     ],
 
     benefits: [
@@ -1034,10 +904,16 @@ export const solutions = [
   },
 ];
 
-export const solutionsBySlug = Object.fromEntries(
-  solutions.map((solution) => [solution.slug, solution]),
-);
+/** Homepage's own curated order — independently verified to differ from the hub order (§9 above). */
+const homeSolutionSlugs = [
+  "corporate-teams",
+  "restaurants-hospitality",
+  "schools-colleges",
+  "delivery-field-teams",
+  "startups",
+  "events-conferences",
+  "sports-teams-clubs",
+  "employee-gifting",
+];
 
-export function getSolution(slug) {
-  return solutionsBySlug[slug] || null;
-}
+module.exports = { solutions, homeSolutionSlugs };

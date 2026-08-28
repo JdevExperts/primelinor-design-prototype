@@ -4,6 +4,37 @@
   gap: var(--space-20);
 }
 
+/* Defensive empty state (Solutions Phase A §21) — same visual language as
+   ProductListing's empty state; should never render in practice since the
+   backend rejects an ACTIVE Solution with zero active mapped products. */
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+  padding: var(--space-48) var(--space-24);
+  background: var(--color-offwhite);
+  border: 1px solid var(--color-border);
+}
+
+.emptyTitle {
+  font-size: var(--text-h4);
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.emptyCopy {
+  max-width: 42ch;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
 .categories {
   display: flex;
   align-items: center;

@@ -6,7 +6,7 @@ import {
   footerContact,
   footerLinkRoutes,
   footerPolicies,
-  socialPlaceholders,
+  socialLinks,
 } from "../../data/mockData";
 import styles from "./Footer.module.css";
 
@@ -81,10 +81,16 @@ export default function Footer() {
           </ul>
 
           <ul className={styles.social} aria-label="Social media">
-            {socialPlaceholders.map((network) => (
-              <li key={network}>
-                <a className={styles.socialLink} href="#top">
-                  {network}
+            {socialLinks.map((social) => (
+              <li key={social.name}>
+                <a
+                  className={styles.socialLink}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.ariaLabel}
+                >
+                  <Icon name={social.icon} size={20} />
                 </a>
               </li>
             ))}

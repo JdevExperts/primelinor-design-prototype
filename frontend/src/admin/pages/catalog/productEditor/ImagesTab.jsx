@@ -233,8 +233,19 @@ export default function ImagesTab({ product, colors, onSaved }) {
     onSaved({ ...product, assets: assets.filter((a) => a.id !== assetId) });
   };
 
+  const activeAssetCount = assets.filter((a) => a.active !== false).length;
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
+      {product.active && activeAssetCount === 0 ? (
+        // Warn-only (Solutions/Catalogue Audit §25) — never blocks saving
+        // or activating; no fabricated imagery.
+        <div className={styles.card} style={{ borderColor: "#b42318", background: "#fef3f2" }}>
+          <p style={{ fontSize: 12.5, color: "#b42318", fontWeight: 600, margin: 0 }}>
+            NO IMAGE — this product is active with zero active images. Customers will see a placeholder everywhere it appears.
+          </p>
+        </div>
+      ) : null}
       <div className={styles.card}>
         <div className={styles.cardTitle}>Images ({assets.length})</div>
         {assets.length === 0 ? (

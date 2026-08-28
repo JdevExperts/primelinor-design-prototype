@@ -85,6 +85,19 @@ const PATHS = {
       <path d="M9 19a3 3 0 003 2" />
     </>
   ),
+  instagram: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="16.6" cy="7.4" r="0.8" fill="currentColor" stroke="none" />
+    </>
+  ),
+  youtube: (
+    <>
+      <path d="M21 8.4c0-1.7-1.2-3.1-2.9-3.3C16.1 4.8 12 4.8 12 4.8s-4.1 0-6.1.3C4.2 5.3 3 6.7 3 8.4v7.2c0 1.7 1.2 3.1 2.9 3.3 2 .3 6.1.3 6.1.3s4.1 0 6.1-.3c1.7-.2 2.9-1.6 2.9-3.3V8.4z" />
+      <path d="M10 9.7l5 2.3-5 2.3z" fill="currentColor" stroke="none" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 20, strokeWidth = 1.6, ...rest }) {

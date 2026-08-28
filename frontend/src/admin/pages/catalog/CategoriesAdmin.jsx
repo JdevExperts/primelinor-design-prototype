@@ -210,6 +210,13 @@ function CategoryRow({ category, categories, onUpdated, isAdmin }) {
   };
 
   const parent = categories.find((c) => c.id === category.parentCategoryId);
+  // isLeaf/activeProductCount come from listCategoriesAdmin (Category Admin
+  // completeness improvements, Solutions Phase A §22) — a leaf with 0
+  // active products is worth flagging even while inactive (nothing to
+  // block there, per §22's "may be empty" allowance), and blocks the
+  // activate toggle itself when it's the empty-leaf case the backend
+  // rejects.
+  const isEmptyActiveLeaf = category.isLeaf && category.activeProductCount === 0;
 
   return (
     <tr>
@@ -219,6 +226,12 @@ function CategoryRow({ category, categories, onUpdated, isAdmin }) {
       </td>
       <td className={tableStyles.muted}>{category.slug}</td>
       <td className={tableStyles.muted}>{parent ? parent.name : "—"}</td>
+      <td className={tableStyles.muted}>
+        {category.isLeaf ? category.activeProductCount : "—"}
+        {category.isLeaf && category.activeProductCount === 0 ? (
+          <span style={{ marginLeft: 6, fontSize: 10, color: "#b42318", fontWeight: 600 }}>NO PRODUCTS</span>
+        ) : null}
+      </td>
       <td>
         <input
           className={styles.input}
@@ -233,6 +246,7 @@ function CategoryRow({ category, categories, onUpdated, isAdmin }) {
         <button
           type="button"
           className={category.active ? tableStyles.actionLink : tableStyles.muted}
+          title={!category.active && isEmptyActiveLeaf ? "This leaf category has no active products — activating it will be rejected." : undefined}
           onClick={() => patch({ active: !category.active })}
           disabled={saving || !isAdmin}
           style={{ border: "none", background: "none", cursor: isAdmin ? "pointer" : "default" }}
@@ -289,6 +303,7 @@ export default function CategoriesAdmin() {
                 <th>Image</th>
                 <th>Slug</th>
                 <th>Parent</th>
+                <th>Active Products</th>
                 <th>Sort Order</th>
                 <th>Status</th>
               </tr>

@@ -146,7 +146,7 @@ export default function ProductListing() {
   };
 
   const filtered = useMemo(
-    () => sortProducts(filterProducts(products, filters, query), sort),
+    () => sortProducts(filterProducts(products, filters, query), sort, filters.categories),
     [products, filters, query, sort],
   );
 

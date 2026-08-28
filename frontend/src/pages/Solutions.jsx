@@ -4,14 +4,27 @@ import Button from "../components/ui/Button";
 import SolutionCard from "../components/solutions/SolutionCard";
 import QuoteModal from "../components/product/QuoteModal";
 import { submitLead } from "../api/leads";
-import { solutions } from "../data/solutionsData";
+import { getSolutions } from "../api/catalog";
 import styles from "./Solutions.module.css";
 
 export default function Solutions() {
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [solutions, setSolutions] = useState([]);
 
   useEffect(() => {
     document.title = "Solutions — PrimeLinor";
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSolutions()
+      .then((list) => {
+        if (!cancelled) setSolutions(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

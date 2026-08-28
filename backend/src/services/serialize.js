@@ -51,13 +51,39 @@ function serializePlacementZone(zone) {
   };
 }
 
+/**
+ * Distinct categories a product belongs to (all ProductCategory
+ * memberships), ordered by membership sortOrder, active memberships only —
+ * never surfaces an inactive category to a customer (Solutions Phase 0 §G).
+ */
+function serializeProductCategories(productCategories) {
+  return (productCategories || [])
+    .filter((pc) => pc.category?.active)
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((pc) => ({
+      ...serializeCategoryRef(pc.category),
+      // This product's merchandising rank WITHIN this specific category's
+      // listing (Category Merchandising Audit §5/§6) — not sensitive
+      // (unlike imageStorageKey/internal ids), and the frontend category
+      // filter needs it to reproduce ProductCategory.sortOrder client-side
+      // the same way GET /products?category=X already does server-side.
+      sortOrder: pc.sortOrder,
+    }));
+}
+
 /** List/card shape — no internal-only fields, no heavy relations. */
 function serializeProductSummary(product) {
   return {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    category: serializeCategoryRef(product.category),
+    primaryCategory: serializeCategoryRef(product.primaryCategory),
+    categories: serializeProductCategories(product.categories),
+    // Temporary back-compat alias (Solutions Phase 0 §G) — every existing
+    // consumer (frontend adapters.js, etc.) reads `product.category`.
+    // Remove once all frontend consumers read `primaryCategory` directly.
+    category: serializeCategoryRef(product.primaryCategory),
     material: product.material,
     gsm: product.gsm,
     moq: product.moq,
@@ -129,8 +155,92 @@ function serializeCategory(category) {
   };
 }
 
+/** Customer-safe image shape — never `imageStorageKey`, same rule as serializeCategoryImage. */
+function serializeSolutionImage(solution) {
+  return solution.imageUrl ? { url: solution.imageUrl, alt: solution.imageAlt } : null;
+}
+
+/**
+ * Distinct categories of a Solution's ACTIVE mapped products, in
+ * first-occurrence order by SolutionProduct.sortOrder (Solutions Phase A
+ * §12/§20 — no SolutionCategory table; derived instead).
+ *
+ * Decision (Solutions Phase 0 §J): uses each product's PRIMARY category
+ * only, not its full ProductCategory membership set. Now that a product can
+ * carry several secondary categories (merchandising/discovery relationships
+ * per §I, not canonical), deriving from every membership risks flooding a
+ * Solution's category-chip row with categories only loosely related to that
+ * use case. The primary category is the one canonical "what this product
+ * is" — the right granularity for a small "Explore by category" chip list.
+ * Revisit only if V1 usage shows primary-only is too sparse in practice.
+ *
+ * Pure — exported for unit testing without a database. Caller must pass
+ * `solutionProducts` already ordered by sortOrder and must include each
+ * product's primaryCategory.
+ */
+function deriveSolutionCategories(solutionProducts) {
+  const seen = new Set();
+  const categories = [];
+  for (const sp of solutionProducts || []) {
+    const product = sp.product;
+    const category = product?.primaryCategory;
+    if (!product?.active || !category?.active || seen.has(category.id)) continue;
+    seen.add(category.id);
+    categories.push({ id: category.id, slug: category.slug, name: category.name });
+  }
+  return categories;
+}
+
+/** List/card shape — enough for the homepage and /solutions hub. */
+function serializeSolutionSummary(solution) {
+  return {
+    id: solution.id,
+    slug: solution.slug,
+    name: solution.name,
+    eyebrow: solution.eyebrow,
+    hubDescription: solution.hubDescription,
+    art: solution.art,
+    color: solution.color,
+    image: serializeSolutionImage(solution),
+    featuredOnHome: solution.featuredOnHome,
+    sortOrder: solution.sortOrder,
+    homeSortOrder: solution.homeSortOrder,
+    categories: deriveSolutionCategories(solution.products),
+  };
+}
+
+/** Full detail shape — everything SolutionDetail's template components need. */
+function serializeSolutionDetail(solution) {
+  return {
+    ...serializeSolutionSummary(solution),
+    heroTitle: solution.heroTitle,
+    heroCopy: solution.heroCopy,
+    challengeTitle: solution.challengeTitle,
+    challengeCopy: solution.challengeCopy,
+    challengePoints: solution.challengePoints || [],
+    useCases: solution.useCases || [],
+    benefits: solution.benefits || [],
+    processSteps: solution.processSteps || [],
+    featureSections: solution.featureSections || [],
+    finalCta: solution.finalCta,
+    primaryCtaLabel: solution.primaryCtaLabel,
+    secondaryCtaLabel: solution.secondaryCtaLabel,
+    secondaryCtaTo: solution.secondaryCtaTo,
+    proofTestimonialId: solution.proofTestimonialId,
+    // Inactive mapped products are never shipped publicly (Solutions Phase
+    // A §6/§21) — filtered here rather than trusting the caller's query
+    // already did so, same defensive posture as selectPrimaryImage.
+    products: (solution.products || [])
+      .filter((sp) => sp.product?.active)
+      .map((sp) => serializeProductSummary(sp.product)),
+  };
+}
+
 module.exports = {
   serializeProductSummary,
   serializeProductDetail,
   serializeCategory,
+  serializeSolutionSummary,
+  serializeSolutionDetail,
+  deriveSolutionCategories,
 };

@@ -155,6 +155,12 @@ export default function ProductsList() {
                         height={36}
                         style={{ objectFit: "cover", borderRadius: 6 }}
                       />
+                    ) : product.active ? (
+                      // Active product with zero ProductAsset rows — a real
+                      // completeness gap worth flagging (Solutions/Catalogue
+                      // Audit §25/§26), warn-only, never a save/activate
+                      // blocker (no fabricated imagery).
+                      <span style={{ fontSize: 10, color: "#b42318", fontWeight: 600 }}>NO IMAGE</span>
                     ) : (
                       <span className={styles.muted}>—</span>
                     )}
@@ -166,7 +172,10 @@ export default function ProductsList() {
                     <br />
                     <span className={styles.muted}>{product.slug}</span>
                   </td>
-                  <td className={styles.muted}>{product.category?.name || "—"}</td>
+                  <td className={styles.muted}>
+                    {product.primaryCategory?.name || "—"}
+                    {product.categoryCount > 1 ? <span style={{ marginLeft: 4, color: "#98a2b3" }}>+{product.categoryCount - 1}</span> : null}
+                  </td>
                   <td>{product.priceSummary}</td>
                   <td>{product.moq}</td>
                   <td>{product.customizable ? "Yes" : "No"}</td>

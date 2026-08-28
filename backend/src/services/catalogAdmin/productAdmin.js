@@ -17,9 +17,21 @@
  */
 const prisma = require("../../lib/prisma");
 const ApiError = require("../../utils/ApiError");
+const solutionAdmin = require("./solutionAdmin");
+
+// Product<->Category is many-to-many via ProductCategory (Solutions Phase
+// 0) — `primaryCategory` is the canonical/breadcrumb category,
+// `categories` is the full membership list (primary included), ordered so
+// the primary reliably sorts first for admin display.
+const CATEGORY_REF_SELECT = { id: true, slug: true, name: true, active: true };
+const CATEGORIES_INCLUDE = {
+  orderBy: { sortOrder: "asc" },
+  include: { category: { select: CATEGORY_REF_SELECT } },
+};
 
 const ADMIN_LIST_INCLUDE = {
-  category: { select: { id: true, slug: true, name: true } },
+  primaryCategory: { select: CATEGORY_REF_SELECT },
+  categories: CATEGORIES_INCLUDE,
   priceTiers: { select: { minQty: true, maxQty: true, unitPrice: true }, orderBy: { minQty: "asc" } },
   // Enough to run the canonical CATALOG→GALLERY_FRONT→first-active
   // priority (productImageSelection.js), not the full asset library
@@ -35,7 +47,8 @@ const ADMIN_LIST_INCLUDE = {
 };
 
 const ADMIN_DETAIL_INCLUDE = {
-  category: { select: { id: true, slug: true, name: true } },
+  primaryCategory: { select: CATEGORY_REF_SELECT },
+  categories: CATEGORIES_INCLUDE,
   priceTiers: { orderBy: { minQty: "asc" } },
   colors: { include: { color: true }, orderBy: { sortOrder: "asc" } },
   variants: { orderBy: { sortOrder: "asc" } },
@@ -51,10 +64,12 @@ const ADMIN_DETAIL_INCLUDE = {
   updatedByUser: { select: { id: true, name: true } },
 };
 
+// primaryCategoryId/categoryIds are handled separately (see createProduct/
+// updateProduct) since they need cross-field validation and a matching
+// ProductCategory write, not a plain scalar column set.
 const BASICS_KEYS = [
   "name",
   "slug",
-  "categoryId",
   "description",
   "longSpec",
   "material",
@@ -81,9 +96,36 @@ async function assertUniqueSlug(slug, excludeId) {
   }
 }
 
-async function assertCategoryExists(categoryId) {
-  const category = await prisma.category.findUnique({ where: { id: categoryId } });
-  if (!category) throw ApiError.badRequest("Category does not exist.");
+/** All of categoryIds must exist, no duplicates — same shape as assertColorsValid/assertTagsValid. */
+async function assertCategoriesValid(categoryIds) {
+  if (new Set(categoryIds).size !== categoryIds.length) {
+    throw ApiError.badRequest("Duplicate category in categoryIds.");
+  }
+  const rows = await prisma.category.findMany({ where: { id: { in: categoryIds } }, select: { id: true, active: true } });
+  if (rows.length !== categoryIds.length) throw ApiError.badRequest("One or more categories do not exist.");
+  return rows;
+}
+
+/**
+ * Pure — exported for unit testing without a database (see
+ * assertTierCoversMoq precedent). `categoryRows` is [{id, active}] for the
+ * product's EFFECTIVE category membership set (after this write). Solutions
+ * Phase 0 §D: an active Product needs >=1 active category mapping, a
+ * primaryCategoryId that's actually one of those mappings, and that
+ * primary category must itself be active.
+ */
+function assertActiveCategoryInvariant(active, categoryRows, primaryCategoryId) {
+  if (!active) return;
+  if (!categoryRows.some((c) => c.active)) {
+    throw ApiError.badRequest("Cannot activate a product with no active category mapping — map at least one active category.");
+  }
+  const primary = categoryRows.find((c) => c.id === primaryCategoryId);
+  if (!primary) {
+    throw ApiError.badRequest("primaryCategoryId must be one of the product's mapped categories.");
+  }
+  if (!primary.active) {
+    throw ApiError.badRequest("The primary category must be active while the product is active.");
+  }
 }
 
 async function assertColorsValid(colorIds) {
@@ -139,7 +181,9 @@ function buildAdminWhere(query) {
       { slug: { contains: query.search, mode: "insensitive" } },
     ];
   }
-  if (query.category) where.category = { slug: query.category };
+  // Matches ANY category membership, not just the primary (Solutions Phase
+  // 0 §H/§F) — consistent with the public products filter.
+  if (query.category) where.categories = { some: { category: { slug: query.category } } };
   if (query.active !== undefined) where.active = query.active;
   if (query.priceMode) where.priceMode = query.priceMode;
   if (query.customizable !== undefined) where.customizable = query.customizable;
@@ -178,7 +222,14 @@ async function getProductAdmin(id) {
 
 async function createProduct(data, staffUser) {
   await assertUniqueSlug(data.slug);
-  await assertCategoryExists(data.categoryId);
+  const categoryRows = await assertCategoriesValid(data.categoryIds);
+  // Zod's checkPrimaryCategoryIncluded already caught this shape at the
+  // HTTP boundary — re-checked here too since createProduct/updateProduct
+  // are also called directly in tests/scripts that bypass Zod.
+  if (!data.categoryIds.includes(data.primaryCategoryId)) {
+    throw ApiError.badRequest("primaryCategoryId must be one of categoryIds.");
+  }
+  assertActiveCategoryInvariant(data.active ?? true, categoryRows, data.primaryCategoryId);
   if (data.priceMode === "TIERED" && data.priceTiers?.length) {
     assertTierCoversMoq(data.moq, data.priceTiers);
   }
@@ -200,7 +251,7 @@ async function createProduct(data, staffUser) {
       data: {
         name: data.name,
         slug: data.slug,
-        categoryId: data.categoryId,
+        primaryCategoryId: data.primaryCategoryId,
         description: data.description,
         longSpec: data.longSpec ?? null,
         material: data.material ?? null,
@@ -220,6 +271,10 @@ async function createProduct(data, staffUser) {
         createdByUserId: staffUser.id,
         updatedByUserId: staffUser.id,
       },
+    });
+
+    await tx.productCategory.createMany({
+      data: data.categoryIds.map((categoryId, i) => ({ productId: created.id, categoryId, sortOrder: i })),
     });
 
     if (data.priceMode === "TIERED" && data.priceTiers?.length) {
@@ -280,13 +335,42 @@ async function createProduct(data, staffUser) {
 }
 
 async function updateProduct(id, data, staffUser) {
-  const existing = await prisma.product.findUnique({ where: { id } });
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    include: { categories: { select: { categoryId: true } } },
+  });
   if (!existing) throw ApiError.notFound("Product not found.");
 
   if (data.slug !== undefined && data.slug !== existing.slug) {
     await assertUniqueSlug(data.slug, id);
   }
-  if (data.categoryId !== undefined) await assertCategoryExists(data.categoryId);
+
+  // Effective (post-write) category state — used both to validate
+  // primaryCategoryId membership and the active-category invariant, since
+  // either can be violated by a request that only touches ONE of
+  // {active, primaryCategoryId, categoryIds} against the product's
+  // EXISTING other values (Solutions Phase 0 §D).
+  const effectivePrimaryCategoryId = data.primaryCategoryId !== undefined ? data.primaryCategoryId : existing.primaryCategoryId;
+  const effectiveCategoryIds = data.categoryIds !== undefined ? data.categoryIds : existing.categories.map((c) => c.categoryId);
+
+  let categoryRows = null;
+  if (data.categoryIds !== undefined) {
+    categoryRows = await assertCategoriesValid(data.categoryIds);
+  }
+  if (!effectiveCategoryIds.includes(effectivePrimaryCategoryId)) {
+    throw ApiError.badRequest("primaryCategoryId must be one of the product's mapped categories.");
+  }
+
+  const effectiveActive = data.active !== undefined ? data.active : existing.active;
+  if (effectiveActive) {
+    const rowsForInvariant =
+      categoryRows ?? (await prisma.category.findMany({ where: { id: { in: effectiveCategoryIds } }, select: { id: true, active: true } }));
+    assertActiveCategoryInvariant(true, rowsForInvariant, effectivePrimaryCategoryId);
+  }
+
+  if (data.active === false && existing.active) {
+    await solutionAdmin.assertProductDeactivationSafe(id);
+  }
 
   const effectiveMoq = data.moq !== undefined ? data.moq : existing.moq;
   const effectivePriceMode = data.priceMode !== undefined ? data.priceMode : existing.priceMode;
@@ -319,9 +403,17 @@ async function updateProduct(id, data, staffUser) {
       if (data.fixedPrice !== undefined && existing.priceMode === "FIXED") basicsData.fixedPrice = data.fixedPrice;
       if (data.quoteAboveQty !== undefined && existing.priceMode === "TIERED") basicsData.quoteAboveQty = data.quoteAboveQty;
     }
+    if (data.primaryCategoryId !== undefined) basicsData.primaryCategoryId = data.primaryCategoryId;
     basicsData.updatedByUserId = staffUser.id;
 
     await tx.product.update({ where: { id }, data: basicsData });
+
+    if (data.categoryIds !== undefined) {
+      await tx.productCategory.deleteMany({ where: { productId: id } });
+      await tx.productCategory.createMany({
+        data: data.categoryIds.map((categoryId, i) => ({ productId: id, categoryId, sortOrder: i })),
+      });
+    }
 
     if (data.priceMode !== undefined || data.priceTiers !== undefined) {
       await tx.productPriceTier.deleteMany({ where: { productId: id } });
@@ -405,7 +497,7 @@ async function updateProduct(id, data, staffUser) {
 async function duplicateProduct(id, { slug: requestedSlug }, staffUser) {
   const original = await prisma.product.findUnique({
     where: { id },
-    include: { priceTiers: true, colors: true, variants: true, specifications: true, tags: true, placementZones: true },
+    include: { priceTiers: true, colors: true, variants: true, specifications: true, tags: true, placementZones: true, categories: true },
   });
   if (!original) throw ApiError.notFound("Product not found.");
 
@@ -423,7 +515,7 @@ async function duplicateProduct(id, { slug: requestedSlug }, staffUser) {
       data: {
         name: `${original.name} (Copy)`,
         slug: candidateSlug,
-        categoryId: original.categoryId,
+        primaryCategoryId: original.primaryCategoryId,
         description: original.description,
         longSpec: original.longSpec,
         material: original.material,
@@ -443,6 +535,12 @@ async function duplicateProduct(id, { slug: requestedSlug }, staffUser) {
         createdByUserId: staffUser.id,
         updatedByUserId: staffUser.id,
       },
+    });
+
+    // Category memberships are structural (like colors/variants) — the
+    // duplicate starts with the exact same category set, primary included.
+    await tx.productCategory.createMany({
+      data: original.categories.map((c) => ({ productId: created.id, categoryId: c.categoryId, sortOrder: c.sortOrder })),
     });
 
     if (original.priceTiers.length) {
@@ -508,4 +606,5 @@ module.exports = {
   // Exported for unit testing without a database — see test/productAdminValidation.test.js
   assertTierCoversMoq,
   assertUniqueVariantCodes,
+  assertActiveCategoryInvariant,
 };

@@ -32,9 +32,61 @@ async function assertValidParent(categoryId, parentCategoryId) {
 }
 
 async function listCategoriesAdmin() {
-  return prisma.category.findMany({
+  const categories = await prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    include: {
+      children: { select: { id: true } },
+      // ALL ProductCategory memberships, not just primary-category products
+      // (Solutions Phase 0 §F) — a category a product lists as a secondary
+      // membership counts toward that category being "not empty" too.
+      productMemberships: { select: { product: { select: { active: true } } } },
+    },
   });
+  // Still direct memberships only (Solutions/Catalogue Completeness Audit
+  // §13) — a parent category's "count" is deliberately 0 direct here even
+  // though its children may be full; the admin list surfaces leaf/parent
+  // state separately so that reads correctly as healthy, not empty.
+  return categories.map((c) => ({
+    ...c,
+    isLeaf: c.children.length === 0,
+    activeProductCount: c.productMemberships.filter((m) => m.product.active).length,
+  }));
+}
+
+/**
+ * Pure — exported for unit testing without a database (see productAdmin.js's
+ * assertTierCoversMoq / solutionAdmin.js's assertActivationValid precedent).
+ * A parent (has children) is exempt — parents may always be empty of
+ * DIRECT products.
+ */
+function assertLeafActivationValid(isLeaf, activeProductCount) {
+  if (isLeaf && activeProductCount === 0) {
+    throw ApiError.badRequest(
+      "Cannot activate an empty leaf category — add at least one active product first, or keep it inactive.",
+    );
+  }
+}
+
+/**
+ * "Activating an empty leaf category is rejected" (Solutions Phase A §22) —
+ * checked only on an explicit `active: true` in the request body (the
+ * activation action itself), never at creation, since a brand-new category
+ * legitimately has 0 products yet and existing flows create the category
+ * before its first product (practical semantics per §22, not a DB
+ * constraint).
+ */
+async function assertCanActivateLeaf(categoryId) {
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    include: {
+      children: { select: { id: true } },
+      productMemberships: { select: { product: { select: { active: true } } } },
+    },
+  });
+  if (!category) return;
+  const isLeaf = category.children.length === 0;
+  const activeProductCount = category.productMemberships.filter((m) => m.product.active).length;
+  assertLeafActivationValid(isLeaf, activeProductCount);
 }
 
 async function createCategory(data) {
@@ -65,6 +117,9 @@ async function updateCategory(id, data) {
   if (data.parentCategoryId !== undefined) {
     await assertValidParent(id, data.parentCategoryId);
   }
+  if (data.active === true && !existing.active) {
+    await assertCanActivateLeaf(id);
+  }
 
   return prisma.category.update({
     where: { id },
@@ -79,4 +134,4 @@ async function updateCategory(id, data) {
   });
 }
 
-module.exports = { listCategoriesAdmin, createCategory, updateCategory };
+module.exports = { listCategoriesAdmin, createCategory, updateCategory, assertCanActivateLeaf, assertLeafActivationValid };

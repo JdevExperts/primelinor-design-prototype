@@ -44,8 +44,23 @@ export function BasicsFieldSet({ values, onChange, categories, slugWarning }) {
         {slugWarning ? <div style={{ fontSize: 11, color: "#b45309", marginTop: 4 }}>{slugWarning}</div> : null}
       </label>
       <label>
-        <div className={styles.fieldLabel}>Category *</div>
-        <select className={styles.select} value={values.categoryId} onChange={set("categoryId")}>
+        <div className={styles.fieldLabel}>Primary Category *</div>
+        <select
+          className={styles.select}
+          value={values.primaryCategoryId}
+          onChange={(event) => {
+            const primaryCategoryId = event.target.value;
+            // Primary must always be one of the mapped categories (Solutions
+            // Phase 0 §E) — picking a new primary that isn't in the current
+            // additional-categories set adds it automatically rather than
+            // rejecting the change, since "make X the primary" is a clear
+            // enough intent to also mean "and map X".
+            const categoryIds = values.categoryIds.includes(primaryCategoryId)
+              ? values.categoryIds
+              : [...values.categoryIds, primaryCategoryId];
+            onChange({ ...values, primaryCategoryId, categoryIds });
+          }}
+        >
           <option value="">Select a category…</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -53,6 +68,44 @@ export function BasicsFieldSet({ values, onChange, categories, slugWarning }) {
             </option>
           ))}
         </select>
+      </label>
+      <label style={{ gridColumn: "1 / -1" }}>
+        <div className={styles.fieldLabel}>Additional Categories</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {categories
+            .filter((c) => c.id !== values.primaryCategoryId)
+            .map((c) => (
+              <label
+                key={c.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  border: "1px solid var(--color-border-strong, #d3d8e0)",
+                  borderRadius: 6,
+                  padding: "5px 9px",
+                  fontSize: 12.5,
+                  background: values.categoryIds.includes(c.id) ? "#f0f4fa" : "#fff",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={values.categoryIds.includes(c.id)}
+                  onChange={(event) => {
+                    const categoryIds = event.target.checked
+                      ? [...values.categoryIds, c.id]
+                      : values.categoryIds.filter((id) => id !== c.id);
+                    onChange({ ...values, categoryIds });
+                  }}
+                />
+                {c.name}
+              </label>
+            ))}
+        </div>
+        <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+          Where this product also shows up (discovery/merchandising) — the Primary Category above stays the canonical
+          breadcrumb/navigation category.
+        </div>
       </label>
       <label>
         <div className={styles.fieldLabel}>MOQ *</div>
@@ -112,7 +165,8 @@ export function basicsToPayload(values) {
   return {
     name: values.name.trim(),
     slug: values.slug.trim(),
-    categoryId: values.categoryId,
+    primaryCategoryId: values.primaryCategoryId,
+    categoryIds: values.categoryIds,
     description: values.description.trim(),
     longSpec: values.longSpec.trim() || null,
     material: values.material.trim() || null,
@@ -134,7 +188,8 @@ export function emptyBasics() {
     name: "",
     slug: "",
     slugTouched: false,
-    categoryId: "",
+    primaryCategoryId: "",
+    categoryIds: [],
     description: "",
     longSpec: "",
     material: "",
@@ -156,7 +211,8 @@ export function basicsFromProduct(product) {
     name: product.name,
     slug: product.slug,
     slugTouched: true,
-    categoryId: product.category?.id || "",
+    primaryCategoryId: product.primaryCategory?.id || product.primaryCategoryId || "",
+    categoryIds: (product.categories || []).map((c) => c.categoryId),
     description: product.description,
     longSpec: product.longSpec || "",
     material: product.material || "",

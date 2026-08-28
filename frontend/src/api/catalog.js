@@ -11,7 +11,7 @@
  * ProductDetail for how that error state is shown.
  */
 import { apiGet } from "./http";
-import { mapApiProductToDetailShape, mapApiProductToListingShape } from "./adapters";
+import { mapApiProductToDetailShape, mapApiProductToListingShape, mapApiSolutionToViewShape } from "./adapters";
 
 const USE_FIXTURES = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_CATALOG === "true";
 
@@ -68,4 +68,24 @@ export async function getCategories() {
 
   const data = await apiGet("/categories");
   return data.categories;
+}
+
+/**
+ * Backend is now the source of truth for Solutions (Solutions Phase A/D) —
+ * frontend/src/data/solutionsData.js is retired. `params.featured` maps
+ * straight onto the public API's `?featured=true` query.
+ */
+export async function getSolutions(params = {}) {
+  const data = await apiGet("/solutions", { params });
+  return data.solutions.map(mapApiSolutionToViewShape);
+}
+
+export async function getSolutionBySlug(slug) {
+  try {
+    const data = await apiGet(`/solutions/${slug}`);
+    return mapApiSolutionToViewShape(data.solution);
+  } catch (err) {
+    if (err.status === 404) return null;
+    throw err;
+  }
 }
