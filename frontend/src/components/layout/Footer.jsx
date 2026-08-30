@@ -28,13 +28,23 @@ export default function Footer() {
                 and curated kits, at quantities that suit the team.
               </p>
               <div className={styles.contact}>
-                <a className={styles.contactLink} href={`mailto:${businessConfig.supportEmail}`}>
-                  {businessConfig.supportEmail}
-                </a>
-                <a className={styles.contactLink} href={`tel:${businessConfig.phoneE164}`}>
-                  {businessConfig.phoneDisplay}
-                </a>
-                <span className={styles.contactMeta}>{businessConfig.addressLines.join(", ")}</span>
+                <p className={styles.contactHeading}>Contacts:</p>
+                <p className={styles.contactRow}>
+                  <strong className={styles.contactLabel}>Email:</strong>{" "}
+                  <a className={styles.contactLink} href={`mailto:${businessConfig.supportEmail}`}>
+                    {businessConfig.supportEmail}
+                  </a>
+                </p>
+                <p className={styles.contactRow}>
+                  <strong className={styles.contactLabel}>Call:</strong>{" "}
+                  <a className={styles.contactLink} href={`tel:${businessConfig.phoneE164}`}>
+                    {businessConfig.phoneDisplay}
+                  </a>
+                </p>
+                <p className={styles.contactRow}>
+                  <strong className={styles.contactLabel}>Official Address:</strong>{" "}
+                  <span className={styles.contactMeta}>{businessConfig.addressLines.join(", ")}</span>
+                </p>
               </div>
               <button type="button" className={styles.chat} onClick={() => setWaOpen(true)}>
                 <Icon name="chat" size={18} />

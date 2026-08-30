@@ -8,11 +8,20 @@
 /* Navigation                                                          */
 /* ------------------------------------------------------------------ */
 
-export const announcement = [
-  "Custom Branding",
-  "Flexible Quantities",
-  "PAN India Supply",
-];
+/**
+ * Slim top bar rendered above the main header on every public page
+ * (components/layout/AnnouncementBar.jsx). Phone/WhatsApp comes from
+ * `businessConfig` below, not duplicated here. One stable message —
+ * no rotation/carousel — per the current design brief.
+ */
+export const announcementBar = {
+  bulkLabel: "Bulk & Custom Orders",
+  sampleCta: {
+    label: "Get Your Sample Today",
+    labelShort: "Get Sample",
+    to: "/contact",
+  },
+};
 
 export const primaryNav = [
   { id: "products", label: "Products", href: "/products", hasMegaMenu: true },

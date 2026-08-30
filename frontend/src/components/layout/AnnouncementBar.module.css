@@ -1,49 +1,95 @@
 .bar {
-  background-color: var(--color-navy-light);
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .inner {
   display: flex;
-  justify-content: center;
-}
-
-.list {
-  display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-16);
   min-height: 36px;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-16);
+  white-space: nowrap;
   font-size: var(--text-caption);
   font-weight: var(--weight-medium);
   letter-spacing: 0.02em;
-  color: #46526a;
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
 }
 
-.item:not(:last-child)::after {
-  content: "";
+.bulk {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.contact {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.contact:hover,
+.contact:focus-visible {
+  color: var(--color-amber);
+}
+
+.sample {
+  color: var(--color-amber);
+  font-weight: var(--weight-semibold);
+}
+
+.sample:hover,
+.sample:focus-visible {
+  color: var(--color-amber-hover);
+  text-decoration: underline;
+}
+
+.divider {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background-color: var(--color-amber);
+  background-color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
 }
 
-@media (max-width: 560px) {
-  .list {
+.sampleShort {
+  display: none;
+}
+
+/* Tighter spacing before content starts getting hidden. */
+@media (max-width: 760px) {
+  .inner {
     gap: var(--space-8);
-    min-height: 32px;
+  }
+}
+
+/* Drop "Bulk & Custom Orders" first — the phone/WhatsApp CTA and sample
+   CTA are the two actionable items and stay on every screen size. */
+@media (max-width: 640px) {
+  .bulk,
+  .dividerBulk {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .inner {
+    min-height: 34px;
   }
 
   .item {
-    gap: var(--space-8);
     font-size: 11px;
-    letter-spacing: 0;
+  }
+
+  .sampleFull {
+    display: none;
+  }
+
+  .sampleShort {
+    display: inline;
   }
 }
