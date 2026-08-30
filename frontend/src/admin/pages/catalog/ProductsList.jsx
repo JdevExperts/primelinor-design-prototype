@@ -171,6 +171,22 @@ export default function ProductsList() {
                     </Link>
                     <br />
                     <span className={styles.muted}>{product.slug}</span>
+                    {product.active && product.variantType === "size" && product.activeVariantCount === 0 ? (
+                      <>
+                        <br />
+                        {/* Size-typed but zero active ProductVariant rows — PDP renders
+                            no Available Sizes line at all (Product Data Completeness §23). */}
+                        <span style={{ fontSize: 10, color: "#b42318", fontWeight: 600 }}>NO SIZES</span>
+                      </>
+                    ) : null}
+                    {product.active && product.specificationCount < 2 ? (
+                      <>
+                        <br />
+                        {/* Fewer than 2 ProductSpecification rows — the Product Details
+                            section reads as thin/placeholder, not a real spec sheet. */}
+                        <span style={{ fontSize: 10, color: "#b54708", fontWeight: 600 }}>THIN DETAILS</span>
+                      </>
+                    ) : null}
                   </td>
                   <td className={styles.muted}>
                     {product.primaryCategory?.name || "—"}

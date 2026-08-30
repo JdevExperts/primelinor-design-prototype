@@ -20,6 +20,7 @@
  */
 const path = require("node:path");
 const PDFDocument = require("pdfkit");
+const { BUSINESS_NAME, ADDRESS_LINES } = require("../config/business");
 
 const DEJAVU_ROOT = path.dirname(require.resolve("dejavu-fonts-ttf/package.json"));
 const FONT_REGULAR = path.join(DEJAVU_ROOT, "ttf", "DejaVuSans.ttf");
@@ -29,7 +30,7 @@ const NAVY = "#0f1b2d";
 const AMBER = "#f59e0b";
 const MUTED = "#6b7280";
 const BORDER = "#e5e7eb";
-const PAGE_BOTTOM = 740; // leave room for the 770-anchored footer disclaimer below this
+const PAGE_BOTTOM = 700; // leave room for the business-contact block + 770-anchored disclaimer below this
 const PAGE_TOP = 50;
 
 function formatMoney(value, currency) {
@@ -41,6 +42,35 @@ function formatMoney(value, currency) {
 function formatDate(value) {
   if (!value) return "—";
   return new Date(value).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
+}
+
+/** "919599122214" -> "+91 9599122214" — mirrors the display format used on-site. */
+function formatPhoneDisplay(whatsappNumber) {
+  const digits = String(whatsappNumber || "").replace(/\D/g, "");
+  if (digits.length < 11) return null;
+  return `+${digits.slice(0, 2)} ${digits.slice(2)}`;
+}
+
+/** "https://primelinorbulk.com" -> "primelinorbulk.com" for a compact PDF display. */
+function formatWebsiteDisplay(publicAppUrl) {
+  if (!publicAppUrl) return null;
+  return publicAppUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+}
+
+/**
+ * Business contact block shown on every quotation PDF (Phase 6B §15).
+ * Each field is independently optional so a not-yet-configured deployment
+ * (e.g. WHATSAPP_NUMBER/SUPPORT_EMAIL unset in a fresh environment) still
+ * renders a correct PDF rather than a broken one — it just omits that line.
+ */
+function getBusinessContactLines() {
+  const lines = [...ADDRESS_LINES];
+  const email = process.env.SUPPORT_EMAIL?.trim();
+  const phone = formatPhoneDisplay(process.env.WHATSAPP_NUMBER);
+  const website = formatWebsiteDisplay(process.env.PUBLIC_APP_URL);
+  const contactBits = [email, phone, website].filter(Boolean);
+  if (contactBits.length) lines.push(contactBits.join("  ·  "));
+  return lines;
 }
 
 /**
@@ -65,7 +95,7 @@ function renderQuotePdf(quote) {
     .fillColor("#ffffff")
     .font("Body-Bold")
     .fontSize(20)
-    .text("PrimeLinor", 50, 30)
+    .text(BUSINESS_NAME, 50, 30)
     .font("Body")
     .fontSize(10)
     .fillColor(AMBER)
@@ -169,6 +199,13 @@ function renderQuotePdf(quote) {
     doc.fontSize(10).fillColor(NAVY).text(quote.customerNotes, 50, y, { width: 495 });
   }
 
+  let contactY = 733;
+  doc.font("Body").fontSize(8).fillColor(MUTED);
+  for (const line of getBusinessContactLines()) {
+    doc.text(line, 50, contactY, { width: 495, align: "center" });
+    contactY += 10;
+  }
+
   doc
     .font("Body")
     .fontSize(8)
@@ -176,7 +213,7 @@ function renderQuotePdf(quote) {
     .text(
       "This is a quotation, not a tax invoice. Pricing, delivery and terms are subject to confirmation by PrimeLinor.",
       50,
-      770,
+      775,
       { width: 495, align: "center" },
     );
 

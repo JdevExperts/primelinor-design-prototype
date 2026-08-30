@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import ContactForm from "../components/contact/ContactForm";
 import WhatsAppDialog from "../components/common/WhatsAppDialog";
 import QuoteModal from "../components/product/QuoteModal";
 import Button from "../components/ui/Button";
+import Seo from "../components/layout/Seo";
 import { contactChannels, contactHero } from "../data/companyData";
+import { businessConfig } from "../data/siteConfig";
 import styles from "./Contact.module.css";
 
 export default function Contact() {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
 
-  useEffect(() => {
-    document.title = "Contact PrimeLinor | PrimeLinor";
-  }, []);
-
   return (
     <main id="main">
+      <Seo
+        title="Contact PrimeLinor"
+        description="Tell us what you need using the form and the PrimeLinor team will follow up directly — apparel, corporate gifts, promotional products and custom kits."
+      />
       <section className={styles.hero} aria-labelledby="contact-hero-title">
         <div className={`container ${styles.heroInner}`}>
           <p className="eyebrow">{contactHero.eyebrow}</p>
@@ -44,9 +46,23 @@ export default function Contact() {
                       Continue on WhatsApp
                     </button>
                   ) : null}
+                  {channel.action === "email" ? (
+                    <a className={styles.channelAction} href={`mailto:${businessConfig.supportEmail}`}>
+                      {businessConfig.supportEmail}
+                    </a>
+                  ) : null}
                 </li>
               ))}
             </ul>
+
+            <div className={styles.quotePanel}>
+              <p className={styles.quotePanelTitle}>Visit or Call Us</p>
+              <p className={styles.quotePanelCopy}>
+                {businessConfig.addressLines.join(", ")}
+                <br />
+                <a href={`tel:${businessConfig.phoneE164}`}>{businessConfig.phoneDisplay}</a>
+              </p>
+            </div>
 
             <div className={styles.quotePanel}>
               <p className={styles.quotePanelTitle}>Already Know What You Need?</p>

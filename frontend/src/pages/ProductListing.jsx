@@ -19,6 +19,7 @@ import {
   toggleId,
 } from "../utils/filterProducts";
 import { useMediaQuery } from "../utils/useMediaQuery";
+import Seo from "../components/layout/Seo";
 import styles from "./ProductListing.module.css";
 
 const CHIP_LIMIT = 8;
@@ -219,6 +220,10 @@ export default function ProductListing() {
 
   return (
     <main id="main" className={styles.page}>
+      <Seo
+        title="All Products — Custom Apparel, Gifts & Promotional Products | PrimeLinor"
+        description="Browse PrimeLinor's full catalogue of custom apparel, corporate gifts, promotional products and kits. Filter by category, material and MOQ — request a quote for your quantity."
+      />
       <div className={`container ${styles.intro}`}>
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">
           <ol className={styles.crumbs}>

@@ -9,6 +9,11 @@
  * generates a random one and prints it ONCE — it is never logged or
  * stored anywhere else (only its bcrypt hash is persisted). No password is
  * ever hardcoded in source.
+ *
+ * Production (Phase 6B §71): refuses to run when NODE_ENV=production unless
+ * ALLOW_ADMIN_BOOTSTRAP=true is set for that one invocation — this is the
+ * intended way to create the very first production admin (there is no
+ * seeded default account; prisma/seed.js never creates a StaffUser row).
  */
 const crypto = require("node:crypto");
 const prisma = require("../src/lib/prisma");
@@ -28,6 +33,15 @@ function generatePassword() {
 }
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_ADMIN_BOOTSTRAP !== "true") {
+    console.error(
+      "Refusing to run: NODE_ENV=production. Set ALLOW_ADMIN_BOOTSTRAP=true for this one " +
+        "invocation if genuinely intended (e.g. creating the first production admin).",
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const args = parseArgs(process.argv.slice(2));
   const email = args.email?.trim().toLowerCase();
   const name = args.name?.trim();

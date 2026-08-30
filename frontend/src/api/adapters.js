@@ -219,6 +219,8 @@ export function mapApiProductToDetailShape(product) {
     categoryLabel: product.category?.name || "Products",
     description: product.description,
     longSpec: product.longSpec || base.spec,
+    seoTitle: product.seoTitle || null,
+    seoDescription: product.seoDescription || null,
     variantType: product.variantType,
     variants: (product.variants || []).map((v) => ({ id: v.code, label: v.label })),
     sizeGuide: sizeGuideFor(product),

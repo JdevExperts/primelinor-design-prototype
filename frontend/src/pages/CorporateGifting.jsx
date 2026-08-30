@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import BrandingPackaging from "../components/gifting/BrandingPackaging";
 import GiftCollections from "../components/gifting/GiftCollections";
 import GiftingBenefits from "../components/gifting/GiftingBenefits";
@@ -11,6 +11,7 @@ import KitBuilder from "../components/gifting/KitBuilder";
 import PopularGiftingProducts from "../components/gifting/PopularGiftingProducts";
 import WelcomeKitFeature from "../components/gifting/WelcomeKitFeature";
 import QuoteModal from "../components/product/QuoteModal";
+import Seo from "../components/layout/Seo";
 import { submitRfq } from "../api/rfqs";
 import { kitDefaultQuantity } from "../data/corporateGiftingData";
 import { buildKitQuotePayload } from "../utils/giftKit";
@@ -25,10 +26,6 @@ export default function CorporateGifting() {
 
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quotePayload, setQuotePayload] = useState(EMPTY_QUOTE);
-
-  useEffect(() => {
-    document.title = "Corporate Gifting — PrimeLinor";
-  }, []);
 
   const toggleKitItem = (id) => {
     setKitItems((current) =>
@@ -54,6 +51,10 @@ export default function CorporateGifting() {
 
   return (
     <main id="main">
+      <Seo
+        title="Corporate Gifting — Employee Welcome Kits & Client Gifts | PrimeLinor"
+        description="Curated corporate gifting for employee welcome kits, festival gifting and client gifts — build a kit or request a quote for your team."
+      />
       <GiftingHero onRequestQuote={openKitQuote} />
       <GiftingUseCases />
       <GiftCollections onRequestQuote={openQuote} />

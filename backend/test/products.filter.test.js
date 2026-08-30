@@ -1,6 +1,12 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildWhere, applyPriceRange, sortProducts, categoryMembershipSortOrder } = require("../src/controllers/products.controller");
+const {
+  buildWhere,
+  applyPriceRange,
+  sortProducts,
+  categoryMembershipSortOrder,
+  mergeRelatedProducts,
+} = require("../src/controllers/products.controller");
 
 test("buildWhere: always scopes to active products", () => {
   assert.deepEqual(buildWhere({}), { active: true });
@@ -114,4 +120,54 @@ test("sortProducts: an explicit sort (price_asc) ignores category-specific sortO
   ];
   const sorted = sortProducts(products, "price_asc", "promotional");
   assert.deepEqual(sorted.map((p) => p.name), ["B", "A"]);
+});
+
+test("mergeRelatedProducts: explicit curated relations always come first, in their given order", () => {
+  const result = mergeRelatedProducts({
+    explicit: [{ id: "b" }, { id: "a" }],
+    samePrimaryCategory: [{ id: "c" }],
+    sharedSecondaryCategory: [{ id: "d" }],
+  });
+  assert.deepEqual(result.map((p) => p.id), ["b", "a", "c", "d"]);
+});
+
+test("mergeRelatedProducts: fills remaining slots from same-primary-category before shared-secondary-category", () => {
+  const result = mergeRelatedProducts({
+    explicit: [],
+    samePrimaryCategory: [{ id: "same-cat-1" }, { id: "same-cat-2" }],
+    sharedSecondaryCategory: [{ id: "shared-secondary-1" }],
+  });
+  assert.deepEqual(result.map((p) => p.id), ["same-cat-1", "same-cat-2", "shared-secondary-1"]);
+});
+
+test("mergeRelatedProducts: dedupes by id across pools, keeping only the first (highest-priority) occurrence", () => {
+  const result = mergeRelatedProducts({
+    explicit: [{ id: "x" }],
+    samePrimaryCategory: [{ id: "x" }, { id: "y" }],
+    sharedSecondaryCategory: [{ id: "y" }, { id: "z" }],
+  });
+  assert.deepEqual(result.map((p) => p.id), ["x", "y", "z"]);
+});
+
+test("mergeRelatedProducts: caps at the given limit without ever exceeding it", () => {
+  const result = mergeRelatedProducts(
+    {
+      explicit: [{ id: "1" }, { id: "2" }],
+      samePrimaryCategory: [{ id: "3" }, { id: "4" }, { id: "5" }],
+      sharedSecondaryCategory: [{ id: "6" }, { id: "7" }],
+    },
+    3,
+  );
+  assert.deepEqual(result.map((p) => p.id), ["1", "2", "3"]);
+});
+
+test("mergeRelatedProducts: 0 candidates across every pool yields an empty list, not an error", () => {
+  const result = mergeRelatedProducts({ explicit: [], samePrimaryCategory: [], sharedSecondaryCategory: [] });
+  assert.deepEqual(result, []);
+});
+
+test("mergeRelatedProducts: defaults to a limit of 8", () => {
+  const explicit = Array.from({ length: 10 }, (_, i) => ({ id: `p${i}` }));
+  const result = mergeRelatedProducts({ explicit, samePrimaryCategory: [], sharedSecondaryCategory: [] });
+  assert.equal(result.length, 8);
 });

@@ -44,6 +44,15 @@ const ADMIN_LIST_INCLUDE = {
     take: 5,
     select: { type: true, url: true, alt: true, sortOrder: true },
   },
+  // Counts only, not full rows (Product Data Completeness §23) — enough
+  // for the list's NO SIZES / THIN DETAILS badges without over-fetching
+  // variant/specification content the list never displays.
+  _count: {
+    select: {
+      variants: { where: { active: true } },
+      specifications: true,
+    },
+  },
 };
 
 const ADMIN_DETAIL_INCLUDE = {
