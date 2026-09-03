@@ -19,6 +19,13 @@ const prisma = require("../../lib/prisma");
 const ApiError = require("../../utils/ApiError");
 const solutionAdmin = require("./solutionAdmin");
 const { normalizeProductCode, productCodeFamily } = require("../productCode");
+const { buildAttributeWhere, REVIEW_PENDING_KEY } = require("../productAttributeService");
+const { PREDICATES } = require("../catalogHealthPredicates");
+
+// `?studioPending=1` etc. → the SAME predicate the dashboard counts with.
+const HEALTH_FILTER_WHERE = Object.fromEntries(
+  Object.values(PREDICATES).map((p) => [p.filterParam, p.where]),
+);
 
 // Product<->Category is many-to-many via ProductCategory (Solutions Phase
 // 0) — `primaryCategory` is the canonical/breadcrumb category,
@@ -54,6 +61,12 @@ const ADMIN_LIST_INCLUDE = {
       specifications: true,
     },
   },
+  // Just the review flag for the list's Pending/Complete badge — not the
+  // whole attribute set (Product Attribute framework §14).
+  productAttributes: {
+    where: { attribute: { key: REVIEW_PENDING_KEY } },
+    select: { id: true },
+  },
 };
 
 const ADMIN_DETAIL_INCLUDE = {
@@ -72,6 +85,12 @@ const ADMIN_DETAIL_INCLUDE = {
   },
   createdByUser: { select: { id: true, name: true } },
   updatedByUser: { select: { id: true, name: true } },
+  // Full attribute set for the editor's Catalogue Review section (§15)
+  // and any future attribute-driven editor UI.
+  productAttributes: {
+    include: { attribute: { select: { key: true, name: true, valueType: true } } },
+    orderBy: { createdAt: "asc" },
+  },
 };
 
 // primaryCategoryId/categoryIds are handled separately (see createProduct/
@@ -232,6 +251,16 @@ function buildAdminWhere(query) {
   if (query.active !== undefined) where.active = query.active;
   if (query.priceMode) where.priceMode = query.priceMode;
   if (query.customizable !== undefined) where.customizable = query.customizable;
+  // Generic product-attribute presence filter (§14/§19).
+  const attrWhere = buildAttributeWhere(query);
+  if (attrWhere.AND) where.AND = [...(where.AND || []), ...attrWhere.AND];
+  // Catalogue-health filters — each reuses the exact predicate the
+  // dashboard counts with, so count and clicked list always agree.
+  for (const [param, predWhere] of Object.entries(HEALTH_FILTER_WHERE)) {
+    if (query[param] === true || query[param] === "1" || query[param] === "true") {
+      where.AND = [...(where.AND || []), predWhere];
+    }
+  }
   return where;
 }
 

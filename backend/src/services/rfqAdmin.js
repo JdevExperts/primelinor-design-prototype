@@ -4,6 +4,7 @@ const { recordStaffActivity } = require("./rfqActivity");
 const { isTransitionAllowed } = require("./rfqStatusTransitions");
 const { resolveRfqItem } = require("./rfqItem");
 const { ensureWorkingItems } = require("./rfqWorkingItems");
+const { periodRange } = require("./dashboardPeriods");
 
 const SUMMARY_INCLUDE = {
   contact: { include: { company: true } },
@@ -24,16 +25,20 @@ const DETAIL_INCLUDE = {
   },
 };
 
-function buildRfqWhere({ status, source, assignedTo, dateFrom, dateTo, search }) {
+function buildRfqWhere({ status, source, assignedTo, dateFrom, dateTo, period, search }) {
   const where = {};
   if (status) where.status = status;
   if (source) where.sourceType = source;
   if (assignedTo === "unassigned") where.assignedToUserId = null;
   else if (assignedTo) where.assignedToUserId = assignedTo;
   if (dateFrom || dateTo) {
+    // Explicit range (e.g. a dashboard "Today/This week" link) wins.
     where.createdAt = {};
     if (dateFrom) where.createdAt.gte = new Date(dateFrom);
     if (dateTo) where.createdAt.lte = new Date(dateTo);
+  } else {
+    const range = periodRange(period || "30d");
+    if (range) where.createdAt = range;
   }
   if (search) {
     where.OR = [
@@ -47,8 +52,8 @@ function buildRfqWhere({ status, source, assignedTo, dateFrom, dateTo, search })
   return where;
 }
 
-async function listRfqs({ status, source, assignedTo, dateFrom, dateTo, search, page, limit }) {
-  const where = buildRfqWhere({ status, source, assignedTo, dateFrom, dateTo, search });
+async function listRfqs({ status, source, assignedTo, dateFrom, dateTo, period, search, page, limit }) {
+  const where = buildRfqWhere({ status, source, assignedTo, dateFrom, dateTo, period, search });
   const [total, rfqs] = await Promise.all([
     prisma.rFQ.count({ where }),
     prisma.rFQ.findMany({

@@ -4,6 +4,7 @@ import { useAdminAuth } from "../context/useAdminAuth";
 import styles from "./AdminLayout.module.css";
 
 const NAV_ITEMS = [
+  { to: "/admin/dashboard", label: "Dashboard" },
   { to: "/admin/rfqs", label: "RFQs" },
   { to: "/admin/quotations", label: "Quotations" },
   { to: "/admin/leads", label: "Leads" },

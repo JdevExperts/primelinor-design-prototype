@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { productColors } from "../../data/mockData";
 import { formatInr } from "../../utils/pricing";
+import { track } from "../../analytics/track";
 import Button from "./Button";
 import Icon from "./Icon";
 import ProductVisual from "./ProductVisual";
@@ -126,6 +127,9 @@ export default function ProductCard({
           size="sm"
           trailingIcon="arrowRight"
           className={styles.details}
+          onClick={() =>
+            track("PRODUCT_CARD_CLICK", { productId: product.id, productCode: productCode || undefined })
+          }
         >
           View Details
         </Button>

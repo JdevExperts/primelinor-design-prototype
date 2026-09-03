@@ -1,4 +1,4 @@
-import { adminGet, adminPatch, adminPost, adminDelete, adminUpload } from "./adminClient";
+import { adminGet, adminPatch, adminPut, adminPost, adminDelete, adminUpload } from "./adminClient";
 
 // ── Products ─────────────────────────────────────────────────────────────────
 export const listProductsAdmin = (params) => adminGet("/admin/catalog/products", params);
@@ -6,6 +6,15 @@ export const getProductAdmin = (id) => adminGet(`/admin/catalog/products/${id}`)
 export const createProductAdmin = (payload) => adminPost("/admin/catalog/products", payload);
 export const updateProductAdmin = (id, payload) => adminPatch(`/admin/catalog/products/${id}`, payload);
 export const duplicateProductAdmin = (id, payload) => adminPost(`/admin/catalog/products/${id}/duplicate`, payload);
+
+// ── Product attributes (generic framework) ───────────────────────────────────
+export const setProductAttribute = (id, key, value) =>
+  adminPut(`/admin/catalog/products/${id}/attributes/${key}`, { value });
+export const removeProductAttribute = (id, key) =>
+  adminDelete(`/admin/catalog/products/${id}/attributes/${key}`);
+// Catalogue-review flag (PRODUCT_REVIEW_PENDING) — present ⇒ pending.
+export const markProductReviewComplete = (id) => removeProductAttribute(id, "PRODUCT_REVIEW_PENDING");
+export const reopenProductReview = (id) => setProductAttribute(id, "PRODUCT_REVIEW_PENDING", true);
 
 // ── Product assets ───────────────────────────────────────────────────────────
 export const uploadProductAsset = (productId, file, meta) => {

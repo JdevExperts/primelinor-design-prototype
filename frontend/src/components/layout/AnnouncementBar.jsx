@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { announcementBar, businessConfig } from "../../data/siteConfig";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
+import { track } from "../../analytics/track";
 import styles from "./AnnouncementBar.module.css";
 
 const CONTACT_MESSAGE = "Hi PrimeLinor, I'd like to know more about bulk/custom orders.";
@@ -20,6 +21,7 @@ export default function AnnouncementBar() {
           target="_blank"
           rel="noreferrer"
           aria-label={`Call or WhatsApp PrimeLinor at ${businessConfig.phoneDisplay}`}
+          onClick={() => track("WHATSAPP_CLICK", { metadata: { context: "announcement_bar" } })}
         >
           Call / WhatsApp: {businessConfig.phoneDisplay}
         </a>

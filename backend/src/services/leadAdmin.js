@@ -3,10 +3,11 @@ const ApiError = require("../utils/ApiError");
 const { generateRfqReference } = require("./referenceNumber");
 const { resolveRfqItem } = require("./rfqItem");
 const { recordActivity } = require("./rfqActivity");
+const { periodRange } = require("./dashboardPeriods");
 
 const LEAD_INCLUDE = { contact: { include: { company: true } } };
 
-function buildLeadWhere({ status, source, dateFrom, dateTo, search }) {
+function buildLeadWhere({ status, source, dateFrom, dateTo, period, search }) {
   const where = {};
   if (status) where.status = status;
   if (source) where.sourceType = source;
@@ -14,6 +15,9 @@ function buildLeadWhere({ status, source, dateFrom, dateTo, search }) {
     where.createdAt = {};
     if (dateFrom) where.createdAt.gte = new Date(dateFrom);
     if (dateTo) where.createdAt.lte = new Date(dateTo);
+  } else {
+    const range = periodRange(period || "30d");
+    if (range) where.createdAt = range;
   }
   if (search) {
     where.OR = [
@@ -27,8 +31,8 @@ function buildLeadWhere({ status, source, dateFrom, dateTo, search }) {
   return where;
 }
 
-async function listLeads({ status, source, dateFrom, dateTo, search, page, limit }) {
-  const where = buildLeadWhere({ status, source, dateFrom, dateTo, search });
+async function listLeads({ status, source, dateFrom, dateTo, period, search, page, limit }) {
+  const where = buildLeadWhere({ status, source, dateFrom, dateTo, period, search });
   const [total, leads] = await Promise.all([
     prisma.lead.count({ where }),
     prisma.lead.findMany({

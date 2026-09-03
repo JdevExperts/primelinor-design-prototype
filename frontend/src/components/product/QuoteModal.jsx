@@ -4,6 +4,7 @@ import { getPublicConfig } from "../../api/config";
 import { formatInr, pluralUnit } from "../../utils/pricing";
 import { getColorMeta } from "../../utils/productDetail";
 import { buildReferenceWhatsAppMessage, buildWhatsAppUrl } from "../../utils/whatsapp";
+import { track } from "../../analytics/track";
 import Dialog from "./Dialog";
 import styles from "./QuoteModal.module.css";
 
@@ -47,10 +48,20 @@ export default function QuoteModal({
 
   useEffect(() => {
     if (!open) return;
+    track("RFQ_STARTED", { productId: product?.id, productCode: product?.productCode });
     getPublicConfig()
       .then((cfg) => setWhatsapp({ enabled: cfg.whatsappEnabled, number: cfg.whatsappNumber }))
       .catch(() => {});
-  }, [open]);
+  }, [open, product?.id, product?.productCode]);
+
+  useEffect(() => {
+    if (status !== "success" || !reference) return;
+    track("RFQ_SUBMITTED", {
+      productId: product?.id,
+      productCode: product?.productCode,
+      metadata: { reference, viaWhatsApp },
+    });
+  }, [status, reference, product?.id, product?.productCode, viaWhatsApp]);
 
   const close = () => {
     setStatus("idle");
@@ -124,6 +135,7 @@ export default function QuoteModal({
                 rel="noreferrer"
                 variant="primary"
                 size="md"
+                onClick={() => track("WHATSAPP_CLICK", { metadata: { context: "quote_modal_success" } })}
               >
                 Open WhatsApp
               </Button>

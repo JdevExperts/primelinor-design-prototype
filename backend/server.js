@@ -17,6 +17,7 @@ const adminAuthRoutes = require("./src/routes/adminAuth.routes");
 const adminRoutes = require("./src/routes/admin.routes");
 const publicQuotesRoutes = require("./src/routes/publicQuotes.routes");
 const publicConfigRoutes = require("./src/routes/publicConfig.routes");
+const analyticsRoutes = require("./src/routes/analytics.routes");
 const { requireStaffAuth } = require("./src/middleware/requireStaffAuth");
 const requireTrustedOrigin = require("./src/middleware/requireTrustedOrigin");
 const errorHandler = require("./src/middleware/errorHandler");
@@ -97,6 +98,9 @@ app.use("/api/v1/uploads", uploadLimiter, uploadsRoutes);
 app.use("/api/v1/artwork-preview", artworkPreviewRoutes);
 app.use("/api/v1/quotes", publicQuoteLimiter, publicQuotesRoutes);
 app.use("/api/v1/config/public", publicConfigRoutes);
+// First-party website analytics ingestion (Phase 6C-1) — public,
+// fire-and-forget, its own tight limiter inside the router.
+app.use("/api/v1/analytics", noCache, analyticsRoutes);
 
 app.use("/api/v1/admin/auth", adminAuthRoutes);
 app.use(

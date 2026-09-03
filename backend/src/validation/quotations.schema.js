@@ -132,6 +132,19 @@ const listQuotationsQuerySchema = z
       .enum(["true", "false"])
       .transform((v) => v === "true")
       .optional(),
+    // "1"/"true" → only threads whose latest version has an unresolved
+    // customer revision request.
+    pendingRevision: z
+      .enum(["1", "true", "0", "false"])
+      .transform((v) => v === "1" || v === "true")
+      .optional(),
+    // "active" → threads whose latest version is DRAFT/SENT/VIEWED and not
+    // expired (the operational open pipeline). Thread-based, never counts
+    // superseded versions.
+    thread: z.enum(["active"]).optional(),
+    // Period pill — trailing window on THREAD creation (first version's
+    // createdAt), so a revision never re-surfaces an old quotation (§9).
+    period: z.enum(["today", "7d", "30d", "90d", "1y", "all"]).default("30d"),
   })
   .strict();
 

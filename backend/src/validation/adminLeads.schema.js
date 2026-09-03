@@ -11,6 +11,8 @@ const listLeadsQuerySchema = z
     source: z.enum(SOURCE_TYPES).optional(),
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
+    // Period pill — trailing window on Lead.createdAt. Default 30 days.
+    period: z.enum(["today", "7d", "30d", "90d", "1y", "all"]).default("30d"),
     search: z.string().trim().min(1).max(200).optional(),
   })
   .strict();

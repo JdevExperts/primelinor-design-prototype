@@ -5,6 +5,7 @@
  */
 const router = require("express").Router();
 
+router.use("/dashboard", require("./adminDashboard.routes"));
 router.use("/leads", require("./adminLeads.routes"));
 router.use("/rfqs", require("./adminRfqs.routes"));
 router.use("/quotations", require("./adminQuotations.routes"));

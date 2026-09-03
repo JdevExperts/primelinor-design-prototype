@@ -41,6 +41,22 @@
   min-width: 220px;
 }
 
+/* "Filter active — click to clear" chip (dashboard deep-links land here). */
+.clearChip {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #e1ad01;
+  background: #fffdf5;
+  color: #8a6d1a;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.clearChip:hover {
+  background: #fdf6e0;
+}
+
 .tableWrap {
   background: #fff;
   border: 1px solid var(--color-border, #e5e7eb);
