@@ -58,7 +58,7 @@ export default function ProductsList() {
       <div className={styles.filters}>
         <input
           type="search"
-          placeholder="Search name or slug…"
+          placeholder="Search name, slug or product code…"
           value={search}
           onChange={(event) => {
             setPage(1);
@@ -133,6 +133,7 @@ export default function ProductsList() {
               <tr>
                 <th>Image</th>
                 <th>Product</th>
+                <th>Code</th>
                 <th>Category</th>
                 <th>Pricing</th>
                 <th>MOQ</th>
@@ -171,6 +172,27 @@ export default function ProductsList() {
                     </Link>
                     <br />
                     <span className={styles.muted}>{product.slug}</span>
+                    {product.active && product.variantType === "size" && product.activeVariantCount === 0 ? (
+                      <>
+                        <br />
+                        {/* Size-typed but zero active ProductVariant rows — PDP renders
+                            no Available Sizes line at all (Product Data Completeness §23). */}
+                        <span style={{ fontSize: 10, color: "#b42318", fontWeight: 600 }}>NO SIZES</span>
+                      </>
+                    ) : null}
+                    {product.active && product.specificationCount < 2 ? (
+                      <>
+                        <br />
+                        {/* Fewer than 2 ProductSpecification rows — the Product Details
+                            section reads as thin/placeholder, not a real spec sheet. */}
+                        <span style={{ fontSize: 10, color: "#b54708", fontWeight: 600 }}>THIN DETAILS</span>
+                      </>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "0.02em", userSelect: "all" }}>
+                      {product.productCode || "—"}
+                    </span>
                   </td>
                   <td className={styles.muted}>
                     {product.primaryCategory?.name || "—"}

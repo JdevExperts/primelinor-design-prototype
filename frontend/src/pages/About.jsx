@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import WhatsAppDialog from "../components/common/WhatsAppDialog";
 import { submitLead } from "../api/leads";
@@ -8,6 +8,7 @@ import Icon from "../components/ui/Icon";
 import ProductVisual from "../components/ui/ProductVisual";
 import Section from "../components/ui/Section";
 import SectionHeader from "../components/ui/SectionHeader";
+import Seo from "../components/layout/Seo";
 import {
   aboutHero,
   howPrimeLinorWorks,
@@ -21,12 +22,12 @@ export default function About() {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
 
-  useEffect(() => {
-    document.title = "About PrimeLinor | PrimeLinor";
-  }, []);
-
   return (
     <main id="main">
+      <Seo
+        title="About PrimeLinor — Custom Products for Your Brand"
+        description="PrimeLinor helps businesses create custom products with their own branding — apparel, corporate gifts, promotional products and curated kits, at quantities that suit the team."
+      />
       <section className={styles.hero} aria-labelledby="about-hero-title">
         <div className={`container ${styles.heroInner}`}>
           <div className={styles.heroCopy}>

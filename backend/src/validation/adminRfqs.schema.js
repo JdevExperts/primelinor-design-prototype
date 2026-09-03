@@ -30,4 +30,41 @@ const updateRfqSchema = z
 
 const addNoteSchema = z.object({ body: z.string().trim().min(1).max(4000) }).strict();
 
-module.exports = { listRfqsQuerySchema, idParamSchema, updateRfqSchema, addNoteSchema, rfqItemSchema };
+// ── Working requirement (Phase C) ────────────────────────────────────────
+const addWorkingItemSchema = z
+  .object({
+    productId: z.string().uuid().optional(),
+    description: z.string().trim().min(1).max(300).optional(),
+    quantity: z.coerce.number().int().positive().max(1_000_000).optional(),
+    unit: z.string().trim().max(40).optional(),
+  })
+  .strict()
+  .refine((body) => body.productId || body.description, {
+    message: "Pick a catalogue product or enter a description.",
+    path: ["productId"],
+  });
+
+const updateWorkingItemSchema = z
+  .object({
+    quantity: z.coerce.number().int().positive().max(1_000_000).nullable().optional(),
+    unit: z.string().trim().max(40).nullable().optional(),
+    description: z.string().trim().max(300).nullable().optional(),
+  })
+  .strict()
+  .refine((body) => Object.keys(body).length > 0, { message: "Nothing to update." });
+
+const reorderWorkingItemsSchema = z.object({ orderedIds: z.array(z.string().uuid()).min(1).max(200) }).strict();
+
+const workingItemParamSchema = z.object({ id: z.string().uuid(), itemId: z.string().uuid() }).strict();
+
+module.exports = {
+  listRfqsQuerySchema,
+  idParamSchema,
+  updateRfqSchema,
+  addNoteSchema,
+  rfqItemSchema,
+  addWorkingItemSchema,
+  updateWorkingItemSchema,
+  reorderWorkingItemsSchema,
+  workingItemParamSchema,
+};

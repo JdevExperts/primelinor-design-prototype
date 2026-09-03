@@ -7,9 +7,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4001/api/v1";
 
 export class AdminApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, details) {
     super(message);
     this.status = status;
+    if (details) this.details = details;
   }
 }
 
@@ -37,7 +38,11 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok || !body.success) {
-    throw new AdminApiError(body?.message || "Something went wrong. Please try again.", response.status);
+    throw new AdminApiError(
+      body?.message || "Something went wrong. Please try again.",
+      response.status,
+      body?.details,
+    );
   }
 
   return body.data;

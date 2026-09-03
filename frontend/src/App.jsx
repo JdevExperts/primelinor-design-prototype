@@ -4,6 +4,7 @@ import SiteLayout from "./components/layout/SiteLayout";
 import Home from "./pages/Home";
 import ProductDetail from "./pages/ProductDetail";
 import ProductListing from "./pages/ProductListing";
+import NotFound from "./pages/NotFound";
 import RouteFallback from "./components/layout/RouteFallback";
 import { AdminAuthProvider } from "./admin/context/AdminAuthContext";
 import RequireAdminAuth from "./admin/components/RequireAdminAuth";
@@ -17,6 +18,10 @@ const Solutions = lazy(() => import("./pages/Solutions"));
 const SolutionDetail = lazy(() => import("./pages/SolutionDetail"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy"));
+const ReturnReplacementPolicy = lazy(() => import("./pages/ReturnReplacementPolicy"));
 
 // Internal staff tooling — a completely separate bundle/shell from the
 // customer site (Phase 3 §27), never mixed into the customer Header/Footer.
@@ -26,6 +31,8 @@ const LeadsInbox = lazy(() => import("./admin/pages/LeadsInbox"));
 const LeadDetail = lazy(() => import("./admin/pages/LeadDetail"));
 const RfqsInbox = lazy(() => import("./admin/pages/RfqsInbox"));
 const RfqDetail = lazy(() => import("./admin/pages/RfqDetail"));
+const QuotationsList = lazy(() => import("./admin/pages/QuotationsList"));
+const NewQuotation = lazy(() => import("./admin/pages/NewQuotation"));
 const QuotationEditor = lazy(() => import("./admin/pages/QuotationEditor"));
 
 // Catalogue Admin (Phase 5) — same admin shell/bundle, not a separate app.
@@ -57,6 +64,11 @@ export default function App() {
             <Route path="/solutions/:slug" element={<SolutionDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="/return-replacement-policy" element={<ReturnReplacementPolicy />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
 
           <Route path="/quote/:token" element={<CustomerQuote />} />
@@ -70,6 +82,8 @@ export default function App() {
                 <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="rfqs" element={<RfqsInbox />} />
                 <Route path="rfqs/:id" element={<RfqDetail />} />
+                <Route path="quotations" element={<QuotationsList />} />
+                <Route path="quotations/new" element={<NewQuotation />} />
                 <Route path="quotations/:id" element={<QuotationEditor />} />
                 <Route path="catalog" element={<Navigate to="catalog/products" replace />} />
                 <Route path="catalog/products" element={<ProductsList />} />
@@ -79,6 +93,7 @@ export default function App() {
                 <Route path="catalog/colors" element={<ColorsAdmin />} />
                 <Route path="catalog/solutions" element={<SolutionsAdmin />} />
                 <Route path="catalog/solutions/:id" element={<SolutionEditor />} />
+                <Route path="*" element={<Navigate to="/admin/rfqs" replace />} />
               </Route>
             </Route>
           </Route>

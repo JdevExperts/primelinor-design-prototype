@@ -219,8 +219,16 @@ export function filterProducts(products, filters, query) {
 
     if (needle) {
       const category = categoryLabelById[product.category] || "";
-      const haystack = `${product.name} ${product.spec} ${category}`.toLowerCase();
-      if (!haystack.includes(needle)) return false;
+      const code = (product.productCode || "").toLowerCase();
+      const haystack = `${product.name} ${product.spec} ${category} ${code}`.toLowerCase();
+      // Also match the Product Code ignoring separators, so "PL-PO-001",
+      // "po-001", "plpo001" and "pl po 001" all locate the product.
+      const compactNeedle = needle.replace(/[^a-z0-9]/g, "");
+      const compactCode = code.replace(/[^a-z0-9]/g, "");
+      const matches =
+        haystack.includes(needle) ||
+        (compactNeedle.length >= 2 && compactCode.length > 0 && compactCode.includes(compactNeedle));
+      if (!matches) return false;
     }
 
     return true;

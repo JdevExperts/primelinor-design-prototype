@@ -61,7 +61,12 @@ function LineItemsTable({ lines, currency }) {
       <tbody>
         {lines.map((line) => (
           <tr key={line.id}>
-            <td data-label="Description">{line.description}</td>
+            <td data-label="Description">
+              {line.description}
+              {line.productCode ? (
+                <span className={styles.lineCode}>Product Code: {line.productCode}</span>
+              ) : null}
+            </td>
             <td data-label="Qty">{line.quantity ?? "—"}</td>
             <td data-label="Unit">{line.unit || "—"}</td>
             <td data-label="Unit Price">{line.unitPrice != null ? formatInr(line.unitPrice, currency) : "—"}</td>
@@ -202,14 +207,21 @@ export default function CustomerQuote() {
       </header>
 
       <main className={styles.content}>
-        {quote.isSuperseded ? (
+        {quote.isCancelled ? (
           <div className={styles.banner} role="status">
-            A newer quotation is available. Please use the link you received for the latest version, or contact us
-            on WhatsApp for a fresh copy.
+            <strong>This quotation is no longer active.</strong> Please contact PrimeLinor Bulk for an updated
+            quotation.
           </div>
         ) : null}
 
-        {quote.isExpired && !quote.isSuperseded ? (
+        {quote.isSuperseded ? (
+          <div className={styles.banner} role="status">
+            This quotation has been replaced by a newer version. Please use the link you received for the latest
+            version, or contact us on WhatsApp for a fresh copy.
+          </div>
+        ) : null}
+
+        {quote.isExpired && !quote.isSuperseded && !quote.isCancelled ? (
           <div className={styles.banner} role="status">
             <strong>Quotation Expired.</strong> This quotation is no longer valid for acceptance. Please request an
             updated quote or contact us.

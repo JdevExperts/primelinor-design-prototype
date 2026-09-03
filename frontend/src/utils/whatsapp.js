@@ -30,6 +30,13 @@ export function buildQuoteWhatsAppMessage(quoteReference) {
   return `Hi PrimeLinor, I'm contacting you about quotation ${quoteReference}.`;
 }
 
+export function buildStudioWhatsAppMessage(productName, colorLabel, quantity, unitLabel, productCode) {
+  // Include the Product Code inline when we have it (task §19) — keeps the
+  // message short while making phone/WhatsApp reference unambiguous.
+  const product = productCode ? `${productName} (${productCode})` : productName;
+  return `Hi PrimeLinor, I'm customizing ${product} (${colorLabel}, ${quantity} ${unitLabel}) and have a question.`;
+}
+
 /**
  * QuoteModal is reused for both Lead and RFQ submissions (About/Solutions
  * submit a Lead, PDP/Studio/Corporate Gifting submit an RFQ) — the

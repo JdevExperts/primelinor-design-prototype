@@ -6,6 +6,14 @@
  * name/label/spec, and computes the server-authoritative price estimate.
  * Never trusts a client-submitted price (Phase 2 §12).
  *
+ * Catalogue resolution is best-effort, never a gate. A "Request a Quote"
+ * submission must always go through — our team confirms the real spec on
+ * the follow-up call. So if the product, colour or size can't be matched
+ * (deactivated, renamed, or — common for colour/size — simply not modelled
+ * on that product), the item is still created; the unresolved values are
+ * kept verbatim in the *Snapshot columns for sales to see. Quantity is
+ * likewise never checked against MOQ here.
+ *
  * `customizationData.{front,back}.placementKey` is stored as submitted,
  * not validated against PlacementZone: no seeded product has calibrated
  * PlacementZone rows yet (that data drives overlay positioning, a separate
@@ -47,33 +55,22 @@ async function resolveRfqItem(tx, rfqId, item, sortOrder) {
   let variant = null;
 
   if (item.productId) {
-    product = await tx.product.findUnique({
+    const found = await tx.product.findUnique({
       where: { slug: item.productId },
       include: { priceTiers: true, colors: { include: { color: true } }, variants: true },
     });
-    if (!product || !product.active) {
-      throw ApiError.badRequest(`Product "${item.productId}" is not available.`);
+    if (found && found.active) {
+      product = found;
     }
 
-    if (item.colorId) {
+    if (product && item.colorId) {
       const match = product.colors.find((c) => c.color.slug === item.colorId);
-      if (!match) {
-        throw ApiError.badRequest(`Color "${item.colorId}" is not available for this product.`);
-      }
-      color = match.color;
+      if (match) color = match.color;
     }
 
-    if (item.variantId) {
-      variant = product.variants.find((v) => v.code === item.variantId && v.active);
-      if (!variant) {
-        throw ApiError.badRequest(`Option "${item.variantId}" is not available for this product.`);
-      }
-    }
-
-    if (item.quantity != null && item.quantity < product.moq) {
-      throw ApiError.badRequest(
-        `Quantity for "${product.name}" is below the minimum order quantity (${product.moq}).`,
-      );
+    if (product && item.variantId) {
+      const match = product.variants.find((v) => v.code === item.variantId && v.active);
+      if (match) variant = match;
     }
   }
 
@@ -89,14 +86,21 @@ async function resolveRfqItem(tx, rfqId, item, sortOrder) {
     data: {
       rfqId,
       productId: product?.id || null,
-      description: item.description || null,
+      // Keep an unresolved product slug visible as the item description so
+      // the request still carries what was asked for.
+      description: item.description || (product ? null : item.productId) || null,
       productNameSnapshot: product?.name || null,
-      productSlugSnapshot: product?.slug || null,
+      productSlugSnapshot: product?.slug || item.productId || null,
+      // Product Code communicated at submission time — frozen here so a
+      // historical RFQ always shows the code the customer was given, even
+      // if the live product's code is later corrected (task §14).
+      productCodeSnapshot: product?.productCode || null,
       specSnapshot: product?.longSpec || product?.description || null,
       colorId: color?.id || null,
-      colorNameSnapshot: color?.name || null,
+      // Falls back to the raw submitted slug/code when it didn't resolve.
+      colorNameSnapshot: color?.name || item.colorId || null,
       variantId: variant?.id || null,
-      variantLabelSnapshot: variant?.label || null,
+      variantLabelSnapshot: variant?.label || item.variantId || null,
       unitSnapshot: product?.unit || null,
       pricingModeSnapshot: product?.priceMode || null,
       quantity: item.quantity ?? null,

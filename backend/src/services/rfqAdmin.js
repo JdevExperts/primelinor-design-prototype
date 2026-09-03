@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const { recordStaffActivity } = require("./rfqActivity");
 const { isTransitionAllowed } = require("./rfqStatusTransitions");
 const { resolveRfqItem } = require("./rfqItem");
+const { ensureWorkingItems } = require("./rfqWorkingItems");
 
 const SUMMARY_INCLUDE = {
   contact: { include: { company: true } },
@@ -14,9 +15,13 @@ const DETAIL_INCLUDE = {
   contact: { include: { company: true } },
   assignedTo: true,
   items: { include: { artworks: true }, orderBy: { sortOrder: "asc" } },
+  workingItems: { orderBy: { sortOrder: "asc" } },
   activity: { orderBy: { createdAt: "desc" } },
   notes: { include: { author: true }, orderBy: { createdAt: "desc" } },
-  quotations: { include: { createdBy: true }, orderBy: { version: "desc" } },
+  quotations: {
+    include: { createdBy: true, lines: true, rfq: { select: { id: true, reference: true } } },
+    orderBy: { version: "desc" },
+  },
 };
 
 function buildRfqWhere({ status, source, assignedTo, dateFrom, dateTo, search }) {
@@ -58,9 +63,11 @@ async function listRfqs({ status, source, assignedTo, dateFrom, dateTo, search, 
 }
 
 async function getRfq(id) {
-  const rfq = await prisma.rFQ.findUnique({ where: { id }, include: DETAIL_INCLUDE });
-  if (!rfq) throw ApiError.notFound("RFQ not found");
-  return rfq;
+  const exists = await prisma.rFQ.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) throw ApiError.notFound("RFQ not found");
+  // Legacy RFQs predate the working requirement — backfill on first open.
+  await ensureWorkingItems(id);
+  return prisma.rFQ.findUnique({ where: { id }, include: DETAIL_INCLUDE });
 }
 
 async function updateRfq(id, { status, assignedToUserId }, staffUser) {

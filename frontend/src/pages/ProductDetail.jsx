@@ -9,13 +9,30 @@ import SizeGuideModal from "../components/product/SizeGuideModal";
 import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
 import ProductCard from "../components/ui/ProductCard";
+import Seo from "../components/layout/Seo";
 import { formatInr, pluralUnit, quoteForQuantity } from "../utils/pricing";
 import { getColorMeta, getPlacementLabel, visibleQuickQuantities } from "../utils/productDetail";
 import styles from "./ProductDetail.module.css";
 
-function defaultVariant(product) {
-  if (!product.variants?.length) return "";
-  return product.variants.find((item) => item.id === "m")?.id || product.variants[0].id;
+/**
+ * Highlights used to be a separate bullet list, but on the real catalogue
+ * it was always just `specifications.map(s => s.value)` — the same rows,
+ * stripped of their labels (PDP Content Cleanup §1/§4). Merging them into
+ * one "Product Details" list is therefore just: render specifications
+ * once. This dedupes exact-duplicate rows (same label AND value) as a
+ * defensive backstop in case Admin data ever has one, not because the
+ * old Highlights/Specifications split could produce one on its own.
+ */
+function dedupeSpecifications(specifications) {
+  const seen = new Set();
+  const rows = [];
+  for (const row of specifications) {
+    const key = `${row.label}|${row.value}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push(row);
+  }
+  return rows;
 }
 
 function ProductNotFound() {
@@ -29,8 +46,8 @@ function ProductNotFound() {
         <p className="eyebrow">Products</p>
         <h1 className={styles.title}>Product not found</h1>
         <p className={styles.lede}>
-          That item is not in this prototype catalogue. Browse the listing to
-          pick another product.
+          That item doesn&rsquo;t exist or may have been removed. Browse the
+          listing to pick another product.
         </p>
         <Button as={Link} to="/products" variant="primary" size="md">
           Browse Products
@@ -80,7 +97,6 @@ function ProductDetailView({ product }) {
   const colors = product.colors || [];
   const [view, setView] = useState("front");
   const [colorId, setColorId] = useState(colors[0] || "white");
-  const [variantId, setVariantId] = useState(defaultVariant(product));
   const [quantity, setQuantity] = useState(product.moq);
   const [qtyDraft, setQtyDraft] = useState(String(product.moq));
   const [moqHint, setMoqHint] = useState(false);
@@ -89,13 +105,15 @@ function ProductDetailView({ product }) {
 
   const color = getColorMeta(colorId);
   const quote = quoteForQuantity(product, quantity);
-  const variantLabel = product.variants.find((item) => item.id === variantId)?.label;
+  const hasSizes = product.variantType === "size" && product.variants.length > 0;
+  const availableSizeLabels = hasSizes ? product.variants.map((item) => item.label) : [];
+  const productDetailRows = dedupeSpecifications(product.specifications || []);
   const chips = visibleQuickQuantities(product.moq);
   const unitWord = pluralUnit(product.unit, quantity);
 
-  useEffect(() => {
-    document.title = `${product.name} — PrimeLinor`;
-  }, [product.name]);
+  const seoTitle = product.seoTitle || `${product.name} — PrimeLinor`;
+  const seoDescription =
+    product.seoDescription || product.description || product.longSpec || undefined;
 
   const clampQuantity = (value) => {
     const numeric = Number.parseInt(value, 10);
@@ -118,6 +136,7 @@ function ProductDetailView({ product }) {
       id="main"
       className={`${styles.page} ${quoteOpen || sizeOpen ? styles.modalOpen : ""}`}
     >
+      <Seo title={seoTitle} description={seoDescription} ogType="product" ogImage={product.image} />
       <div className={`container ${styles.top}`}>
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">
           <ol className={styles.crumbs}>
@@ -149,6 +168,11 @@ function ProductDetailView({ product }) {
           <div className={styles.config}>
             <p className="eyebrow">{product.categoryLabel}</p>
             <h1 className={styles.title}>{product.name}</h1>
+            {product.productCode ? (
+              <p className={styles.productCode}>
+                Product Code: <span>{product.productCode}</span>
+              </p>
+            ) : null}
             <p className={styles.spec}>{product.longSpec}</p>
 
             <div className={styles.priceBlock} aria-live="polite">
@@ -199,10 +223,15 @@ function ProductDetailView({ product }) {
               </fieldset>
             ) : null}
 
-            {product.variantType === "size" && product.variants.length > 0 ? (
-              <fieldset className={styles.group}>
-                <legend className={styles.label}>
-                  Size
+            {hasSizes ? (
+              <div className={styles.group}>
+                <p className={styles.sizesLine}>
+                  <span>
+                    <span className={styles.sizesLabel}>Available Sizes:</span>{" "}
+                    <span className={styles.sizesValue}>
+                      {availableSizeLabels.join(", ")}
+                    </span>
+                  </span>
                   {product.sizeGuide ? (
                     <button
                       type="button"
@@ -212,24 +241,11 @@ function ProductDetailView({ product }) {
                       View Size Guide
                     </button>
                   ) : null}
-                </legend>
-                <div className={styles.sizes}>
-                  {product.variants.map((item) => {
-                    const selected = item.id === variantId;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`${styles.size} ${selected ? styles.sizeOn : ""}`}
-                        onClick={() => setVariantId(item.id)}
-                        aria-pressed={selected}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
+                </p>
+                <p className={styles.hint}>
+                  Size-wise quantities can be finalized before order confirmation.
+                </p>
+              </div>
             ) : null}
 
             <div className={styles.group}>
@@ -321,14 +337,6 @@ function ProductDetailView({ product }) {
             </ul>
 
             <div className={styles.ctas}>
-              <Button
-                variant="primary"
-                size="lg"
-                fullWidth
-                onClick={() => setQuoteOpen(true)}
-              >
-                Request a Quote
-              </Button>
               {product.studioReady ? (
                 <Button
                   as={Link}
@@ -338,9 +346,17 @@ function ProductDetailView({ product }) {
                   icon="upload"
                   fullWidth
                 >
-                  See With Your Logo
+                  Try Your Logo
                 </Button>
               ) : null}
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={() => setQuoteOpen(true)}
+              >
+                Request a Quote
+              </Button>
               <button type="button" className={styles.chat}>
                 <Icon name="chat" size={16} />
                 Chat with Product Expert
@@ -350,34 +366,23 @@ function ProductDetailView({ product }) {
         </div>
       </div>
 
-      <section className={styles.band} aria-labelledby="highlights-title">
-        <div className="container">
-          <h2 id="highlights-title" className={styles.sectionTitle}>
-            Highlights
-          </h2>
-          <ul className={styles.highlights}>
-            {product.highlights.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className={styles.section} aria-labelledby="specs-title">
-        <div className="container">
-          <h2 id="specs-title" className={styles.sectionTitle}>
-            Specifications
-          </h2>
-          <dl className={styles.specs}>
-            {product.specifications.map((row) => (
-              <div key={row.label} className={styles.specRow}>
-                <dt>{row.label}</dt>
-                <dd>{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
+      {productDetailRows.length > 0 ? (
+        <section className={styles.section} aria-labelledby="details-title">
+          <div className="container">
+            <h2 id="details-title" className={styles.sectionTitle}>
+              Product Details
+            </h2>
+            <dl className={styles.specs}>
+              {productDetailRows.map((row) => (
+                <div key={row.label} className={styles.specRow}>
+                  <dt>{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+      ) : null}
 
       {product.customizable ? (
         <section className={styles.band} aria-labelledby="customize-title">
@@ -410,63 +415,11 @@ function ProductDetailView({ product }) {
                 size="md"
                 icon="upload"
               >
-                See With Your Logo
+                Try Your Logo
               </Button>
             ) : (
               <p className={styles.copy}>Logo preview coming soon for this product.</p>
             )}
-          </div>
-        </section>
-      ) : null}
-
-      {product.sizeGuide ? (
-        <section
-          className={styles.section}
-          aria-labelledby="size-guide-heading"
-          id="size-guide"
-        >
-          <div className="container">
-            <div className={styles.sectionHead}>
-              <h2 id="size-guide-heading" className={styles.sectionTitle}>
-                Size guide
-              </h2>
-              <button
-                type="button"
-                className={styles.textLink}
-                onClick={() => setSizeOpen(true)}
-              >
-                View larger
-              </button>
-            </div>
-            <p className={styles.copy}>{product.sizeGuide.note}</p>
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    {product.sizeGuide.columns.map((column) => (
-                      <th key={column} scope="col">
-                        {column}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {product.sizeGuide.rows.map((row) => (
-                    <tr key={row[0]}>
-                      {row.map((cell, index) =>
-                        index === 0 ? (
-                          <th key={cell} scope="row">
-                            {cell}
-                          </th>
-                        ) : (
-                          <td key={`${row[0]}-${cell}`}>{cell}</td>
-                        ),
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </section>
       ) : null}
@@ -503,13 +456,6 @@ function ProductDetailView({ product }) {
             dispatch.
           </p>
           <div className={styles.finalCtas}>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => setQuoteOpen(true)}
-            >
-              Request a Quote
-            </Button>
             {product.studioReady ? (
               <Button
                 as={Link}
@@ -518,9 +464,16 @@ function ProductDetailView({ product }) {
                 size="lg"
                 icon="upload"
               >
-                See With Your Logo
+                Try Your Logo
               </Button>
             ) : null}
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => setQuoteOpen(true)}
+            >
+              Request a Quote
+            </Button>
           </div>
         </div>
       </section>
@@ -539,9 +492,11 @@ function ProductDetailView({ product }) {
         onClose={() => setQuoteOpen(false)}
         product={product}
         colorId={colorId}
-        variantLabel={variantLabel}
         quantity={quantity}
         quote={quote}
+        extraSummary={
+          hasSizes ? [`Available sizes: ${availableSizeLabels.join(", ")}`] : []
+        }
         onSubmit={(contact) =>
           submitRfq({
             contact: {
@@ -554,11 +509,22 @@ function ProductDetailView({ product }) {
             deliveryCity: contact.city,
             sourceType: "PDP",
             sourceContext: { productSlug: product.id },
+            // Bulk apparel doesn't commit to one size (PDP Bulk Size UX
+            // Cleanup) — the buyer's real mix is confirmed with sales, so no
+            // variantId is sent. Sizes offered are recorded neutrally here
+            // instead of as a false single-size selection.
+            requirementData: hasSizes
+              ? { availableSizes: availableSizeLabels, sizeBreakdown: "To be confirmed" }
+              : undefined,
             items: [
               {
                 productId: product.id,
-                colorId,
-                variantId: variantId || undefined,
+                // Only send a colour when the product actually offers a
+                // colour choice. Products with no ProductColor rows never
+                // show the swatch picker, so `colorId` is still its
+                // placeholder default ("white") — submitting that makes the
+                // backend reject the item as an unavailable colour.
+                ...(colors.length > 0 ? { colorId } : {}),
                 quantity,
               },
             ],

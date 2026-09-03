@@ -18,6 +18,7 @@
 const prisma = require("../../lib/prisma");
 const ApiError = require("../../utils/ApiError");
 const solutionAdmin = require("./solutionAdmin");
+const { normalizeProductCode, productCodeFamily } = require("../productCode");
 
 // Product<->Category is many-to-many via ProductCategory (Solutions Phase
 // 0) — `primaryCategory` is the canonical/breadcrumb category,
@@ -43,6 +44,15 @@ const ADMIN_LIST_INCLUDE = {
     orderBy: { sortOrder: "asc" },
     take: 5,
     select: { type: true, url: true, alt: true, sortOrder: true },
+  },
+  // Counts only, not full rows (Product Data Completeness §23) — enough
+  // for the list's NO SIZES / THIN DETAILS badges without over-fetching
+  // variant/specification content the list never displays.
+  _count: {
+    select: {
+      variants: { where: { active: true } },
+      specifications: true,
+    },
   },
 };
 
@@ -70,6 +80,7 @@ const ADMIN_DETAIL_INCLUDE = {
 const BASICS_KEYS = [
   "name",
   "slug",
+  "productCode",
   "description",
   "longSpec",
   "material",
@@ -94,6 +105,38 @@ async function assertUniqueSlug(slug, excludeId) {
   if (existing && existing.id !== excludeId) {
     throw ApiError.conflict(`A product with slug "${slug}" already exists.`);
   }
+}
+
+/**
+ * Product Code is a permanent business identifier — uniqueness is enforced
+ * at the DB level too (Product.productCode @unique), this just turns the
+ * raw P2002 into a clear 409. `code` is already normalized by the Zod
+ * schema; normalized again here for direct (test/script) callers.
+ */
+async function assertUniqueProductCode(code, excludeId) {
+  const normalized = normalizeProductCode(code);
+  const existing = await prisma.product.findUnique({ where: { productCode: normalized } });
+  if (existing && existing.id !== excludeId) {
+    throw ApiError.conflict(`Product Code "${normalized}" is already used by another product.`);
+  }
+  return normalized;
+}
+
+/**
+ * Next free code in a family, e.g. "PO" -> "PL-PO-008" when 001–007 exist.
+ * Used only to give a duplicated product a valid code automatically; the
+ * admin can still edit it afterwards.
+ */
+async function nextProductCodeInFamily(family) {
+  const rows = await prisma.product.findMany({
+    where: { productCode: { startsWith: `PL-${family}-` } },
+    select: { productCode: true },
+  });
+  const maxNum = rows.reduce((max, row) => {
+    const n = Number.parseInt(row.productCode.slice(`PL-${family}-`.length), 10);
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  return `PL-${family}-${String(maxNum + 1).padStart(3, "0")}`;
 }
 
 /** All of categoryIds must exist, no duplicates — same shape as assertColorsValid/assertTagsValid. */
@@ -179,6 +222,8 @@ function buildAdminWhere(query) {
     where.OR = [
       { name: { contains: query.search, mode: "insensitive" } },
       { slug: { contains: query.search, mode: "insensitive" } },
+      // Product Code lookup — "PL-PO-001" jumps straight to the product.
+      { productCode: { contains: query.search, mode: "insensitive" } },
     ];
   }
   // Matches ANY category membership, not just the primary (Solutions Phase
@@ -222,6 +267,7 @@ async function getProductAdmin(id) {
 
 async function createProduct(data, staffUser) {
   await assertUniqueSlug(data.slug);
+  const productCode = await assertUniqueProductCode(data.productCode);
   const categoryRows = await assertCategoriesValid(data.categoryIds);
   // Zod's checkPrimaryCategoryIncluded already caught this shape at the
   // HTTP boundary — re-checked here too since createProduct/updateProduct
@@ -251,6 +297,7 @@ async function createProduct(data, staffUser) {
       data: {
         name: data.name,
         slug: data.slug,
+        productCode,
         primaryCategoryId: data.primaryCategoryId,
         description: data.description,
         longSpec: data.longSpec ?? null,
@@ -343,6 +390,13 @@ async function updateProduct(id, data, staffUser) {
 
   if (data.slug !== undefined && data.slug !== existing.slug) {
     await assertUniqueSlug(data.slug, id);
+  }
+
+  // Product Code is a stable business identifier — corrections are allowed
+  // (task §5) but the new value must still be unique. Never regenerated
+  // from slug/name/category; it only changes when explicitly sent.
+  if (data.productCode !== undefined) {
+    data.productCode = await assertUniqueProductCode(data.productCode, id);
   }
 
   // Effective (post-write) category state — used both to validate
@@ -510,11 +564,23 @@ async function duplicateProduct(id, { slug: requestedSlug }, staffUser) {
     suffix += 1;
   }
 
+  // A duplicate needs its own permanent code — never reuse the original's.
+  // Auto-assign the next free number in the original's family; the admin
+  // can correct it afterwards.
+  const family = productCodeFamily(original.productCode) || "OT";
+  let newProductCode = await nextProductCodeInFamily(family);
+  // eslint-disable-next-line no-await-in-loop
+  while (await prisma.product.findUnique({ where: { productCode: newProductCode } })) {
+    const n = Number.parseInt(newProductCode.slice(-3), 10) + 1;
+    newProductCode = `PL-${family}-${String(n).padStart(3, "0")}`;
+  }
+
   const newId = await prisma.$transaction(async (tx) => {
     const created = await tx.product.create({
       data: {
         name: `${original.name} (Copy)`,
         slug: candidateSlug,
+        productCode: newProductCode,
         primaryCategoryId: original.primaryCategoryId,
         description: original.description,
         longSpec: original.longSpec,
@@ -607,4 +673,5 @@ module.exports = {
   assertTierCoversMoq,
   assertUniqueVariantCodes,
   assertActiveCategoryInvariant,
+  buildAdminWhere,
 };

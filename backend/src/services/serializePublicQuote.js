@@ -13,33 +13,50 @@ function serializeLine(line) {
     id: line.id,
     lineType: line.lineType,
     description: line.description,
+    // Frozen when this quotation version was created (§16/§17/§39/§59).
+    productName: line.productNameSnapshot || null,
+    productCode: line.productCodeSnapshot || null,
     quantity: line.quantity,
     unit: line.unit,
     unitPrice: line.unitPrice != null ? Number(line.unitPrice) : null,
-    lineTotal: Number(line.lineTotal),
+    lineTotal: line.lineTotal != null ? Number(line.lineTotal) : null,
   };
 }
 
 function serializePublicQuote(quotation) {
-  const rfq = quotation.rfq;
+  const rfq = quotation.rfq || null;
   const eligibility = actionEligibility(quotation, rfq);
+
+  // The party the quote is prepared for. RFQ-origin: the RFQ's contact
+  // (falls back to the party snapshot). MANUAL: the quotation's own party
+  // snapshot, entered by sales.
+  const contact = rfq?.contact || null;
+  const customer = {
+    name: contact?.name || quotation.partyContactPerson || quotation.partyName || null,
+    companyName:
+      contact?.company?.name || contact?.companyNameRaw || (contact ? null : quotation.partyName) || null,
+    phone: contact?.phoneRaw || contact?.phone || quotation.partyPhone || null,
+    email: contact?.email || quotation.partyEmail || null,
+    gstin: quotation.partyGstin || null,
+    address: quotation.partyAddress || null,
+  };
 
   return {
     reference: quotationReference(rfq, quotation),
-    rfqReference: rfq.reference,
+    rfqReference: rfq?.reference || null,
+    originType: quotation.originType,
     version: quotation.version,
     status: quotation.status,
     isExpired: isExpired(quotation),
     isSuperseded: quotation.status === "SUPERSEDED",
+    isCancelled: quotation.status === "CANCELLED",
     actions: {
       canAccept: eligibility.canAccept,
       canDecline: eligibility.canDecline,
       canRequestRevision: eligibility.canRequestRevision,
     },
-    customer: {
-      name: rfq.contact.name,
-      companyName: rfq.contact.company?.name || rfq.contact.companyNameRaw || null,
-    },
+    customer,
+    createdAt: quotation.createdAt,
     currency: quotation.currency,
     lines: (quotation.lines || []).map(serializeLine),
     subtotal: Number(quotation.subtotal),
@@ -51,10 +68,7 @@ function serializePublicQuote(quotation) {
     sentAt: quotation.sentAt,
     viewedAt: quotation.viewedAt,
     respondedAt: quotation.respondedAt,
-    requestSummary: {
-      sourceType: rfq.sourceType,
-      message: rfq.message,
-    },
+    requestSummary: rfq ? { sourceType: rfq.sourceType, message: rfq.message } : null,
   };
 }
 

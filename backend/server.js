@@ -24,7 +24,8 @@ const requestLogger = require("./src/middleware/requestLogger");
 const noCache = require("./src/middleware/noCache");
 const { validateConfig } = require("./src/startup/validateConfig");
 const prisma = require("./src/lib/prisma");
-const { logSafeStartupError } = require("./src/utils/safeLog");
+const { logSafeError, logSafeStartupError } = require("./src/utils/safeLog");
+const { buildSitemapXml } = require("./src/services/sitemap");
 
 const app = express();
 
@@ -106,7 +107,33 @@ app.use(
   adminRoutes,
 );
 
-app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
+/**
+ * Verifies real DB connectivity, not just "the Node process is alive"
+ * (Phase 6B §27) — a deployment health check that only pings the process
+ * would report healthy while every real request 503s on a DB outage.
+ * Response body is intentionally minimal: no version, no environment,
+ * no error detail — just enough for an uptime/orchestrator check to
+ * decide whether to route traffic here.
+ */
+app.get("/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: "ok" });
+  } catch (err) {
+    logSafeError(err, { label: "health-check-db", method: req.method, path: req.path });
+    res.status(503).json({ status: "unavailable" });
+  }
+});
+
+app.get("/sitemap.xml", async (req, res) => {
+  try {
+    const xml = await buildSitemapXml();
+    res.type("application/xml").send(xml);
+  } catch (err) {
+    logSafeError(err, { label: "sitemap", method: req.method, path: req.path });
+    res.status(503).type("application/xml").send('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n');
+  }
+});
 
 // 404 for anything unmatched under /api
 app.use("/api", (req, res) => {

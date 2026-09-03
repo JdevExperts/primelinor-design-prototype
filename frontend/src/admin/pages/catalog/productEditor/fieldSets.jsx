@@ -13,7 +13,7 @@ export function slugify(text) {
  * manually edited the slug field, so auto-suggestion from the name only
  * keeps applying until they make it their own (Phase 5 §11).
  */
-export function BasicsFieldSet({ values, onChange, categories, slugWarning }) {
+export function BasicsFieldSet({ values, onChange, categories, slugWarning, codeWarning }) {
   const set = (key) => (event) => onChange({ ...values, [key]: event.target.value });
   const setChecked = (key) => (event) => onChange({ ...values, [key]: event.target.checked });
 
@@ -42,6 +42,24 @@ export function BasicsFieldSet({ values, onChange, categories, slugWarning }) {
           onChange={(event) => onChange({ ...values, slug: slugify(event.target.value), slugTouched: true })}
         />
         {slugWarning ? <div style={{ fontSize: 11, color: "#b45309", marginTop: 4 }}>{slugWarning}</div> : null}
+      </label>
+      <label>
+        <div className={styles.fieldLabel}>Product Code *</div>
+        <input
+          className={styles.input}
+          value={values.productCode}
+          placeholder="PL-PO-001"
+          onChange={(event) =>
+            onChange({ ...values, productCode: event.target.value.toUpperCase().replace(/\s+/g, "") })
+          }
+        />
+        {codeWarning ? (
+          <div style={{ fontSize: 11, color: "#b45309", marginTop: 4 }}>{codeWarning}</div>
+        ) : (
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+            Permanent identifier — format PL-XX-001. Doesn&rsquo;t change with size/colour.
+          </div>
+        )}
       </label>
       <label>
         <div className={styles.fieldLabel}>Primary Category *</div>
@@ -165,6 +183,7 @@ export function basicsToPayload(values) {
   return {
     name: values.name.trim(),
     slug: values.slug.trim(),
+    productCode: values.productCode.trim().toUpperCase(),
     primaryCategoryId: values.primaryCategoryId,
     categoryIds: values.categoryIds,
     description: values.description.trim(),
@@ -188,6 +207,7 @@ export function emptyBasics() {
     name: "",
     slug: "",
     slugTouched: false,
+    productCode: "",
     primaryCategoryId: "",
     categoryIds: [],
     description: "",
@@ -211,6 +231,7 @@ export function basicsFromProduct(product) {
     name: product.name,
     slug: product.slug,
     slugTouched: true,
+    productCode: product.productCode || "",
     primaryCategoryId: product.primaryCategory?.id || product.primaryCategoryId || "",
     categoryIds: (product.categories || []).map((c) => c.categoryId),
     description: product.description,

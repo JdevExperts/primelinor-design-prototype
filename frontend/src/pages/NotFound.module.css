@@ -1,0 +1,31 @@
+.page {
+  background: var(--color-white);
+}
+
+.missing {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-12);
+  padding-block: var(--space-64);
+  min-height: 60vh;
+  align-content: center;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.625rem, 1.3rem + 1vw, 2.125rem);
+  line-height: 1.18;
+  letter-spacing: -0.022em;
+}
+
+.lede {
+  max-width: 46ch;
+  color: var(--color-text-muted);
+}
+
+.missingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  margin-top: var(--space-8);
+}

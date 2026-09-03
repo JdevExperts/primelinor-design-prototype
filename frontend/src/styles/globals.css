@@ -179,7 +179,7 @@ p {
   content: "";
   width: 24px;
   height: 2px;
-  background: var(--color-amber);
+  background: var(--color-mustard);
 }
 
 .on-dark .eyebrow {

@@ -45,6 +45,15 @@ const DETAIL_INCLUDE = {
 
 function buildWhere(query) {
   const where = { active: true };
+  if (query.search) {
+    // Product Code is stored uppercase; `mode: "insensitive"` + `contains`
+    // means "PL-PO-001", "pl-po-001" and "PO-001" all locate the product.
+    where.OR = [
+      { name: { contains: query.search, mode: "insensitive" } },
+      { slug: { contains: query.search, mode: "insensitive" } },
+      { productCode: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
   // Matches ANY category membership, not only the primary (Solutions Phase
   // 0 §H) — a dry-fit tee whose primary is T-Shirts but is also mapped to
   // Sports Teams & Clubs shows up when filtering by either category.
@@ -155,6 +164,78 @@ exports.getProducts = asyncHandler(async (req, res) => {
   });
 });
 
+const RELATED_PRODUCTS_LIMIT = 8;
+
+/**
+ * Priority-ordered merge for "You may also like" (PDP Content Cleanup):
+ * hand-curated ProductRelated rows first (their configured order wins),
+ * then same-primary-category products, then products sharing a secondary
+ * category — deduped by id, capped at `limit`. Pure — each pool is
+ * supplied pre-filtered (active, excluding the source product and
+ * anything already chosen), so this only owns priority + dedup + the cap.
+ */
+function mergeRelatedProducts({ explicit, samePrimaryCategory, sharedSecondaryCategory }, limit = RELATED_PRODUCTS_LIMIT) {
+  const seen = new Set();
+  const result = [];
+  for (const pool of [explicit, samePrimaryCategory, sharedSecondaryCategory]) {
+    for (const candidate of pool) {
+      if (result.length >= limit) return result;
+      if (seen.has(candidate.id)) continue;
+      seen.add(candidate.id);
+      result.push(candidate);
+    }
+  }
+  return result;
+}
+
+/**
+ * Resolves up to RELATED_PRODUCTS_LIMIT related products for a PDP.
+ * Explicit ProductRelated mappings are never replaced by automatic
+ * recommendations — they only get topped up when there are fewer than the
+ * target count (Category M2M Awareness: same primaryCategory outranks a
+ * merely-shared secondary category, since it fills before that tier is
+ * ever queried).
+ */
+async function resolveRelatedProducts(product) {
+  const explicit = product.relatedFrom
+    .filter((rel) => rel.relatedProduct.active)
+    .map((rel) => rel.relatedProduct);
+
+  if (explicit.length >= RELATED_PRODUCTS_LIMIT) {
+    return mergeRelatedProducts({ explicit, samePrimaryCategory: [], sharedSecondaryCategory: [] });
+  }
+
+  const excludeIds = [product.id, ...explicit.map((p) => p.id)];
+
+  const samePrimaryCategory = product.primaryCategoryId
+    ? await prisma.product.findMany({
+        where: { active: true, primaryCategoryId: product.primaryCategoryId, id: { notIn: excludeIds } },
+        include: LIST_INCLUDE,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        take: RELATED_PRODUCTS_LIMIT,
+      })
+    : [];
+
+  const secondaryCategoryIds = product.categories
+    .map((pc) => pc.categoryId)
+    .filter((id) => id !== product.primaryCategoryId);
+
+  const sharedSecondaryCategory = secondaryCategoryIds.length
+    ? await prisma.product.findMany({
+        where: {
+          active: true,
+          id: { notIn: [...excludeIds, ...samePrimaryCategory.map((p) => p.id)] },
+          categories: { some: { categoryId: { in: secondaryCategoryIds } } },
+        },
+        include: LIST_INCLUDE,
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        take: RELATED_PRODUCTS_LIMIT,
+      })
+    : [];
+
+  return mergeRelatedProducts({ explicit, samePrimaryCategory, sharedSecondaryCategory });
+}
+
 // GET /api/v1/products/:slug
 exports.getProductBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.validated.params;
@@ -164,7 +245,8 @@ exports.getProductBySlug = asyncHandler(async (req, res) => {
   });
   if (!product) throw ApiError.notFound("Product not found");
 
-  sendSuccess(res, { product: serializeProductDetail(product) });
+  const relatedProducts = await resolveRelatedProducts(product);
+  sendSuccess(res, { product: serializeProductDetail(product, relatedProducts) });
 });
 
 // Exported for unit testing without a database — see test/products.filter.test.js
@@ -172,3 +254,4 @@ exports.buildWhere = buildWhere;
 exports.applyPriceRange = applyPriceRange;
 exports.sortProducts = sortProducts;
 exports.categoryMembershipSortOrder = categoryMembershipSortOrder;
+exports.mergeRelatedProducts = mergeRelatedProducts;

@@ -1,0 +1,17 @@
+# PrimeLinor — production robots.txt
+#
+# Sitemap is generated dynamically by the backend from the live active
+# catalogue (backend/src/services/sitemap.js), not this frontend build —
+# see /sitemap.xml. Confirmed production domain (Phase 6B owner-input
+# closure): primelinorbulk.com. This assumes /sitemap.xml is reachable
+# from that same public domain (a reverse proxy or platform routing rule
+# forwarding it to the backend) — if the backend ends up on a separate
+# API subdomain instead, update this line to that host once backend
+# hosting is selected (still an open infrastructure input).
+Sitemap: https://primelinorbulk.com/sitemap.xml
+
+User-agent: *
+Disallow: /admin
+Disallow: /quote/
+Disallow: /customize/
+Allow: /

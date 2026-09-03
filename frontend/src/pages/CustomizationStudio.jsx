@@ -6,9 +6,12 @@ import ProductStickyCta from "../components/product/ProductStickyCta";
 import QuoteModal from "../components/product/QuoteModal";
 import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
+import Seo from "../components/layout/Seo";
+import { getPublicConfig } from "../api/config";
 import { submitRfq } from "../api/rfqs";
 import { uploadArtwork } from "../api/uploads";
 import { productColors } from "../data/mockData";
+import { buildStudioWhatsAppMessage, buildWhatsAppUrl } from "../utils/whatsapp";
 import { validateArtworkFile } from "../utils/artworkValidation";
 import { formatInr, pluralUnit, quoteForQuantity } from "../utils/pricing";
 import { visibleQuickQuantities } from "../utils/productDetail";
@@ -182,6 +185,8 @@ function StudioView({
   const [moqHint, setMoqHint] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [waOpen, setWaOpen] = useState(false);
+  const [waUrl, setWaUrl] = useState(null);
+  const [waChecked, setWaChecked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [realSwitcher, setRealSwitcher] = useState(null);
 
@@ -201,6 +206,31 @@ function StudioView({
 
   const colorMeta = setup.colorMeta || productColors;
   const color = colorMeta[colorKey] || productColors[colorKey] || productColors.white;
+
+  useEffect(() => {
+    if (!waOpen) return;
+    setWaChecked(false);
+    getPublicConfig()
+      .then((cfg) => {
+        setWaUrl(
+          cfg.whatsappEnabled
+            ? buildWhatsAppUrl(
+                cfg.whatsappNumber,
+                buildStudioWhatsAppMessage(
+                  listing.name,
+                  color.label,
+                  quantity,
+                  pluralUnit(listing.unit, quantity),
+                  listing.productCode,
+                ),
+              )
+            : null,
+        );
+        setWaChecked(true);
+      })
+      .catch(() => setWaChecked(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waOpen]);
   const labelFor = (key) => setup.placementLabels?.[key] || studioPlacementLabel(key);
   const quote = quoteForQuantity(listing, quantity);
   const chips = visibleQuickQuantities(listing.moq);
@@ -288,6 +318,10 @@ function StudioView({
       id="main"
       className={`${styles.page} ${modalOpen ? styles.modalOpen : ""}`}
     >
+      {/* Workflow/UI page, not a landing page (Phase 6B §38) — canonical
+          points back at the real product PDP rather than being indexed
+          under its own URL. */}
+      <Seo noindex title={`Try Your Logo — ${listing.name}`} />
       <div className={`container ${styles.shell}`}>
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">
           <ol className={styles.crumbs}>
@@ -727,16 +761,33 @@ function StudioView({
         title="Continue on WhatsApp"
       >
         <p className={styles.waCopy}>
-          WhatsApp would open here in production with this configuration. This
-          is a visual prototype — nothing was sent.
+          {waUrl
+            ? "You'll be taken to WhatsApp to chat with our team about this configuration."
+            : waChecked
+              ? "WhatsApp chat isn't set up yet — please use Request a Quote instead."
+              : "Checking WhatsApp availability…"}
         </p>
         <p className={styles.waMeta}>
           {listing.name} · {color.label} · {quantity}{" "}
           {pluralUnit(listing.unit, quantity)}
         </p>
-        <Button variant="primary" size="md" onClick={() => setWaOpen(false)}>
-          Close
-        </Button>
+        {waUrl ? (
+          <Button
+            as="a"
+            href={waUrl}
+            target="_blank"
+            rel="noreferrer"
+            variant="primary"
+            size="md"
+            onClick={() => setWaOpen(false)}
+          >
+            Open WhatsApp
+          </Button>
+        ) : (
+          <Button variant="primary" size="md" onClick={() => setWaOpen(false)}>
+            Close
+          </Button>
+        )}
       </Dialog>
     </main>
   );

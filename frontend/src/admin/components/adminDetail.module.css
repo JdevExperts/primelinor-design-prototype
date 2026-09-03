@@ -101,6 +101,9 @@
 }
 
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 32px;
   padding: 0 14px;
   border-radius: 6px;
@@ -109,6 +112,7 @@
   color: #fff;
   font-size: 12.5px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -118,6 +122,9 @@
 }
 
 .buttonSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 32px;
   padding: 0 14px;
   border-radius: 6px;
@@ -126,6 +133,7 @@
   color: var(--color-navy, #0f1b2d);
   font-size: 12.5px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -135,6 +143,9 @@
 }
 
 .buttonDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 32px;
   padding: 0 14px;
   border-radius: 6px;
@@ -143,6 +154,7 @@
   color: #fff;
   font-size: 12.5px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -243,4 +255,342 @@
 
 .quotationRow:last-child {
   border-bottom: none;
+}
+
+/* ── Quotation / working-requirement line tables (Phases C–D) ────────── */
+.muted {
+  color: #667085;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lineTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 640px;
+}
+
+.lineTable th {
+  text-align: left;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #667085;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e4e7ec;
+  white-space: nowrap;
+}
+
+.lineTable td {
+  padding: 8px;
+  border-bottom: 1px solid #f2f4f7;
+  vertical-align: top;
+}
+
+/* Below ~720px the line editor becomes a stacked 2-col grid per row so it
+   never needs a horizontal scroll on a phone (§80). Inputs already carry
+   placeholders, so no per-cell labels are required. */
+@media (max-width: 720px) {
+  .lineTable {
+    min-width: 0;
+  }
+  .lineTable thead {
+    display: none;
+  }
+  .lineTable,
+  .lineTable tbody {
+    display: block;
+  }
+  .lineTable tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+    border: 1px solid #e4e7ec;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .lineTable td {
+    display: block;
+    border: none;
+    padding: 0;
+  }
+  .lineTable td:first-child {
+    grid-column: 1 / -1;
+  }
+  .lineTable td :global(input) {
+    width: 100% !important;
+  }
+}
+
+/* ── Finalised quotation view: content-left / workflow-right (§1) ─────── */
+.quoteView {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  gap: 16px;
+  align-items: start;
+}
+
+.quoteMain {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.quoteAside {
+  display: grid;
+  gap: 12px;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
+
+/* Read-only label / value block — never disabled-looking inputs (§9/§10). */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  gap: 8px 14px;
+  font-size: 13px;
+}
+.infoGrid dt {
+  color: #667085;
+}
+.infoGrid dd {
+  margin: 0;
+  color: var(--color-navy, #0f1b2d);
+  overflow-wrap: anywhere;
+}
+
+/* Compact revision alert strip at the top of the content column (§3/§12). */
+.revisionStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-left: 3px solid #e1ad01;
+  background: #fffdf5;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a6d1a;
+}
+
+/* Sidebar revision card — mustard top accent, compact (§3/§15). */
+.revisionCard {
+  border-top: 3px solid #e1ad01;
+}
+.revisionBadge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #8a6d1a;
+}
+
+/* Compact activity timeline — no heavy borders, no input look (§4/§5). */
+.timeline {
+  display: grid;
+  gap: 2px;
+}
+.timelineRow {
+  position: relative;
+  padding: 7px 0 7px 16px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.timelineRow::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd2dc;
+}
+.timelineRow:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 5.5px;
+  top: 16px;
+  bottom: -2px;
+  width: 1px;
+  background: #e4e7ec;
+}
+.timelineRow.accent::before {
+  background: #e1ad01;
+}
+.timelineAction {
+  font-weight: 600;
+  color: var(--color-navy, #0f1b2d);
+}
+.timelineWhen {
+  color: #98a2b3;
+  font-size: 11px;
+}
+.timelineQuote {
+  margin-top: 3px;
+  padding-left: 8px;
+  border-left: 2px solid #e4e7ec;
+  color: #475467;
+  white-space: pre-wrap;
+}
+
+/* Strong totals block for the finalised view (§11). */
+.totalsRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+}
+.totalsGrand {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 2px solid var(--color-navy, #0f1b2d);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--color-navy, #0f1b2d);
+}
+
+/* Small line-type badge for non-product rows (§8). */
+.lineTypeBadge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #eef2f6;
+  color: #475467;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
+/* Stack below tablet width — a 336px sidebar gets cramped under ~1040px (§13). */
+@media (max-width: 1040px) {
+  .quoteView {
+    grid-template-columns: 1fr;
+  }
+  .quoteAside {
+    position: static;
+  }
+}
+
+/* ── Version History — full-width, below the main quotation content ──── */
+.versionHistory {
+  margin-top: 4px;
+}
+
+.rowLink,
+.actionLink {
+  color: var(--color-navy, #0f1b2d);
+  font-weight: 600;
+  text-decoration: none;
+}
+.rowLink:hover,
+.actionLink:hover {
+  text-decoration: underline;
+}
+
+.versionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 720px;
+}
+.versionTable th {
+  text-align: left;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #667085;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e4e7ec;
+  white-space: nowrap;
+}
+.versionTable td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #f2f4f7;
+  vertical-align: top;
+}
+.vhCurrentRow {
+  background: #fffdf5;
+}
+/* Small "you are here" tick instead of a text badge. */
+.vhCurrent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: #e1ad01;
+  color: #1a1206;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+.vhBadgeMuted {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #eef2f6;
+  color: #475467;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+/* Below ~720px the history becomes stacked cards — no horizontal scroll (§15). */
+@media (max-width: 720px) {
+  .versionTable {
+    min-width: 0;
+  }
+  .versionTable thead {
+    display: none;
+  }
+  .versionTable,
+  .versionTable tbody {
+    display: block;
+  }
+  .versionTable tr {
+    display: block;
+    border: 1px solid #e4e7ec;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .versionTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    border: none;
+    padding: 3px 0;
+  }
+  .versionTable td::before {
+    content: attr(data-label);
+    color: #667085;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .versionTable td[data-label=""] {
+    justify-content: flex-end;
+  }
+  .versionTable td[data-label=""]::before {
+    content: "";
+  }
 }

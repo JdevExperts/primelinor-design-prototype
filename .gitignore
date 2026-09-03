@@ -23,8 +23,20 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Local-disk artwork/upload storage fallback (dev-only convenience —
+# services/storage/localStorage.js — production always uses S3). Two
+# leftover test-upload PNGs from earlier dev testing were previously
+# tracked here by mistake (Phase 6B §81 source-control cleanliness).
+backend/storage/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Legacy DB dump (removed from working tree — Phase 6B security finding, contains
+# real password hashes + customer PII from the old primelinor-bulk system). This
+# does not scrub it from git history (still present in commit c959954) — a full
+# history rewrite (git filter-repo / BFG) is a separate, deliberate owner action.
+primelinorbulk_backup.sql

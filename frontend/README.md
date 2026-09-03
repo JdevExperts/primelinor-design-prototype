@@ -1,10 +1,14 @@
-# PrimeLinor — Design Prototype
+# PrimeLinor — Frontend
 
-A standalone **visual design prototype** for the PrimeLinor website redesign. This is
-not the production site and shares no code with it.
-
-Scope of this pass: the design system foundation plus **Homepage V5** (desktop-first,
-responsive). No other pages exist yet.
+React 19 + Vite customer-facing site and staff Admin console for the
+PrimeLinor B2B custom-products marketplace. This talks to the
+`backend/` API over HTTP and has no filesystem dependency on it. A
+running backend (and its database) is required for every page beyond
+static layout — the one exception is an explicit, dev-build-only opt-in
+fixture mode (`VITE_USE_MOCK_CATALOG=true`, see Environment below) for
+frontend-only work with no backend running; it can never activate in a
+production build regardless of that flag's value (`api/catalog.js`
+gates it on `import.meta.env.DEV`).
 
 ## Running it
 
@@ -13,180 +17,113 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:5173/
+Then open http://localhost:5173/ (with `backend` also running — see
+`../backend/README.md`).
 
-Other scripts: `npm run build`, `npm run preview`, `npm run lint`.
+Other scripts: `npm run build`, `npm run preview`, `npm run lint`
+(`oxlint`). Root-level `npm run verify` (from the repo root) chains
+backend tests + this lint + this build in one command.
 
 ## Stack
 
-React 19 + Vite, plain CSS with CSS Modules. No UI component library, no CSS
-framework, no template. Inter is loaded from Google Fonts in `index.html`.
+React 19 + React Router 7 + Vite, plain CSS with CSS Modules — no UI
+component library, no CSS framework. Inter is loaded from Google Fonts
+in `index.html`.
+
+## What this app actually does
+
+This is the full production frontend, not a prototype — routing, live
+API-backed data, customer commercial workflow, and a staff Admin console
+are all real and working:
+
+- **Public site**: Home, Product Listing (`/products`, filterable by
+  category), Product Detail (`/products/:id`), Solutions hub
+  (`/solutions`) and Solution Detail (`/solutions/:slug`), Corporate
+  Gifting (`/corporate-gifting`), About, Contact, and a Customization
+  Studio (`/customize/:productId`) for products with `studioReady`
+  configuration.
+- **Commercial flow**: Request a Quote from any PDP submits a real
+  `Lead`/`RFQ` to the backend; a customer quote page
+  (`/quote/:token`) renders a real, backend-generated quotation with
+  PDF download and Accept / Decline / Request Revision actions.
+- **Admin console** (`/admin`, cookie-session authenticated):
+  Products, Categories, Colors, Solutions (full CRUD + image
+  management), Leads inbox, RFQs inbox, and the Quotation editor. Role
+  gating (`ADMIN` vs `SALES`) is enforced by the backend, not just
+  hidden in the UI.
+- **404 handling**: unmatched public routes render a real
+  `NotFound` page; unmatched admin routes redirect to
+  `/admin/rfqs`.
 
 ## Structure
 
 ```
 src/
-  styles/
-    tokens.css        design tokens (colour, type, spacing, radius, shadow, motion)
-    globals.css       reset, base typography, container + accessibility helpers
-  data/
-    mockData.js       ALL placeholder content — products, prices, MOQs, testimonials
+  api/            fetch wrappers + response adapters — the ONLY place
+                  that talks to the backend (catalog.js, leads.js,
+                  rfqs.js, quotes.js, submission.js, uploads.js)
+  data/           siteConfig.js (business contact, socials — see below),
+                  catalogData.js / homeData.js (category + homepage
+                  copy, not fabricated content), productDetail.js,
+                  companyData.js, corporateGiftingData.js
   components/
-    layout/           AnnouncementBar, Header (+ mega menu), Footer, Logo
-    home/             Hero (campaign banner wall), ProductExplorer, CategoryGrid,
-                      TryYourLogo, CreationTypes, BusinessUseCases,
-                      CorporateGifting, HowItWorks, TrustSection, FinalCTA
-                      (listed in the order Home.jsx renders them)
-                      CampaignBanner is the reusable hero tile
-    customizer/       CustomizationPreview + GarmentMockup (Try Your Logo only)
-    ui/               Button, ProductCard, CategoryCard, SectionHeader, Section,
-                      ProductVisual, Icon
-  pages/
-    Home.jsx
+    layout/       AnnouncementBar, Header (+ mega menu), Footer, Logo,
+                  SiteLayout (site chrome + Organization JSON-LD), Seo
+                  (per-route <title>/meta/canonical/OG component)
+    home/         Hero, ProductExplorer, CategoryGrid,
+                  SolutionsForEveryTeam, HowItWorks, TrustSection,
+                  FinalCTA
+    product/      PDP sections (details, sizes, related products, etc.)
+    catalogue/    Product Listing filters/grid
+    solutions/    Solutions hub + detail sections
+    gifting/      Corporate Gifting page sections
+    customizer/   Customization Studio preview + garment mockup
+    ui/           Button, ProductCard, CategoryCard, SectionHeader,
+                  Section, ProductVisual, Icon
+    common/       shared small pieces (loading/error states, etc.)
+  pages/          one file per route (see App.jsx for the exact map)
+  admin/          separate app shell: admin/api, admin/components,
+                  admin/context (auth), admin/pages
+  utils/          pure helpers (filterProducts, studio placement math,
+                  giftKit, productDetail shaping)
 ```
 
-## Page width
+`src/data/mockData.js` still exists but is now just a thin re-export
+barrel (`export * from "./catalogData"`, `"./homeData"`, `"./siteConfig"`)
+— a leftover name from the original design-prototype era. It re-exports
+real structural data (category labels, listing sort options, business
+config), not fabricated content; the misleading filename is a minor,
+non-blocking cleanup item.
 
-`.container` is a wide marketplace shell: `--container-max` 1440px with
-`--container-pad` scaling to 56px, so wide desktops get roughly 1330px of content
-and 1920px still keeps real gutters. Below 1280px nothing changed.
+## Business contact configuration
 
-The homepage explorer pages through `catalogueProducts` locally (12 per desktop
-page, 6 on small screens) so only the current page is in the DOM. View all
-products is a placeholder until the Product Listing page exists.
+Phone, WhatsApp number, support email, and social links (Instagram,
+YouTube, Google Maps/reviews) are centralized in
+`src/data/siteConfig.js` — **no component hardcodes a literal phone
+number, email, or social URL**. To change any of these for launch,
+edit that one file (see `backend/DEPLOYMENT.md` for the equivalent
+backend-side `WHATSAPP_NUMBER`/`SUPPORT_EMAIL` env vars, which the
+public API also exposes via `GET /api/v1/config/public`).
 
-Grids are meant to use that full width; running text is not. Text blocks pull
-themselves back in with a `ch` max-width on the element, and full-bleed surfaces
-that would look stretched (the closing CTA) cap themselves at `--container-narrow`.
+## SEO
 
-## Homepage campaign banners
+Per-route metadata (title, description, canonical, Open Graph, robots)
+is handled by `components/layout/Seo.jsx`, mounted once per page with
+page-specific props — no `react-helmet`-style dependency, just a direct
+`<head>` tag upsert matching this codebase's existing
+`document.title`-in-`useEffect` convention. Canonical/OG URLs are
+always derived from `window.location.origin` at runtime, never a
+hardcoded domain (no production domain has been chosen yet — see
+`backend/DEPLOYMENT.md`). `/quote/:token` and `/customize/:productId`
+are explicitly `noindex`. A site-wide `Organization` JSON-LD block is
+injected once by `SiteLayout.jsx`. The sitemap (`/sitemap.xml`) and
+`robots.txt` are documented in `backend/README.md` /
+`backend/DEPLOYMENT.md`.
 
-The hero is a data-driven campaign wall (`heroCampaigns` in `mockData.js`), not
-coded marketing copy. Each record maps to a future admin/API field:
+## Environment
 
-`id`, `placement`, `title` (internal), `altText`, `desktopImage`, `mobileImage`,
-`href`, `isActive`, `sortOrder`, optional `objectPosition`.
-
-Set `desktopImage` / `mobileImage` to a public path such as
-`/images/banners/apparel-desktop.webp` (files live in `public/`) or an imported
-asset. Null images render a labelled studio placeholder. Inactive records are
-not shown.
-
-Recommended creative ratios — design the artwork to match the slot so
-`object-fit: cover` does not crop embedded campaign text:
-
-| Slot | Desktop | Mobile |
-| --- | --- | --- |
-| `hero_primary` | ~2:1 landscape | ~2:1 |
-| `hero_secondary_1` / `_2` | ~1.7:1 landscape | ~1.7:1 |
-
-Desktop layout is one primary (~68%) plus two stacked secondaries (~32%).
-Below 768px the three campaigns stack: primary, then secondary 1, then
-secondary 2. `mobileImage` is selected with `<picture>` when provided;
-otherwise the desktop file is used.
-
-Do not overlay HTML headlines or CTAs on the creative. The image is the
-campaign; the banner is a click target with accessible `altText`.
-
-## Customization imagery (studio)
-
-Try Your Logo on `/customize/:productId` is **image-first**. Controlled product
-photos are the accurate branding surface. Vector `GarmentMockup` is fallback only.
-
-### Fallback order
-
-1. Selected-colour `productFront` / `productBack`
-2. Product `defaultColor` asset (when that colour has no pack of its own)
-3. Vector garment mockup
-
-Lifestyle / model / team images never receive automatic artwork overlay unless the
-asset sets `supportsLogoOverlay` and calibrated `modelPlacementZones` (or
-`placementZones` on the model gallery item). Those coordinates are independent of
-product-photo zones. Team / lifestyle images stay reference photography.
-
-Studio UI labels are customer-facing (`Left Chest`, `Center`, `Upper Back`,
-`Center Back`). Homepage Try Your Logo keeps wearer-perspective names.
-
-### Controlled product photo guidelines
-
-For accurate overlay, `productFront` and `productBack` should be:
-
-- front- or back-facing, centered, full product visible
-- plain / studio background, even lighting, little perspective
-- consistent crop between front and back of the same colour
-- high resolution, no existing logo, margin around the product
-
-Use `object-fit: contain`. Do not crop the garment in a way that invalidates
-percentage placement zones (`cx`, `cy`, `w`, `h` of the image frame).
-
-If a colour’s photo has a different crop, put `placementZones` on that colour’s
-asset. Shared zones live on the product record.
-
-### Same-model guideline
-
-Across colours of one product, prefer the same model, pose, framing, lighting and
-background so White → Navy does not change the person in the photo.
-
-### File locations
-
-Prototype files: `public/images/products/{slug}/{color}-{view}.png`
-
-Examples:
-
-- `/images/products/polo/navy-front.png`
-- `/images/products/polo/navy-back.png`
-- `/images/products/polo/navy-model.png`
-
-Swap in real PrimeLinor photography by changing `src` in
-`src/data/productAssets.js`. Catalogue cards keep using listing `image` / `art`
-and do not load these lifestyle assets.
-
-Admin-ready fields already on each asset (mock only): `src`, `alt`, `active`,
-`sortOrder`, `objectFit`, `aspectRatio`, `placementZones`,
-`supportsLogoOverlay`, `type`, `label`.
-
-## Logo placement semantics
-
-
-Try Your Logo uses a dedicated mockup system (`customizer/`), not `ProductVisual`.
-Print zones live on each entry in `customizableProducts` as percentages of the
-mockup surface (`cx`, `cy`, `w`, `h`). Uploaded artwork is contained inside the
-active zone and never stretched.
-
-Placement names on the homepage demo come from the **wearer's** perspective.
-On a front-facing garment that mirrors, so `cx` is above 50 for the wearer's
-left and below 50 for their right. The Customization Studio uses the same
-coordinates with customer-facing labels (`Left Chest`, `Center`, `Upper Back`,
-`Center Back`). `printPlacements[key].view` is `"front"` or `"back"` and
-switches the mockup accordingly — a back placement is never previewed on a
-front garment.
-
-## Imagery
-
-`ui/ProductVisual` is the single image primitive. It renders an `<img>` when a `src`
-is provided and otherwise draws a neutral studio-style illustration for the given
-product type. Every entry in `mockData.js` already carries an `image: null` field, so
-dropping in real photography is a data change — no layout work required.
-
-Three things worth knowing when working with it:
-
-- **Illustrations are normalised.** Each art key has an entry in `ART_BOX`, and the
-  component scales and translates the drawing so every product shares one footprint
-  and one floor line. Add a new illustration and its bounds together.
-- **`surface`** picks the studio backdrop (`default`, `tint`, `warm`, `dark`). Pale
-  products are moved to a deeper variant automatically so they do not wash out.
-  Surfaces are ignored once a real photo is supplied.
-- **Frame shape is responsive.** Consumers pass `ratio`, but any ancestor can set
-  `--visual-ratio-override` in a media query to retune the frame per breakpoint.
-
-## What is deliberately not built
-
-No backend, database, auth, payments, RFQ submission, WhatsApp API, search, routing,
-product listing/detail pages, gifting page, kit builder, or the full Try Your Logo
-editor. Buttons are visual placeholders.
-
-## Placeholder data warning
-
-Every price, MOQ, rating, company name and testimonial in `mockData.js` is invented
-for layout purposes and must be replaced with real, verified data before anything is
-published.
+Only `VITE_`-prefixed variables are exposed to the browser bundle (Vite
+convention) — never put a secret in one. See `.env.example`:
+`VITE_API_BASE_URL` (backend origin) and `VITE_USE_MOCK_CATALOG`
+(dev-build-only fixture-data opt-in, ignored entirely in production
+builds).

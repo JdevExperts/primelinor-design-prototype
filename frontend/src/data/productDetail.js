@@ -12,7 +12,7 @@ export const apparelSizes = [
 ];
 
 export const apparelSizeGuide = {
-  note: "Mock measurements for this prototype. Replace with graded specs.",
+  note: "Measurements are approximate and may vary slightly by batch.",
   columns: ["Size", "Chest", "Length"],
   rows: [
     ["S", "36 in", "26 in"],
@@ -24,7 +24,7 @@ export const apparelSizeGuide = {
 };
 
 export const hoodieSizeGuide = {
-  note: "Mock measurements for this prototype. Replace with graded specs.",
+  note: "Measurements are approximate and may vary slightly by batch.",
   columns: ["Size", "Chest", "Length"],
   rows: [
     ["S", "40 in", "26 in"],

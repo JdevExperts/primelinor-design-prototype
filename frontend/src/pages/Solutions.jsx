@@ -5,15 +5,12 @@ import SolutionCard from "../components/solutions/SolutionCard";
 import QuoteModal from "../components/product/QuoteModal";
 import { submitLead } from "../api/leads";
 import { getSolutions } from "../api/catalog";
+import Seo from "../components/layout/Seo";
 import styles from "./Solutions.module.css";
 
 export default function Solutions() {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [solutions, setSolutions] = useState([]);
-
-  useEffect(() => {
-    document.title = "Solutions — PrimeLinor";
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +26,10 @@ export default function Solutions() {
 
   return (
     <main id="main">
+      <Seo
+        title="Solutions — Built Around Your Business Need | PrimeLinor"
+        description="From uniforms and event merchandise to onboarding kits and promotional campaigns — explore custom product solutions built around how businesses actually buy."
+      />
       <section className={styles.hero} aria-labelledby="solutions-hero-title">
         <div className={`container ${styles.heroInner}`}>
           <p className="eyebrow">Solutions</p>

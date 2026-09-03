@@ -2,8 +2,10 @@
  * RFQ creation — the "concrete, priceable request" tier (Phase 2 §7). Same
  * idempotency contract as Lead creation (see leadService.js). Every item is
  * resolved and price-estimated server-side inside one transaction so a
- * partially-invalid submission (one bad productId, one bad artworkAssetId)
- * never creates a partial RFQ.
+ * submission that fails partway (e.g. one bad artworkAssetId) never creates
+ * a partial RFQ. Catalogue mismatches (unknown product/colour/size, sub-MOQ
+ * quantity) are NOT failures — see resolveRfqItem: the request always goes
+ * through and sales confirms the spec.
  */
 const prisma = require("../lib/prisma");
 const ApiError = require("../utils/ApiError");
@@ -12,6 +14,7 @@ const { resolveContact } = require("./contact");
 const { generateRfqReference } = require("./referenceNumber");
 const { resolveRfqItem } = require("./rfqItem");
 const { recordActivity } = require("./rfqActivity");
+const { seedWorkingItemsFromRfqItems } = require("./rfqWorkingItems");
 
 const UNIQUE_CONSTRAINT = "P2002";
 
@@ -69,6 +72,10 @@ async function createRfq(payload) {
       for (let i = 0; i < payload.items.length; i += 1) {
         await resolveRfqItem(tx, created.id, payload.items[i], i);
       }
+
+      // Seed the editable working requirement from the submission, once
+      // (Phase C). RFQItem[] stays the immutable original.
+      await seedWorkingItemsFromRfqItems(tx, created.id);
 
       await recordActivity(tx, { rfqId: created.id, type: "RFQ_CREATED", actorType: "CUSTOMER" });
 

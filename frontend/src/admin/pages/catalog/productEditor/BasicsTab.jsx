@@ -14,6 +14,7 @@ export default function BasicsTab({ product, categories, onSaved, setDirty }) {
   }, [product.id]);
 
   const slugChanged = values.slug !== product.slug;
+  const codeChanged = values.productCode !== (product.productCode || "");
 
   const handleChange = (next) => {
     setValues(next);
@@ -48,6 +49,11 @@ export default function BasicsTab({ product, categories, onSaved, setDirty }) {
         slugWarning={
           slugChanged
             ? "Changing the slug on a published product breaks its existing /products/... URL — no redirect is created."
+            : null
+        }
+        codeWarning={
+          codeChanged
+            ? "Changing the Product Code affects customer communication and quotation/RFQ history. Only edit it to correct a mistake."
             : null
         }
       />

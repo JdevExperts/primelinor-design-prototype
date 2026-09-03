@@ -10,6 +10,7 @@ const {
 const BASE_PRODUCT = {
   name: "Test Product",
   slug: "test-product",
+  productCode: "PL-TS-999",
   primaryCategoryId: "11111111-1111-4111-8111-111111111111",
   categoryIds: ["11111111-1111-4111-8111-111111111111"],
   description: "A test product.",

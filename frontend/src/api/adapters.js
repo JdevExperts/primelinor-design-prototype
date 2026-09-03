@@ -153,6 +153,9 @@ export function mapApiProductToListingShape(product) {
   return {
     id: product.slug,
     name: product.name,
+    // Permanent human-friendly base-product identifier (PL-[TYPE]-[NNN]).
+    // Shown on cards/PDP and matched by catalogue search.
+    productCode: product.productCode || null,
     spec: specFromProduct(product),
     art: artForProduct(product),
     color: tintForProduct(product),
@@ -219,6 +222,8 @@ export function mapApiProductToDetailShape(product) {
     categoryLabel: product.category?.name || "Products",
     description: product.description,
     longSpec: product.longSpec || base.spec,
+    seoTitle: product.seoTitle || null,
+    seoDescription: product.seoDescription || null,
     variantType: product.variantType,
     variants: (product.variants || []).map((v) => ({ id: v.code, label: v.label })),
     sizeGuide: sizeGuideFor(product),

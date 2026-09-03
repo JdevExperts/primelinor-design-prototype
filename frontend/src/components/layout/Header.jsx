@@ -68,7 +68,7 @@ export default function Header() {
         <Link
           to="/"
           className={styles.brand}
-          aria-label="PrimeLinor home"
+          aria-label="PrimeLinor Bulk home"
           onClick={() => {
             if (location.pathname === "/") window.scrollTo(0, 0);
           }}
@@ -193,17 +193,6 @@ export default function Header() {
               onChange={(event) => setSearchQuery(event.target.value)}
             />
           </form>
-
-          <Button
-            as={Link}
-            to={{ pathname: "/", hash: "#request-quote" }}
-            variant="primary"
-            size="md"
-            className={styles.headerCta}
-          >
-            <span className={styles.ctaLong}>Request a Quote</span>
-            <span className={styles.ctaShort}>Get Quote</span>
-          </Button>
 
           <button
             type="button"

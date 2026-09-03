@@ -77,6 +77,8 @@ function serializeProductSummary(product) {
   return {
     id: product.id,
     slug: product.slug,
+    // Permanent human-friendly base-product identifier (PL-[TYPE]-[NNN]).
+    productCode: product.productCode,
     name: product.name,
     primaryCategory: serializeCategoryRef(product.primaryCategory),
     categories: serializeProductCategories(product.categories),
@@ -109,12 +111,22 @@ function serializeProductSummary(product) {
   };
 }
 
-/** Full PDP/Studio shape. */
-function serializeProductDetail(product) {
+/**
+ * Full PDP/Studio shape. `relatedProducts` is resolved by the caller
+ * (products.controller.js's resolveRelatedProducts — curated ProductRelated
+ * rows topped up with same-category fallback, PDP Content Cleanup) rather
+ * than derived here from the raw `relatedFrom` join, since picking the
+ * fallback pool needs sibling Prisma queries this serializer doesn't run.
+ */
+function serializeProductDetail(product, relatedProducts = []) {
   return {
     ...serializeProductSummary(product),
     description: product.description,
     longSpec: product.longSpec,
+    // Admin-set SEO overrides (Phase 6B §31) — null unless staff filled
+    // them in; the frontend falls back to name/description when absent.
+    seoTitle: product.seoTitle || null,
+    seoDescription: product.seoDescription || null,
     variantType: product.variantType,
     variants: (product.variants || []).map(serializeVariant),
     specifications: (product.specifications || []).map(serializeSpecification),
@@ -122,10 +134,7 @@ function serializeProductDetail(product) {
     assets: (product.assets || []).map(serializeAsset),
     placementZones: (product.placementZones || []).map(serializePlacementZone),
     tags: (product.tags || []).map((productTag) => productTag.tag.slug),
-    relatedProducts: (product.relatedFrom || [])
-      .slice()
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((rel) => serializeProductSummary(rel.relatedProduct)),
+    relatedProducts: relatedProducts.map(serializeProductSummary),
   };
 }
 

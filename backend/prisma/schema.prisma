@@ -83,6 +83,10 @@ model Category {
 model Product {
   id                String    @id @default(uuid())
   slug              String    @unique
+  // Permanent, human-friendly identifier for the base product (PL-[TYPE]-[NNN],
+  // e.g. PL-PO-001). Never varies by size/colour/variant/quantity/pricing.
+  // Stable once assigned — see src/services/productCode.js.
+  productCode       String    @unique @map("product_code")
   name              String
   primaryCategoryId String    @map("primary_category_id")
   active            Boolean   @default(true)
@@ -559,13 +563,17 @@ model RFQ {
   createdAt        DateTime   @default(now()) @map("created_at")
   updatedAt        DateTime   @updatedAt @map("updated_at")
 
-  contact    Contact        @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  lead       Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  assignedTo StaffUser?     @relation("RFQAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
-  items      RFQItem[]
-  activity   RFQActivity[]
-  notes      InternalNote[]
-  quotations Quotation[]
+  contact      Contact          @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  lead         Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedTo   StaffUser?       @relation("RFQAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  // Immutable customer-submitted items — the historical source of truth.
+  items        RFQItem[]
+  // Editable sales requirement used during negotiation (Phase C). Seeded
+  // once from `items` at RFQ creation; never writes back to `items`.
+  workingItems RfqWorkingItem[]
+  activity     RFQActivity[]
+  notes        InternalNote[]
+  quotations   Quotation[]
 
   @@index([contactId])
   @@index([status])
@@ -586,6 +594,7 @@ model RFQItem {
   // Snapshots — frozen at submission time, never re-derived from live data.
   productNameSnapshot  String? @map("product_name_snapshot")
   productSlugSnapshot  String? @map("product_slug_snapshot")
+  productCodeSnapshot  String? @map("product_code_snapshot")
   specSnapshot         String? @map("spec_snapshot")
   colorId              String? @map("color_id")
   colorNameSnapshot    String? @map("color_name_snapshot")
@@ -614,6 +623,36 @@ model RFQItem {
   @@map("rfq_items")
 }
 
+// ── RFQ working requirement (Phase C) ────────────────────────────────────────
+// The editable sales requirement. Distinct from RFQItem so the customer's
+// original submission stays immutable. Seeded once from RFQItem at RFQ
+// creation (and backfilled for legacy RFQs); after that ADMIN/SALES edit
+// freely — change quantities, add catalogue or custom lines, remove lines.
+// A new quotation snapshots THIS, not RFQItem. Never syncs back.
+
+model RfqWorkingItem {
+  id                   String   @id @default(uuid())
+  rfqId                String   @map("rfq_id")
+  // Null for a custom/described line.
+  productId            String?  @map("product_id")
+  productCodeSnapshot  String?  @map("product_code_snapshot")
+  productNameSnapshot  String?  @map("product_name_snapshot")
+  description          String?
+  quantity             Int?
+  unit                 String?
+  specSnapshot         String?  @map("spec_snapshot")
+  colorNameSnapshot    String?  @map("color_name_snapshot")
+  variantLabelSnapshot String?  @map("variant_label_snapshot")
+  sortOrder            Int      @default(0) @map("sort_order")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  rfq RFQ @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+
+  @@index([rfqId])
+  @@map("rfq_working_items")
+}
+
 // ── RFQ activity ─────────────────────────────────────────────────────────────
 // Append-only. `type` is a plain string, not an enum, so later phases (admin
 // status changes, quotation events) can add new event types without a
@@ -621,9 +660,13 @@ model RFQItem {
 
 model RFQActivity {
   id        String   @id @default(uuid())
-  rfqId     String   @map("rfq_id")
-  type      String
-  actorType String   @map("actor_type") // "SYSTEM" | "CUSTOMER" | "STAFF"
+  // Nullable since Phase E: a MANUAL (standalone) quotation has no RFQ, so
+  // its lifecycle events are scoped to `quotationId` instead. Exactly one
+  // of rfqId / quotationId is set on any row.
+  rfqId       String?  @map("rfq_id")
+  quotationId String?  @map("quotation_id")
+  type        String
+  actorType   String   @map("actor_type") // "SYSTEM" | "CUSTOMER" | "STAFF"
   // Loose reference, not a FK — actorId's meaning depends on actorType
   // (a StaffUser.id for "STAFF", absent otherwise), so a single relation
   // column would be wrong for two of the three actor types.
@@ -631,9 +674,11 @@ model RFQActivity {
   metadata  Json?
   createdAt DateTime @default(now()) @map("created_at")
 
-  rfq RFQ @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  rfq       RFQ?       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  quotation Quotation? @relation(fields: [quotationId], references: [id], onDelete: Cascade)
 
   @@index([rfqId])
+  @@index([quotationId])
   @@map("rfq_activity")
 }
 
@@ -694,17 +739,25 @@ model StaffUser {
   @@map("staff_users")
 }
 
+// Private staff note. Scoped to an RFQ OR a quotation lineage — exactly
+// one of rfqId / quotationId is set. A quotation-scoped note lets sales
+// keep negotiation history against a standalone (MANUAL) quotation that
+// has no RFQ. Never exposed on any public endpoint or in the PDF.
 model InternalNote {
   id           String   @id @default(uuid())
-  rfqId        String   @map("rfq_id")
+  rfqId        String?  @map("rfq_id")
+  quotationId  String?  @map("quotation_id")
   authorUserId String   @map("author_user_id")
   body         String
   createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  rfq    RFQ       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  author StaffUser @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
+  rfq       RFQ?       @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  quotation Quotation? @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  author    StaffUser  @relation(fields: [authorUserId], references: [id], onDelete: Restrict)
 
   @@index([rfqId])
+  @@index([quotationId])
   @@map("internal_notes")
 }
 
@@ -715,6 +768,17 @@ enum QuotationStatus {
   ACCEPTED
   REJECTED
   SUPERSEDED
+  // Staff-voided a mistakenly issued quotation. Distinct from REJECTED
+  // (a customer decision). Record preserved; customer link deactivated.
+  CANCELLED
+}
+
+enum QuotationOrigin {
+  RFQ
+  MANUAL
+  PHONE
+  WHATSAPP
+  OFFLINE
 }
 
 // ── Quotation ────────────────────────────────────────────────────────────────
@@ -728,11 +792,37 @@ enum QuotationStatus {
 // decision to a later phase.
 model Quotation {
   id              String          @id @default(uuid())
-  rfqId           String          @map("rfq_id")
+  // RFQ = created from an RFQ's working requirement; MANUAL = standalone
+  // (customer called / WhatsApp / repeat / walk-in) — same engine, editor,
+  // PDF and public page (Phase E / AA-3).
+  originType      QuotationOrigin @default(RFQ) @map("origin_type")
+  // Free-text detail on how a non-RFQ quotation arrived ("WhatsApp enquiry
+  // from +91…", "Office meeting", "Direct call"). Optional.
+  originDetail    String?         @map("origin_detail")
+  // Nullable — null for MANUAL. No fake RFQ is ever created.
+  rfqId           String?         @map("rfq_id")
+  // Shared by every version (V1/V2/V3) of one quotation lineage. For an
+  // RFQ-origin lineage this equals the rfqId; for MANUAL it is a fresh id
+  // minted on V1 and reused by revisions. Versioning keys off this.
+  quotationGroupId String         @map("quotation_group_id")
+  // Customer-facing group number for MANUAL lineages (PL-QT-YYYY-NNNNNN).
+  // Null for RFQ-origin, which reuses the RFQ reference (historical compat).
+  groupReference  String?         @map("group_reference")
   version         Int
   supersedesId    String?         @unique @map("supersedes_id")
   status          QuotationStatus @default(DRAFT)
   currency        String          @default("INR")
+
+  // ── Party snapshot (AA-2) — the commercial counterparty, frozen on the
+  // quotation. Populated from RFQ/Contact for RFQ-origin, entered directly
+  // for MANUAL. Not a CRM model.
+  partyName          String? @map("party_name")
+  partyContactPerson String? @map("party_contact_person")
+  partyPhone         String? @map("party_phone")
+  partyEmail         String? @map("party_email")
+  partyGstin         String? @map("party_gstin")
+  partyAddress       String? @map("party_address")
+
   subtotal        Decimal         @default(0) @db.Decimal(10, 2)
   taxMode         String?         @map("tax_mode")
   taxAmount       Decimal?        @map("tax_amount") @db.Decimal(10, 2)
@@ -745,6 +835,8 @@ model Quotation {
   sentAt          DateTime?       @map("sent_at")
   viewedAt        DateTime?       @map("viewed_at")
   respondedAt     DateTime?       @map("responded_at")
+  cancelledAt     DateTime?       @map("cancelled_at")
+  cancelReason    String?         @map("cancel_reason")
 
   // ── Customer access token (Phase 4 §3) ──────────────────────────────────
   // Only the SHA-256 hash is stored — the raw token is returned once, at
@@ -756,17 +848,21 @@ model Quotation {
   accessTokenCreatedAt DateTime? @map("access_token_created_at")
   accessTokenRevokedAt DateTime? @map("access_token_revoked_at")
 
-  rfq          RFQ             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  rfq          RFQ?            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
   createdBy    StaffUser       @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
   // The prior version this one revises — set only on the NEW row created by
   // a revision. The prior row only flips to SUPERSEDED once this new row is
   // actually SENT (Phase 3 §24), not merely on draft creation.
   supersedes   Quotation?      @relation("QuotationSupersedes", fields: [supersedesId], references: [id], onDelete: SetNull)
   supersededBy Quotation?      @relation("QuotationSupersedes")
-  lines        QuotationLine[]
+  lines         QuotationLine[]
+  activity      RFQActivity[]
+  internalNotes InternalNote[]
 
-  @@unique([rfqId, version])
+  @@unique([quotationGroupId, version])
   @@index([rfqId])
+  @@index([quotationGroupId])
+  @@index([status])
   @@map("quotations")
 }
 
@@ -792,10 +888,22 @@ model QuotationLine {
   rfqItemId   String?           @map("rfq_item_id")
   lineType    QuotationLineType @map("line_type")
   description String
+  // Catalogue product this line represents, when it is a PRODUCT line
+  // backed by the catalogue. Loose reference (no FK relation) — the line's
+  // commercial identity lives in the *Snapshot columns and must survive
+  // the product being renamed, recoded or deleted (§18/§59).
+  productId           String? @map("product_id")
+  productNameSnapshot String? @map("product_name_snapshot")
+  // Product Code frozen when this quotation version was created (§16) —
+  // copied from the linked RFQItem's snapshot, never re-read from live data.
+  productCodeSnapshot String? @map("product_code_snapshot")
   quantity    Int?
   unit        String?
   unitPrice   Decimal?          @map("unit_price") @db.Decimal(10, 2)
-  lineTotal   Decimal           @map("line_total") @db.Decimal(10, 2)
+  // Nullable: a PRODUCT/SHIPPING line may sit in a DRAFT with a quantity
+  // but no rate yet ("rate required"). Never null on a SENT quotation —
+  // send validation blocks that (§11/§12).
+  lineTotal   Decimal?          @map("line_total") @db.Decimal(10, 2)
   sortOrder   Int               @default(0) @map("sort_order")
   metadata    Json?
 

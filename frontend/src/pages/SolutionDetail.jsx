@@ -12,6 +12,7 @@ import SolutionProcess from "../components/solutions/SolutionProcess";
 import SolutionProducts from "../components/solutions/SolutionProducts";
 import SolutionProof from "../components/solutions/SolutionProof";
 import { getSolutionBySlug } from "../api/catalog";
+import Seo from "../components/layout/Seo";
 import styles from "./SolutionDetail.module.css";
 
 function SolutionNotFound() {
@@ -25,8 +26,8 @@ function SolutionNotFound() {
         <p className="eyebrow">Solutions</p>
         <h1 className={styles.missingTitle}>Solution not found</h1>
         <p className={styles.missingCopy}>
-          That solution isn&rsquo;t in this prototype yet. Browse the
-          solutions directory or the full catalogue instead.
+          That solution doesn&rsquo;t exist or may have been removed. Browse
+          the solutions directory or the full catalogue instead.
         </p>
         <div className={styles.missingActions}>
           <Button as={Link} to="/solutions" variant="primary" size="md">
@@ -51,14 +52,15 @@ function SolutionNotFound() {
 function SolutionDetailView({ solution }) {
   const [quoteOpen, setQuoteOpen] = useState(false);
 
-  useEffect(() => {
-    document.title = `${solution.label} — PrimeLinor`;
-  }, [solution.label]);
-
   const openQuote = () => setQuoteOpen(true);
 
   return (
     <main id="main">
+      <Seo
+        title={`${solution.label} — PrimeLinor`}
+        description={solution.hubDescription || solution.heroCopy}
+        ogImage={solution.heroImage}
+      />
       <SolutionHero solution={solution} onRequestQuote={openQuote} />
       <SolutionChallenge solution={solution} />
       <SolutionProducts solution={solution} />

@@ -8,11 +8,20 @@
 /* Navigation                                                          */
 /* ------------------------------------------------------------------ */
 
-export const announcement = [
-  "Custom Branding",
-  "Flexible Quantities",
-  "PAN India Supply",
-];
+/**
+ * Slim top bar rendered above the main header on every public page
+ * (components/layout/AnnouncementBar.jsx). Phone/WhatsApp comes from
+ * `businessConfig` below, not duplicated here. One stable message —
+ * no rotation/carousel — per the current design brief.
+ */
+export const announcementBar = {
+  bulkLabel: "Bulk & Custom Orders",
+  sampleCta: {
+    label: "Get Your Sample Today",
+    labelShort: "Get Sample",
+    to: "/contact",
+  },
+};
 
 export const primaryNav = [
   { id: "products", label: "Products", href: "/products", hasMegaMenu: true },
@@ -177,17 +186,11 @@ export const footerLinkRoutes = {
   Contact: "/contact",
 };
 
-export const footerContact = {
-  email: "hello@primelinor.example",
-  phone: "+91 00000 00000",
-  location: "India • PAN India delivery",
-};
-
 export const footerPolicies = [
-  "Privacy Policy",
-  "Terms of Use",
-  "Shipping Policy",
-  "Return & Replacement Policy",
+  { label: "Privacy Policy", to: "/privacy-policy" },
+  { label: "Terms & Conditions", to: "/terms" },
+  { label: "Shipping & Delivery", to: "/shipping-policy" },
+  { label: "Return & Replacement", to: "/return-replacement-policy" },
 ];
 
 /**
@@ -210,3 +213,34 @@ export const socialLinks = [
     ariaLabel: "PrimeLinor on YouTube",
   },
 ];
+
+/**
+ * BUSINESS CONFIG — the single canonical source for PrimeLinor Bulk's real
+ * business identity (confirmed owner input, Phase 6B closure). Every
+ * customer-facing surface that needs a phone number, address, support
+ * email or website URL reads from here rather than a local literal, so a
+ * future detail change touches exactly one file. `whatsappNumber` here is
+ * a display-purposes fallback matching the confirmed real number — the
+ * WhatsApp CTA components still ask the backend's live
+ * GET /config/public for the actual click-to-chat destination, since that
+ * stays the authoritative, env-driven source of truth and can honestly
+ * report "not configured" per deployment.
+ */
+export const businessConfig = {
+  businessName: "PrimeLinor Bulk",
+  supportEmail: "primelinor@gmail.com",
+  phoneDisplay: "+91 9599122214",
+  phoneE164: "+919599122214",
+  whatsappNumber: "919599122214",
+  addressLines: ["2nd Floor, C-107, C Block", "Sector 10, Noida, Uttar Pradesh 201301, India"],
+  websiteUrl: "https://primelinorbulk.com",
+  // Kept as its own literal (matching homeData.js's `trust.rating.url`)
+  // rather than importing homeData here — that cross-module import pulled
+  // the whole homeData module into the eagerly-loaded SiteLayout chain and
+  // broke Seo.jsx's route-level code-splitting (main bundle +91KB,
+  // measured and reverted during Phase 6B owner-input closure).
+  googleMapsUrl:
+    "https://www.google.com/maps/place/PrimeLinor/@28.5891563,77.3319841,17z/data=!3m1!4b1!4m6!3m5!1s0x390ce5dc2bce1395:0xeb94b99601375e18!8m2!3d28.5891563!4d77.3319841!16s%2Fg%2F11nbn1qdkb?hl=en-IN&entry=ttu&g_ep=EgoyMDI2MDgyNS4wIKXMDSoASAFQAw%3D%3D",
+  instagramUrl: socialLinks.find((s) => s.name === "Instagram")?.url || null,
+  youtubeUrl: socialLinks.find((s) => s.name === "YouTube")?.url || null,
+};

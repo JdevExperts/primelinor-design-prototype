@@ -6,6 +6,7 @@
  */
 const { effectivePrice } = require("./pricing");
 const { selectPrimaryImage } = require("./productImageSelection");
+const { isStudioReady } = require("./studioReadiness");
 
 function serializeCategoryAdmin(category) {
   return {
@@ -80,18 +81,29 @@ function serializeProductAdminSummary(product) {
   return {
     id: product.id,
     slug: product.slug,
+    productCode: product.productCode,
     name: product.name,
     primaryCategory: serializeCategoryRefAdmin(product.primaryCategory),
     categoryCount: (product.categories || []).length,
     thumbnail: pickThumbnail(product),
     priceMode: product.priceMode,
     priceSummary: priceSummary(product),
+    // Numeric entry price (FIXED -> fixedPrice, TIERED -> MOQ tier, QUOTE_ONLY -> null)
+    // so a quote line can pre-fill an editable starting rate.
+    effectivePrice: effectivePrice(product),
+    fixedPrice: product.fixedPrice != null ? Number(product.fixedPrice) : null,
     moq: product.moq,
     unit: product.unit,
     customizable: product.customizable,
     active: product.active,
     sortOrder: product.sortOrder,
     updatedAt: product.updatedAt,
+    // Drives the list's NO SIZES / THIN DETAILS badges (Product Data
+    // Completeness §23) — a product only needs sizes at all when it's
+    // actually variant-typed for them.
+    variantType: product.variantType,
+    activeVariantCount: product._count?.variants ?? 0,
+    specificationCount: product._count?.specifications ?? 0,
   };
 }
 
@@ -130,21 +142,30 @@ function serializePlacementZoneAdmin(zone) {
 /**
  * customizable=true with no usable customization setup is a soft warning,
  * not a save-blocker (Phase 5 §39) — surfaced to the admin editor as a
- * flag, not enforced server-side beyond that.
+ * flag, not enforced server-side beyond that. Delegates to the same
+ * isStudioReady() the public PDP/ProductCard CTA uses (Product Data
+ * Completeness §13) so this warning can never drift from what "Try Your
+ * Logo" actually requires — a BACK-only asset+zone no longer silently
+ * suppresses the warning, since studioReady specifically requires FRONT.
+ * Admin's product include is unfiltered (full child lists, not just
+ * active rows — see file header), so active-filtering happens here before
+ * handing off to isStudioReady, which expects only-active rows already
+ * filtered by the caller.
  */
 function customizationIncomplete(product) {
   if (!product.customizable) return false;
-  const hasCustomizationAsset = (product.assets || []).some(
-    (a) => a.active && (a.type === "CUSTOMIZATION_FRONT" || a.type === "CUSTOMIZATION_BACK"),
-  );
-  const hasActiveZone = (product.placementZones || []).some((z) => z.active);
-  return !hasCustomizationAsset || !hasActiveZone;
+  return !isStudioReady({
+    customizable: product.customizable,
+    assets: (product.assets || []).filter((a) => a.active),
+    placementZones: (product.placementZones || []).filter((z) => z.active),
+  });
 }
 
 function serializeProductAdminDetail(product) {
   return {
     id: product.id,
     slug: product.slug,
+    productCode: product.productCode,
     name: product.name,
     primaryCategoryId: product.primaryCategoryId,
     primaryCategory: serializeCategoryRefAdmin(product.primaryCategory),

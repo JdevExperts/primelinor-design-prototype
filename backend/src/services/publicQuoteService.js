@@ -9,6 +9,28 @@ const prisma = require("../lib/prisma");
 const ApiError = require("../utils/ApiError");
 const { hashToken } = require("./quoteToken");
 const { recordActivity } = require("./rfqActivity");
+const { classifyRevisionRequest } = require("./quotationRevisionRules");
+
+const CUSTOMER_ACTIVITY_TYPES = [
+  "CUSTOMER_REVISION_REQUESTED",
+  "REVISION_REQUEST_ADDRESSED",
+  "QUOTATION_REVISION_CREATED",
+  "QUOTATION_ACCEPTED",
+  "QUOTATION_REJECTED",
+  "QUOTATION_CANCELLED",
+];
+
+/** Workflow activity for one quotation version — MANUAL (quotationId) or
+ *  RFQ-origin (rfqId-scoped, quotationId in metadata). */
+async function loadVersionActivity(quotation) {
+  return prisma.rFQActivity.findMany({
+    where: {
+      type: { in: CUSTOMER_ACTIVITY_TYPES },
+      OR: [{ quotationId: quotation.id }, { metadata: { path: ["quotationId"], equals: quotation.id } }],
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
 
 const DETAIL_INCLUDE = {
   lines: { orderBy: { sortOrder: "asc" } },
@@ -23,12 +45,16 @@ function isExpired(quotation) {
 
 function actionEligibility(quotation, rfq) {
   const expired = isExpired(quotation);
-  const rfqOpen = !["WON", "LOST", "CANCELLED"].includes(rfq.status);
+  // A MANUAL quotation has no RFQ to close, so revision requests stay open.
+  const rfqOpen = !rfq || !["WON", "LOST", "CANCELLED"].includes(rfq.status);
+  // A staff-cancelled quotation offers no customer actions at all.
+  const cancelled = quotation.status === "CANCELLED";
   return {
-    canAccept: ["SENT", "VIEWED"].includes(quotation.status) && !expired,
-    canDecline: ["SENT", "VIEWED"].includes(quotation.status),
-    canRequestRevision: ["SENT", "VIEWED", "REJECTED"].includes(quotation.status) && rfqOpen,
+    canAccept: !cancelled && ["SENT", "VIEWED"].includes(quotation.status) && !expired,
+    canDecline: !cancelled && ["SENT", "VIEWED"].includes(quotation.status),
+    canRequestRevision: !cancelled && ["SENT", "VIEWED", "REJECTED"].includes(quotation.status) && rfqOpen,
     isExpired: expired,
+    isCancelled: cancelled,
   };
 }
 
@@ -46,7 +72,13 @@ async function resolveQuoteByToken(rawToken) {
   const hash = hashToken(rawToken);
   let quotation = await prisma.quotation.findUnique({ where: { accessTokenHash: hash }, include: DETAIL_INCLUDE });
 
-  if (!quotation || quotation.accessTokenRevokedAt) throw ApiError.notFound(INVALID_LINK);
+  if (!quotation) throw ApiError.notFound(INVALID_LINK);
+  // A staff cancellation revokes the token (§12) but the holder of that
+  // exact link still sees a clear "no longer active" page (§23) rather
+  // than the generic invalid-link 404 — a guessed token still 404s.
+  if (quotation.accessTokenRevokedAt && quotation.status !== "CANCELLED") {
+    throw ApiError.notFound(INVALID_LINK);
+  }
 
   if (quotation.status === "SENT" && !quotation.viewedAt) {
     quotation = await prisma.$transaction(async (tx) => {
@@ -56,7 +88,7 @@ async function resolveQuoteByToken(rawToken) {
         include: DETAIL_INCLUDE,
       });
       await recordActivity(tx, {
-        rfqId: quotation.rfqId,
+        ...(quotation.rfqId ? { rfqId: quotation.rfqId } : { quotationId: quotation.id }),
         type: "QUOTATION_VIEWED",
         actorType: "CUSTOMER",
         metadata: { quotationId: quotation.id, version: quotation.version },
@@ -94,20 +126,23 @@ async function acceptQuoteByToken(rawToken) {
       include: DETAIL_INCLUDE,
     });
 
-    await tx.rFQ.update({ where: { id: quotation.rfqId }, data: { status: "WON" } });
-
     await recordActivity(tx, {
-      rfqId: quotation.rfqId,
+      ...(quotation.rfqId ? { rfqId: quotation.rfqId } : { quotationId: quotation.id }),
       type: "QUOTATION_ACCEPTED",
       actorType: "CUSTOMER",
       metadata: { quotationId: quotation.id, version: quotation.version },
     });
-    await recordActivity(tx, {
-      rfqId: quotation.rfqId,
-      type: "STATUS_CHANGED",
-      actorType: "CUSTOMER",
-      metadata: { from: quotation.rfq.status, to: "WON", reason: "customer_accepted" },
-    });
+
+    // A MANUAL quotation has no RFQ to move to WON.
+    if (quotation.rfqId) {
+      await tx.rFQ.update({ where: { id: quotation.rfqId }, data: { status: "WON" } });
+      await recordActivity(tx, {
+        rfqId: quotation.rfqId,
+        type: "STATUS_CHANGED",
+        actorType: "CUSTOMER",
+        metadata: { from: quotation.rfq.status, to: "WON", reason: "customer_accepted" },
+      });
+    }
 
     return accepted;
   });
@@ -139,13 +174,13 @@ async function declineQuoteByToken(rawToken, message) {
     });
 
     await recordActivity(tx, {
-      rfqId: quotation.rfqId,
+      ...(quotation.rfqId ? { rfqId: quotation.rfqId } : { quotationId: quotation.id }),
       type: "QUOTATION_REJECTED",
       actorType: "CUSTOMER",
       metadata: { quotationId: quotation.id, version: quotation.version, message: message || undefined },
     });
 
-    if (!["WON", "LOST", "CANCELLED"].includes(quotation.rfq.status)) {
+    if (quotation.rfqId && !["WON", "LOST", "CANCELLED"].includes(quotation.rfq.status)) {
       await tx.rFQ.update({ where: { id: quotation.rfqId }, data: { status: "NEGOTIATING" } });
       await recordActivity(tx, {
         rfqId: quotation.rfqId,
@@ -166,15 +201,30 @@ async function requestRevisionByToken(rawToken, message) {
     throw ApiError.badRequest("This quotation can no longer receive revision requests.");
   }
 
-  return prisma.$transaction(async (tx) => {
-    await recordActivity(tx, {
-      rfqId: quotation.rfqId,
-      type: "CUSTOMER_REVISION_REQUESTED",
-      actorType: "CUSTOMER",
-      metadata: { quotationId: quotation.id, version: quotation.version, message: message || undefined },
-    });
+  // Deduplicate repeat clicks (§10): if the latest unresolved customer
+  // event is already a revision request with the same (or no) message,
+  // just bump its timestamp instead of stacking an identical row. A
+  // genuinely different, non-empty message always inserts a new row.
+  const priorActivity = await loadVersionActivity(quotation);
+  const decision = classifyRevisionRequest(priorActivity, message);
 
-    if (!["WON", "LOST", "CANCELLED"].includes(quotation.rfq.status)) {
+  return prisma.$transaction(async (tx) => {
+    if (decision.action === "touch") {
+      await tx.rFQActivity.update({ where: { id: decision.rowId }, data: { createdAt: new Date() } });
+    } else {
+      await recordActivity(tx, {
+        ...(quotation.rfqId ? { rfqId: quotation.rfqId } : { quotationId: quotation.id }),
+        type: "CUSTOMER_REVISION_REQUESTED",
+        actorType: "CUSTOMER",
+        metadata: { quotationId: quotation.id, version: quotation.version, message: message || undefined },
+      });
+    }
+
+    // Bump the quotation so it rises to the top of the Quotations list
+    // (ordered by updatedAt) — a revision request needs attention.
+    await tx.quotation.update({ where: { id: quotation.id }, data: { updatedAt: new Date() } });
+
+    if (quotation.rfqId && !["WON", "LOST", "CANCELLED"].includes(quotation.rfq.status)) {
       await tx.rFQ.update({ where: { id: quotation.rfqId }, data: { status: "NEGOTIATING" } });
       await recordActivity(tx, {
         rfqId: quotation.rfqId,

@@ -3,6 +3,37 @@ import { Outlet, useLocation } from "react-router-dom";
 import AnnouncementBar from "./AnnouncementBar";
 import Footer from "./Footer";
 import Header from "./Header";
+import { socialLinks } from "../../data/siteConfig";
+import { trust } from "../../data/homeData";
+
+/**
+ * Conservative, site-wide Organization JSON-LD (Phase 6B §39) — mounted
+ * once, not per-page. Deliberately no LocalBusiness (no confirmed
+ * production address yet) and no AggregateRating/Review (self-hosted
+ * rating markup doesn't meet Google's rich-result eligibility rules
+ * without a compliant third-party aggregator; the real 4.8/28-review
+ * figure is shown to customers in the homepage trust section instead,
+ * linking out to the real Google listing rather than asserted as schema
+ * here). `url` is built from window.location.origin rather than a
+ * hardcoded domain — no production domain has been chosen yet.
+ */
+function injectOrganizationJsonLd() {
+  const existing = document.head.querySelector('script[data-seo="org-jsonld"]');
+  if (existing) return;
+
+  const script = document.createElement("script");
+  script.type = "application/ld+json";
+  script.setAttribute("data-seo", "org-jsonld");
+  script.textContent = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "PrimeLinor",
+    url: window.location.origin,
+    description: "Custom apparel, corporate gifts, promotional products and kits for businesses.",
+    sameAs: [...socialLinks.map((s) => s.url), trust.rating.url],
+  });
+  document.head.appendChild(script);
+}
 
 function scrollToHash(hash) {
   const id = hash.replace(/^#/, "");
@@ -17,6 +48,10 @@ export default function SiteLayout() {
   const location = useLocation();
 
   useEffect(() => {
+    injectOrganizationJsonLd();
+  }, []);
+
+  useEffect(() => {
     if (location.hash) {
       const frame = requestAnimationFrame(() => {
         if (!scrollToHash(location.hash)) {
@@ -29,22 +64,6 @@ export default function SiteLayout() {
     window.scrollTo(0, 0);
     return undefined;
   }, [location.pathname, location.hash, location.key]);
-
-  /**
-   * Every route's page component sets its own document.title, except these
-   * two — Home has no page-level effect for it, and the listing page has
-   * no per-item variation to justify one. Every other route is left alone
-   * here rather than maintained as a growing list of exceptions.
-   */
-  useEffect(() => {
-    if (location.pathname === "/") {
-      document.title = "PrimeLinor — Custom Products for Your Brand";
-      return;
-    }
-    if (location.pathname === "/products") {
-      document.title = "Products — PrimeLinor";
-    }
-  }, [location.pathname]);
 
   return (
     <div id="top">

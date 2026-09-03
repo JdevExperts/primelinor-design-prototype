@@ -11,6 +11,13 @@
   --color-amber-hover: #d97706;
   --color-amber-light: #fef3c7;
 
+  /* ---------- Brand: Mustard (exact brand accent, narrowly scoped) ----------
+     Distinct from --color-amber above (which stays as-is everywhere it's
+     already used — buttons, cards, CTAs). This exact hex is reserved for
+     three specific brand-lockup touches only: the "Bulk" tagline, the
+     active/hover nav underline, and the eyebrow accent line. */
+  --color-mustard: #e1ad01;
+
   /* ---------- Neutral ---------- */
   --color-charcoal: #1a1a2e;
   --color-grey: #6b7280;

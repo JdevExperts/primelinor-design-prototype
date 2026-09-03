@@ -84,12 +84,6 @@ export const contactHero = {
   copy: "Tell us what you're looking for and the PrimeLinor team can help you choose the right products, quantities and customization approach.",
 };
 
-/**
- * No real phone/email is configured yet — see the Contact page brief's
- * explicit instruction not to present the mockData.js footer placeholders
- * (hello@primelinor.example / +91 00000 00000) as real. Channels describe
- * what happens rather than showing an unverified value.
- */
 export const contactChannels = [
   {
     id: "business-enquiry",
@@ -105,8 +99,8 @@ export const contactChannels = [
   {
     id: "email",
     title: "Email Us",
-    description: "Not yet connected in this prototype — use the enquiry form in the meantime.",
-    pending: true,
+    description: "Send us your requirement directly by email.",
+    action: "email",
   },
 ];
 
