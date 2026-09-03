@@ -216,7 +216,13 @@ function StudioView({
           cfg.whatsappEnabled
             ? buildWhatsAppUrl(
                 cfg.whatsappNumber,
-                buildStudioWhatsAppMessage(listing.name, color.label, quantity, pluralUnit(listing.unit, quantity)),
+                buildStudioWhatsAppMessage(
+                  listing.name,
+                  color.label,
+                  quantity,
+                  pluralUnit(listing.unit, quantity),
+                  listing.productCode,
+                ),
               )
             : null,
         );

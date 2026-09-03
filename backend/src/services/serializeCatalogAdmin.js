@@ -81,12 +81,17 @@ function serializeProductAdminSummary(product) {
   return {
     id: product.id,
     slug: product.slug,
+    productCode: product.productCode,
     name: product.name,
     primaryCategory: serializeCategoryRefAdmin(product.primaryCategory),
     categoryCount: (product.categories || []).length,
     thumbnail: pickThumbnail(product),
     priceMode: product.priceMode,
     priceSummary: priceSummary(product),
+    // Numeric entry price (FIXED -> fixedPrice, TIERED -> MOQ tier, QUOTE_ONLY -> null)
+    // so a quote line can pre-fill an editable starting rate.
+    effectivePrice: effectivePrice(product),
+    fixedPrice: product.fixedPrice != null ? Number(product.fixedPrice) : null,
     moq: product.moq,
     unit: product.unit,
     customizable: product.customizable,
@@ -160,6 +165,7 @@ function serializeProductAdminDetail(product) {
   return {
     id: product.id,
     slug: product.slug,
+    productCode: product.productCode,
     name: product.name,
     primaryCategoryId: product.primaryCategoryId,
     primaryCategory: serializeCategoryRefAdmin(product.primaryCategory),

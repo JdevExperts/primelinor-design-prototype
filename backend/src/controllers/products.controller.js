@@ -45,6 +45,15 @@ const DETAIL_INCLUDE = {
 
 function buildWhere(query) {
   const where = { active: true };
+  if (query.search) {
+    // Product Code is stored uppercase; `mode: "insensitive"` + `contains`
+    // means "PL-PO-001", "pl-po-001" and "PO-001" all locate the product.
+    where.OR = [
+      { name: { contains: query.search, mode: "insensitive" } },
+      { slug: { contains: query.search, mode: "insensitive" } },
+      { productCode: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
   // Matches ANY category membership, not only the primary (Solutions Phase
   // 0 §H) — a dry-fit tee whose primary is T-Shirts but is also mapped to
   // Sports Teams & Clubs shows up when filtering by either category.

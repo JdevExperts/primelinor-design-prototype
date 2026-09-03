@@ -77,6 +77,8 @@ function serializeProductSummary(product) {
   return {
     id: product.id,
     slug: product.slug,
+    // Permanent human-friendly base-product identifier (PL-[TYPE]-[NNN]).
+    productCode: product.productCode,
     name: product.name,
     primaryCategory: serializeCategoryRef(product.primaryCategory),
     categories: serializeProductCategories(product.categories),

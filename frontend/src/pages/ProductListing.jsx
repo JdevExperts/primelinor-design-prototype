@@ -263,14 +263,14 @@ export default function ProductListing() {
               onSubmit={(event) => event.preventDefault()}
             >
               <label className="visually-hidden" htmlFor="catalogue-search">
-                Search products
+                Search products or product code
               </label>
               <Icon name="search" size={16} className={styles.searchIcon} />
               <input
                 id="catalogue-search"
                 className={styles.searchInput}
                 type="search"
-                placeholder="Search products..."
+                placeholder="Search products or product code..."
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 autoComplete="off"

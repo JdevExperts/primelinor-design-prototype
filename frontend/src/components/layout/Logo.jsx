@@ -28,7 +28,10 @@ export default function Logo({ tone = "light", size = 36 }) {
         />
         <rect x="9" y="24" width="8" height="4" rx="2" fill="#f59e0b" />
       </svg>
-      <span className={styles.wordmark}>PrimeLinor</span>
+      <span className={styles.wordmarkGroup}>
+        <span className={styles.wordmark}>PrimeLinor</span>
+        <span className={styles.tagline}>Bulk</span>
+      </span>
     </span>
   );
 }

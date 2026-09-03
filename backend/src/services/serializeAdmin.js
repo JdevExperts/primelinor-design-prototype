@@ -5,6 +5,11 @@
  */
 const storage = require("./storage");
 const { safeDownloadFilename } = require("../utils/artworkHeaders");
+const { lineNeedsRate } = require("./quotationTotals");
+const { quotationSendBlockers } = require("./quotationService");
+const { quotationReference } = require("./quoteReference");
+const { canCreateRevision, canEditInPlace, canCancel, isExpired, revisionCta } = require("./quotationEligibility");
+const { hasPendingRevisionRequest, newerDraftVersion } = require("./quotationRevisionRules");
 
 function serializeCompany(company) {
   if (!company) return null;
@@ -99,6 +104,7 @@ async function serializeRfqItemWithArtwork(item) {
     description: item.description,
     productNameSnapshot: item.productNameSnapshot,
     productSlugSnapshot: item.productSlugSnapshot,
+    productCodeSnapshot: item.productCodeSnapshot,
     specSnapshot: item.specSnapshot,
     colorId: item.colorId,
     colorNameSnapshot: item.colorNameSnapshot,
@@ -138,15 +144,56 @@ function serializeNote(note) {
   };
 }
 
+function serializeQuotationParty(quotation) {
+  return {
+    name: quotation.partyName || null,
+    contactPerson: quotation.partyContactPerson || null,
+    phone: quotation.partyPhone || null,
+    email: quotation.partyEmail || null,
+    gstin: quotation.partyGstin || null,
+    address: quotation.partyAddress || null,
+  };
+}
+
 function serializeQuotationSummary(quotation) {
+  const lines = quotation.lines || [];
   return {
     id: quotation.id,
     version: quotation.version,
+    reference: quotationReference(quotation.rfq, quotation),
+    originType: quotation.originType,
+    originDetail: quotation.originDetail || null,
+    isExpired: isExpired(quotation),
+    isCancelled: quotation.status === "CANCELLED",
+    cancelledAt: quotation.cancelledAt || null,
+    rfqId: quotation.rfqId || null,
+    rfqReference: quotation.rfq?.reference || null,
+    groupReference: quotation.groupReference || null,
+    quotationGroupId: quotation.quotationGroupId,
+    // Thread grouping (Quotation Tracking UX): in the top-level list this
+    // row IS the latest version of its thread, and versionCount is how
+    // many versions the thread has. Set by listQuotations.
+    latestVersion: quotation.version,
+    versionCount: quotation._versionCount || 1,
+    party: serializeQuotationParty(quotation),
     status: quotation.status,
-    grandTotal: Number(quotation.grandTotal),
+    grandTotal: quotation.grandTotal != null ? Number(quotation.grandTotal) : null,
     currency: quotation.currency,
+    validUntil: quotation.validUntil,
+    lineCount: lines.length,
+    linesNeedingRate: lines.filter((l) =>
+      lineNeedsRate({
+        lineType: l.lineType,
+        quantity: l.quantity,
+        unitPrice: l.unitPrice != null ? Number(l.unitPrice) : null,
+        lineTotal: l.lineTotal != null ? Number(l.lineTotal) : null,
+      }),
+    ).length,
     createdBy: serializeStaffRef(quotation.createdBy),
     createdAt: quotation.createdAt,
+    updatedAt: quotation.updatedAt,
+    // Set by listQuotations — the customer's latest response is a revision request.
+    pendingRevision: Boolean(quotation._pendingRevision),
     sentAt: quotation.sentAt,
     supersedesId: quotation.supersedesId,
     // Whether a customer link currently exists — the raw token itself is
@@ -163,19 +210,80 @@ function serializeQuotationLine(line) {
     rfqItemId: line.rfqItemId,
     lineType: line.lineType,
     description: line.description,
+    productId: line.productId || null,
+    productNameSnapshot: line.productNameSnapshot || null,
+    productCodeSnapshot: line.productCodeSnapshot || null,
     quantity: line.quantity,
     unit: line.unit,
     unitPrice: line.unitPrice != null ? Number(line.unitPrice) : null,
-    lineTotal: Number(line.lineTotal),
+    // null (not 0) when the line still needs a rate — the UI shows
+    // "Rate required" rather than a misleading ₹0 (§11).
+    lineTotal: line.lineTotal != null ? Number(line.lineTotal) : null,
+    needsRate: lineNeedsRate({
+      lineType: line.lineType,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice != null ? Number(line.unitPrice) : null,
+      lineTotal: line.lineTotal != null ? Number(line.lineTotal) : null,
+    }),
     sortOrder: line.sortOrder,
     metadata: line.metadata,
   };
 }
 
+/**
+ * One row in the Version History table. Lightweight — no line detail, but
+ * enough to render Version / Quotation ID / Status / Grand Total / Created
+ * / Valid Until / Created By / Action. `rfq` (the parent quotation's RFQ,
+ * if any) is passed so the per-version reference resolves for RFQ-origin.
+ */
+function serializeQuotationVersionRow(version, rfq = null) {
+  const lines = version.lines || [];
+  const needingRate = lines.filter((l) =>
+    lineNeedsRate({
+      lineType: l.lineType,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice != null ? Number(l.unitPrice) : null,
+      lineTotal: l.lineTotal != null ? Number(l.lineTotal) : null,
+    }),
+  ).length;
+  return {
+    id: version.id,
+    version: version.version,
+    reference: quotationReference(rfq || version.rfq || null, version),
+    status: version.status,
+    grandTotal: version.grandTotal != null ? Number(version.grandTotal) : null,
+    validUntil: version.validUntil,
+    isExpired: isExpired(version),
+    isCancelled: version.status === "CANCELLED",
+    linesNeedingRate: needingRate,
+    pricingComplete: needingRate === 0,
+    createdAt: version.createdAt,
+    updatedAt: version.updatedAt,
+    createdBy: serializeStaffRef(version.createdBy),
+    hasActiveLink: Boolean(version.accessTokenHash) && !version.accessTokenRevokedAt,
+  };
+}
+
+function serializeInternalNote(note) {
+  return {
+    id: note.id,
+    body: note.body,
+    author: serializeStaffRef(note.author),
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt || note.createdAt,
+    editable: true,
+  };
+}
+
 function serializeQuotationDetail(quotation) {
+  const lines = (quotation.lines || []).map(serializeQuotationLine);
+  const linesNeedingRate = lines.filter((l) => l.needsRate).length;
+  const versions = (quotation.versions || []).map((v) => serializeQuotationVersionRow(v, quotation.rfq));
+  const newerDraft = newerDraftVersion(versions, quotation.version);
+  const latestVersion = versions.length ? Math.max(...versions.map((v) => v.version)) : quotation.version;
+  const pendingRevision = hasPendingRevisionRequest(quotation.activity || []);
   return {
     ...serializeQuotationSummary(quotation),
-    rfqId: quotation.rfqId,
     subtotal: Number(quotation.subtotal),
     taxMode: quotation.taxMode,
     taxAmount: quotation.taxAmount != null ? Number(quotation.taxAmount) : null,
@@ -183,8 +291,55 @@ function serializeQuotationDetail(quotation) {
     customerNotes: quotation.customerNotes,
     viewedAt: quotation.viewedAt,
     respondedAt: quotation.respondedAt,
+    cancelledAt: quotation.cancelledAt || null,
+    cancelReason: quotation.cancelReason || null,
     updatedAt: quotation.updatedAt,
-    lines: (quotation.lines || []).map(serializeQuotationLine),
+    lines,
+    // Commercial readiness — drives "Pricing incomplete" and the Send gate.
+    pricingComplete: linesNeedingRate === 0,
+    linesNeedingRate,
+    sendBlockers: quotation.status === "DRAFT" ? quotationSendBlockers(quotation) : [],
+    // Version-eligibility — single source of truth (quotationEligibility.js).
+    canEditInPlace: canEditInPlace(quotation.status),
+    canCreateRevision: canCreateRevision(quotation.status),
+    canCancel: canCancel(quotation.status),
+    revisionCta: revisionCta(quotation.status),
+    // Every version in the lineage, ascending, for the Version History
+    // table, plus the highest version number in the thread so the editor
+    // can flag "you're viewing an older version — newer version exists".
+    versions,
+    latestVersion,
+    newerDraft: newerDraft ? { id: newerDraft.id, version: newerDraft.version } : null,
+    // Private negotiation notes for the lineage (§8/§9). Never public.
+    internalNotes: (quotation.internalNotes || []).map(serializeInternalNote),
+    // Customer responses on this version — revision request + its message,
+    // accept, decline, first view. Newest first.
+    customerActivity: (quotation.activity || []).map((a) => ({
+      id: a.id,
+      type: a.type,
+      actorType: a.actorType,
+      message: a.metadata?.message || null,
+      createdAt: a.createdAt,
+    })),
+    hasPendingRevisionRequest: pendingRevision,
+    pendingRevision,
+  };
+}
+
+function serializeWorkingItem(item) {
+  return {
+    id: item.id,
+    productId: item.productId || null,
+    productCode: item.productCodeSnapshot || null,
+    productName: item.productNameSnapshot || null,
+    description: item.description || null,
+    quantity: item.quantity,
+    unit: item.unit || null,
+    spec: item.specSnapshot || null,
+    color: item.colorNameSnapshot || null,
+    variant: item.variantLabelSnapshot || null,
+    sortOrder: item.sortOrder,
+    isCustom: !item.productId,
   };
 }
 
@@ -207,7 +362,11 @@ async function serializeRfqDetail(rfq) {
     contact: serializeContact(rfq.contact),
     leadId: rfq.leadId,
     assignedTo: serializeStaffRef(rfq.assignedTo),
+    // The immutable customer submission.
     items,
+    originalItems: items,
+    // The editable sales requirement (Phase C).
+    workingItems: (rfq.workingItems || []).map(serializeWorkingItem),
     activity: (rfq.activity || []).map(serializeActivity),
     notes: (rfq.notes || []).map(serializeNote),
     quotations: (rfq.quotations || []).map(serializeQuotationSummary),
@@ -221,8 +380,12 @@ module.exports = {
   serializeLeadDetail,
   serializeRfqSummary,
   serializeRfqDetail,
+  serializeWorkingItem,
   serializeQuotationSummary,
   serializeQuotationDetail,
+  serializeQuotationParty,
+  serializeQuotationVersionRow,
+  serializeInternalNote,
   serializeNote,
   serializeActivity,
   serializeStaffRef,

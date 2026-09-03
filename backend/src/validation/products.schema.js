@@ -14,6 +14,10 @@ const listProductsQuerySchema = z
   .object({
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(100).default(12),
+    // Free-text search over product name, slug and Product Code
+    // (case-insensitive, partial). The catalogue listing UI still filters
+    // client-side; this is for API consumers and direct code lookups.
+    search: z.string().trim().min(1).max(200).optional(),
     category: z.string().trim().min(1).optional(),
     material: z.string().trim().min(1).optional(),
     color: z.string().trim().min(1).optional(),

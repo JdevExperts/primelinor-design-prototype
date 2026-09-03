@@ -168,6 +168,11 @@ function ProductDetailView({ product }) {
           <div className={styles.config}>
             <p className="eyebrow">{product.categoryLabel}</p>
             <h1 className={styles.title}>{product.name}</h1>
+            {product.productCode ? (
+              <p className={styles.productCode}>
+                Product Code: <span>{product.productCode}</span>
+              </p>
+            ) : null}
             <p className={styles.spec}>{product.longSpec}</p>
 
             <div className={styles.priceBlock} aria-live="polite">
@@ -514,7 +519,12 @@ function ProductDetailView({ product }) {
             items: [
               {
                 productId: product.id,
-                colorId,
+                // Only send a colour when the product actually offers a
+                // colour choice. Products with no ProductColor rows never
+                // show the swatch picker, so `colorId` is still its
+                // placeholder default ("white") — submitting that makes the
+                // backend reject the item as an unavailable colour.
+                ...(colors.length > 0 ? { colorId } : {}),
                 quantity,
               },
             ],

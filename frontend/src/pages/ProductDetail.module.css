@@ -69,6 +69,21 @@
   letter-spacing: -0.022em;
 }
 
+/* Product Code — clear but secondary to the title (task §13). The code
+   itself is selectable as a unit for easy copy into WhatsApp/email. */
+.productCode {
+  margin: 6px 0 2px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.productCode span {
+  user-select: all;
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+  letter-spacing: 0.01em;
+}
+
 .spec {
   margin-top: -4px;
   font-size: var(--text-sm);

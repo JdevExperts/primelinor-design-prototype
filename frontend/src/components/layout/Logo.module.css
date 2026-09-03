@@ -9,11 +9,53 @@
   flex: none;
 }
 
+.wordmarkGroup {
+  /* inline-flex shrinks the group to the width of its widest child
+     (the "PrimeLinor" text) rather than stretching to fill the row —
+     that's what lets align-items center "Bulk" under the wordmark
+     itself, not under the icon+wordmark row as a whole. */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
 .wordmark {
   font-size: 1.1875rem;
   font-weight: var(--weight-bold);
   letter-spacing: -0.025em;
+  line-height: 1.05;
   color: var(--color-navy);
+}
+
+.tagline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-top: 2px;
+  /* Compensates the trailing letter-spacing so the word stays optically
+     centred between the flanking rules. */
+  text-indent: 0.06em;
+  /* Matches the "Get Your Sample Today" CTA's token exactly
+     (components/layout/AnnouncementBar.module.css .sample), not the
+     narrower --color-mustard used by the nav underline/eyebrow line. */
+  color: var(--color-amber);
+}
+
+/* Rules on either side of the word — renders as "──── Bulk ────". */
+.tagline::before,
+.tagline::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
 }
 
 .onDark {

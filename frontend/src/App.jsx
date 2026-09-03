@@ -31,6 +31,8 @@ const LeadsInbox = lazy(() => import("./admin/pages/LeadsInbox"));
 const LeadDetail = lazy(() => import("./admin/pages/LeadDetail"));
 const RfqsInbox = lazy(() => import("./admin/pages/RfqsInbox"));
 const RfqDetail = lazy(() => import("./admin/pages/RfqDetail"));
+const QuotationsList = lazy(() => import("./admin/pages/QuotationsList"));
+const NewQuotation = lazy(() => import("./admin/pages/NewQuotation"));
 const QuotationEditor = lazy(() => import("./admin/pages/QuotationEditor"));
 
 // Catalogue Admin (Phase 5) — same admin shell/bundle, not a separate app.
@@ -80,6 +82,8 @@ export default function App() {
                 <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="rfqs" element={<RfqsInbox />} />
                 <Route path="rfqs/:id" element={<RfqDetail />} />
+                <Route path="quotations" element={<QuotationsList />} />
+                <Route path="quotations/new" element={<NewQuotation />} />
                 <Route path="quotations/:id" element={<QuotationEditor />} />
                 <Route path="catalog" element={<Navigate to="catalog/products" replace />} />
                 <Route path="catalog/products" element={<ProductsList />} />

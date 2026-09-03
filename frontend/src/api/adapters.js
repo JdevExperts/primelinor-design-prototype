@@ -153,6 +153,9 @@ export function mapApiProductToListingShape(product) {
   return {
     id: product.slug,
     name: product.name,
+    // Permanent human-friendly base-product identifier (PL-[TYPE]-[NNN]).
+    // Shown on cards/PDP and matched by catalogue search.
+    productCode: product.productCode || null,
     spec: specFromProduct(product),
     art: artForProduct(product),
     color: tintForProduct(product),

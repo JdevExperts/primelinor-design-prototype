@@ -83,6 +83,10 @@
 .status_superseded {
   background: rgba(255, 255, 255, 0.14);
 }
+.status_cancelled {
+  background: #e5e7eb;
+  color: #4b5563;
+}
 
 .content {
   flex: 1;
@@ -201,6 +205,15 @@
 
 .table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Product Code under the item description — subtle, easy to copy into
+   WhatsApp/phone (task §17). */
+.lineCode {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted, #6b7280);
 }
 
 /* Below small widths, restack the table into labeled cards — no

@@ -34,4 +34,15 @@ async function generateRfqReference() {
   return formatReference("RQ", value);
 }
 
-module.exports = { generateLeadReference, generateRfqReference, formatReference };
+/**
+ * Customer-facing group number for a MANUAL (standalone) quotation lineage
+ * — "PL-QT-2026-000007". RFQ-origin quotations reuse the RFQ reference
+ * instead (see quoteReference.js), so this sequence only advances for
+ * manual quotes.
+ */
+async function generateQuotationGroupReference() {
+  const value = await nextSequenceValue("quotation_reference_seq");
+  return formatReference("QT", value);
+}
+
+module.exports = { generateLeadReference, generateRfqReference, generateQuotationGroupReference, formatReference };

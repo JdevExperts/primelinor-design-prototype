@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import * as leadsApi from "../api/leads";
 import StatusBadge from "../components/StatusBadge";
 import styles from "../components/adminTable.module.css";
+import { formatDateTime } from "../utils/datetime";
 
 const LEAD_STATUSES = ["NEW", "IN_REVIEW", "CONVERTED", "CLOSED"];
 const SOURCE_TYPES = [
@@ -130,7 +131,7 @@ export default function LeadsInbox() {
                   <td>
                     <StatusBadge status={lead.status} />
                   </td>
-                  <td className={styles.muted}>{new Date(lead.createdAt).toLocaleDateString("en-IN")}</td>
+                  <td className={styles.muted}>{formatDateTime(lead.createdAt)}</td>
                   <td>
                     <Link className={styles.actionLink} to={`/admin/leads/${lead.id}`}>
                       Open

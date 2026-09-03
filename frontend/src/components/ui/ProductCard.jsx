@@ -22,6 +22,7 @@ export default function ProductCard({
 }) {
   const {
     name,
+    productCode,
     spec,
     art,
     color,
@@ -69,6 +70,7 @@ export default function ProductCard({
 
       <div className={styles.body}>
         <h3 className={styles.name}>{name}</h3>
+        {productCode ? <p className={styles.code}>Code: {productCode}</p> : null}
         <p className={styles.spec}>{spec}</p>
 
         <div className={styles.priceBlock}>

@@ -30,8 +30,11 @@ export function buildQuoteWhatsAppMessage(quoteReference) {
   return `Hi PrimeLinor, I'm contacting you about quotation ${quoteReference}.`;
 }
 
-export function buildStudioWhatsAppMessage(productName, colorLabel, quantity, unitLabel) {
-  return `Hi PrimeLinor, I'm customizing ${productName} (${colorLabel}, ${quantity} ${unitLabel}) and have a question.`;
+export function buildStudioWhatsAppMessage(productName, colorLabel, quantity, unitLabel, productCode) {
+  // Include the Product Code inline when we have it (task §19) — keeps the
+  // message short while making phone/WhatsApp reference unambiguous.
+  const product = productCode ? `${productName} (${productCode})` : productName;
+  return `Hi PrimeLinor, I'm customizing ${product} (${colorLabel}, ${quantity} ${unitLabel}) and have a question.`;
 }
 
 /**

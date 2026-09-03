@@ -5,6 +5,7 @@ import * as staffApi from "../api/staff";
 import { useAdminAuth } from "../context/useAdminAuth";
 import StatusBadge from "../components/StatusBadge";
 import styles from "../components/adminTable.module.css";
+import { formatDateTime } from "../utils/datetime";
 
 const RFQ_STATUSES = ["NEW", "IN_PROGRESS", "QUOTED", "NEGOTIATING", "WON", "LOST", "CANCELLED"];
 const SOURCE_TYPES = [
@@ -168,7 +169,7 @@ export default function RfqsInbox() {
                     <StatusBadge status={rfq.status} />
                   </td>
                   <td className={styles.muted}>{rfq.assignedTo?.name || "Unassigned"}</td>
-                  <td className={styles.muted}>{new Date(rfq.createdAt).toLocaleDateString("en-IN")}</td>
+                  <td className={styles.muted}>{formatDateTime(rfq.createdAt)}</td>
                   <td>
                     <Link className={styles.actionLink} to={`/admin/rfqs/${rfq.id}`}>
                       Open

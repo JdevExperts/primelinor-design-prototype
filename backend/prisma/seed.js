@@ -11,6 +11,7 @@
  */
 const { PrismaClient } = require("@prisma/client");
 const { assertSeedAllowed } = require("../src/utils/seedGuard");
+const { PRODUCT_CODE_BY_SLUG } = require("./productCodeMap");
 
 assertSeedAllowed();
 
@@ -92,6 +93,7 @@ async function upsertProduct({ colors, tags, categories }, def) {
     data: {
       slug: def.slug,
       name: def.name,
+      productCode: PRODUCT_CODE_BY_SLUG[def.slug],
       categoryId: categories[def.category].id,
       description: def.description,
       longSpec: def.longSpec,

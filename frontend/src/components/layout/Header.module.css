@@ -58,7 +58,7 @@
   right: var(--space-12);
   bottom: 2px;
   height: 2px;
-  background-color: var(--color-amber);
+  background-color: var(--color-mustard);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform var(--duration) var(--ease);
@@ -183,7 +183,7 @@
 }
 
 .searchInput {
-  width: 148px;
+  width: 260px;
   border: none;
   background: transparent;
   outline: none;
@@ -271,10 +271,6 @@
   }
 }
 
-.ctaShort {
-  display: none;
-}
-
 @media (max-width: 560px) {
   .inner {
     gap: var(--space-12);
@@ -282,20 +278,6 @@
 
   .actions {
     gap: var(--space-8);
-  }
-
-  .actions .headerCta {
-    min-height: 40px;
-    padding-inline: var(--space-16);
-    font-size: var(--text-sm);
-  }
-
-  .ctaLong {
-    display: none;
-  }
-
-  .ctaShort {
-    display: inline;
   }
 
   .menuToggle {

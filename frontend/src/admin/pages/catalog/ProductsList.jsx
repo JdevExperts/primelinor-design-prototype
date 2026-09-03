@@ -58,7 +58,7 @@ export default function ProductsList() {
       <div className={styles.filters}>
         <input
           type="search"
-          placeholder="Search name or slug…"
+          placeholder="Search name, slug or product code…"
           value={search}
           onChange={(event) => {
             setPage(1);
@@ -133,6 +133,7 @@ export default function ProductsList() {
               <tr>
                 <th>Image</th>
                 <th>Product</th>
+                <th>Code</th>
                 <th>Category</th>
                 <th>Pricing</th>
                 <th>MOQ</th>
@@ -187,6 +188,11 @@ export default function ProductsList() {
                         <span style={{ fontSize: 10, color: "#b54708", fontWeight: 600 }}>THIN DETAILS</span>
                       </>
                     ) : null}
+                  </td>
+                  <td>
+                    <span style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "0.02em", userSelect: "all" }}>
+                      {product.productCode || "—"}
+                    </span>
                   </td>
                   <td className={styles.muted}>
                     {product.primaryCategory?.name || "—"}

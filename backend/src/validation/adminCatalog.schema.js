@@ -1,4 +1,5 @@
 const { z } = require("zod");
+const { normalizeProductCode, PRODUCT_CODE_RE } = require("../services/productCode");
 
 const SLUG_RE = /^[a-z0-9-]+$/;
 const HEX_RE = /^#[0-9a-f]{6}$/i;
@@ -18,6 +19,16 @@ const PLACEMENT_VIEWS = ["FRONT", "BACK"];
 const PRICE_MODES = ["FIXED", "TIERED", "QUOTE_ONLY"];
 
 const slug = z.string().trim().min(1).max(200).regex(SLUG_RE, "Use lowercase letters, numbers and hyphens only.");
+
+// Product Code — normalized to uppercase/trimmed before the format check,
+// so "pl-po-001" is accepted and stored as "PL-PO-001" (task §8/§22).
+const productCode = z
+  .string()
+  .trim()
+  .min(1)
+  .max(20)
+  .transform(normalizeProductCode)
+  .refine((value) => PRODUCT_CODE_RE.test(value), "Use the format PL-XX-001 (e.g. PL-PO-001).");
 const uuid = z.string().uuid();
 const idParamSchema = z.object({ id: uuid }).strict();
 const productSubIdParamSchema = z.object({ id: uuid, assetId: uuid }).strict();
@@ -105,6 +116,7 @@ const specificationInputSchema = z
 const productBasicsFields = {
   name: z.string().trim().min(1).max(200),
   slug,
+  productCode,
   // Product<->Category is many-to-many (Solutions Phase 0) — `categoryIds`
   // is the product's full category membership set, `primaryCategoryId`
   // must be one of them (checked in productAdmin.js, not expressible in
@@ -433,6 +445,7 @@ module.exports = {
   createProductSchema,
   updateProductSchema,
   duplicateProductSchema,
+  variantInputSchema,
   uploadAssetMetaSchema,
   createAssetFromUrlSchema,
   updateAssetSchema,
