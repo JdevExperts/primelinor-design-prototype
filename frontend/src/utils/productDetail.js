@@ -8,7 +8,6 @@ import {
 import {
   apparelSizeGuide,
   apparelSizes,
-  galleryViews,
   hoodieSizeGuide,
   productDetailOverrides,
   quickQuantities,
@@ -153,10 +152,10 @@ export function getProductDetail(id) {
     highlights: merged.highlights || defaultHighlights(base),
     specifications,
     relatedProductIds: merged.relatedProductIds || [],
-    gallery: galleryViews.map((view) => ({
-      ...view,
-      image: null,
-    })),
+    // Dev-fixture mode has no real ProductAsset URLs — a single slot is
+    // enough for the PDP stage to render its art placeholder (the live API
+    // path builds the real multi-image gallery, see api/adapters.js).
+    gallery: [{ id: "primary", image: null }],
     fit: merged.fit,
     gender: merged.gender,
     sleeve: merged.sleeve,

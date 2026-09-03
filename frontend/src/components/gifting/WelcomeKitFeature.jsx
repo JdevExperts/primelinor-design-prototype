@@ -3,25 +3,53 @@ import Button from "../ui/Button";
 import ProductVisual from "../ui/ProductVisual";
 import Section from "../ui/Section";
 import { welcomeKitFeature } from "../../data/corporateGiftingData";
+import { resolveGiftProduct } from "../../utils/giftingCatalogue";
 import styles from "./WelcomeKitFeature.module.css";
 
 /**
- * The strongest single feature on the page. Items sit inside one bordered
- * "kit" panel rather than as separate floating cards, so the composition
- * reads as one curated kit even with placeholder illustrations.
+ * The strongest single feature on the page. Each kit piece resolves to its
+ * real catalogue product image where one exists (`item.productSlug`);
+ * "Welcome Card" has no SKU and keeps its illustration. "Explore Welcome
+ * Kits" links to the real welcome-kit PDP.
  */
-export default function WelcomeKitFeature() {
+export default function WelcomeKitFeature({ productsBySlug }) {
+  const lookup = productsBySlug || new Map();
+  const items = welcomeKitFeature.items.map((item) => {
+    const product = item.productSlug ? resolveGiftProduct(item.productSlug, lookup) : null;
+    return { ...item, image: product?.image || null, href: product ? `/products/${product.id}` : null };
+  });
+
   return (
     <Section id="welcome-kit-feature" tone="tint" ariaLabelledBy="welcome-kit-title" spacious>
       <div className={styles.layout}>
-        <div className={styles.kitBox} aria-hidden="true">
+        <div className={styles.kitBox}>
           <ul className={styles.items}>
-            {welcomeKitFeature.items.map((item) => (
-              <li key={item.id} className={styles.item}>
-                <ProductVisual art={item.art} color={item.color} ratio="1 / 1" scale={0.86} />
-                <span className={styles.itemLabel}>{item.label}</span>
-              </li>
-            ))}
+            {items.map((item) => {
+              const visual = (
+                <>
+                  <ProductVisual
+                    art={item.art}
+                    color={item.color}
+                    src={item.image}
+                    alt={item.image ? item.label : ""}
+                    ratio="1 / 1"
+                    scale={0.86}
+                  />
+                  <span className={styles.itemLabel}>{item.label}</span>
+                </>
+              );
+              return (
+                <li key={item.id} className={styles.item}>
+                  {item.href ? (
+                    <Link to={item.href} className={styles.itemLink}>
+                      {visual}
+                    </Link>
+                  ) : (
+                    visual
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -39,7 +67,7 @@ export default function WelcomeKitFeature() {
           </ul>
 
           <div className={styles.ctas}>
-            <Button as={Link} to={`/products/${welcomeKitFeature.productId}`} variant="primary" size="lg">
+            <Button as={Link} to={`/products/${welcomeKitFeature.productSlug}`} variant="primary" size="lg">
               Explore Welcome Kits
             </Button>
             <Button as={Link} to={{ hash: "#build-kit" }} variant="secondary" size="lg">

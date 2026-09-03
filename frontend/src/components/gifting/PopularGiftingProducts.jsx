@@ -3,14 +3,20 @@ import Button from "../ui/Button";
 import ProductCard from "../ui/ProductCard";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
-import { popularGiftingProductIds } from "../../data/corporateGiftingData";
-import { listingProducts } from "../../data/mockData";
+import { popularGiftingProductSlugs } from "../../data/corporateGiftingData";
+import { resolveGiftProducts } from "../../utils/giftingCatalogue";
 import styles from "./PopularGiftingProducts.module.css";
 
-export default function PopularGiftingProducts() {
-  const products = popularGiftingProductIds
-    .map((id) => listingProducts.find((item) => item.id === id))
-    .filter(Boolean);
+/**
+ * The most-requested individual gifting products — resolved from the shared
+ * catalogue by slug and rendered with the same ProductCard the Products
+ * listing uses, so the image, code and price match exactly. Unresolved /
+ * inactive slugs are skipped.
+ */
+export default function PopularGiftingProducts({ productsBySlug }) {
+  const products = resolveGiftProducts(popularGiftingProductSlugs, productsBySlug);
+
+  if (products.length === 0) return null;
 
   return (
     <Section ariaLabelledBy="popular-gifting-title">

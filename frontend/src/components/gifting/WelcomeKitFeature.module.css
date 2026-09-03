@@ -27,6 +27,25 @@
   text-align: center;
 }
 
+.itemLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+
+.itemLink:hover .itemLabel {
+  color: var(--color-navy);
+}
+
+.itemLink:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 3px;
+}
+
 .itemLabel {
   font-size: var(--text-caption);
   font-weight: var(--weight-medium);

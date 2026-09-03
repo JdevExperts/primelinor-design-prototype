@@ -57,10 +57,16 @@
 }
 
 .photo {
+  display: block;
   width: 100%;
-  height: 100%;
+  /* Mirrors .collage so a real category/campaign photo occupies the exact
+     same slot the composed placeholder would. */
+  aspect-ratio: 4 / 3.4;
+  height: auto;
   border-radius: var(--radius-xl);
   object-fit: cover;
+  object-position: center;
+  box-shadow: var(--shadow-md);
 }
 
 .collage {
@@ -126,7 +132,8 @@
     order: 2;
   }
 
-  .collage {
+  .collage,
+  .photo {
     aspect-ratio: 16 / 9;
   }
 }
@@ -137,7 +144,8 @@
     align-items: stretch;
   }
 
-  .collage {
+  .collage,
+  .photo {
     aspect-ratio: 4 / 3;
   }
 }

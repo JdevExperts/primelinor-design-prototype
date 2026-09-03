@@ -11,31 +11,18 @@
   background: var(--color-offwhite);
 }
 
-.caption {
-  position: absolute;
-  left: var(--space-12);
-  bottom: var(--space-12);
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-navy);
-  background: rgba(255, 255, 255, 0.88);
-  border-radius: var(--radius-sm);
-}
-
 .thumbs {
   display: flex;
   gap: var(--space-8);
+  margin: 0;
+  padding: 0 0 2px;
+  list-style: none;
   overflow-x: auto;
-  padding-bottom: 2px;
   scrollbar-width: thin;
 }
 
 .thumb {
-  display: grid;
-  gap: 6px;
+  display: block;
   flex: none;
   width: 88px;
   padding: 0;
@@ -53,18 +40,6 @@
 .thumbOn {
   border-color: var(--color-navy);
   box-shadow: 0 0 0 1px var(--color-navy);
-}
-
-.thumbLabel {
-  padding: 0 var(--space-8) 8px;
-  font-size: 11px;
-  font-weight: var(--weight-medium);
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.thumbOn .thumbLabel {
-  color: var(--color-navy);
 }
 
 @media (max-width: 639px) {

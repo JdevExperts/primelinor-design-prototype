@@ -2,16 +2,21 @@ import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import ProductVisual from "../ui/ProductVisual";
 import { giftingHero } from "../../data/corporateGiftingData";
+import { resolveBlockImage } from "../../utils/giftingCatalogue";
 import styles from "./GiftingHero.module.css";
 
 /**
- * Not a homepage-style campaign wall — one editorial hero. `desktopImage` /
- * `mobileImage` are admin-ready (same principle as the homepage banners): a
- * real photo swaps in as a data change. Until then a composed placeholder
- * (three ProductVisual tiles) fills the same slot.
+ * One editorial hero. Image priority: an explicit curated campaign photo
+ * (`giftingHero.desktopImage`, admin-ready like the homepage banners) →
+ * the real Promotional Products category image → a composed placeholder
+ * (three ProductVisual tiles). A missing image never renders a broken
+ * `<img>`.
  */
-export default function GiftingHero({ onRequestQuote }) {
-  const hasPhoto = Boolean(giftingHero.desktopImage);
+export default function GiftingHero({ onRequestQuote, resolverContext }) {
+  const resolved = resolveBlockImage(giftingHero.imageSource, resolverContext || {});
+  const photo = giftingHero.desktopImage
+    ? { url: giftingHero.desktopImage, alt: giftingHero.altText }
+    : resolved;
 
   return (
     <section className={styles.hero} aria-labelledby="gifting-hero-title">
@@ -44,11 +49,12 @@ export default function GiftingHero({ onRequestQuote }) {
         </div>
 
         <div className={styles.visual}>
-          {hasPhoto ? (
+          {photo ? (
             <img
               className={styles.photo}
-              src={giftingHero.desktopImage}
-              alt={giftingHero.altText}
+              src={photo.url}
+              alt={photo.alt || giftingHero.altText}
+              loading="eager"
             />
           ) : (
             <div className={styles.collage} aria-hidden="true">

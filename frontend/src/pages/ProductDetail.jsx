@@ -96,7 +96,6 @@ function ProductLoadError({ message, onRetry }) {
 function ProductDetailView({ product }) {
   const related = product.relatedProducts || [];
   const colors = product.colors || [];
-  const [view, setView] = useState("front");
   const [colorId, setColorId] = useState(colors[0] || "white");
   const [quantity, setQuantity] = useState(product.moq);
   const [qtyDraft, setQtyDraft] = useState(String(product.moq));
@@ -171,8 +170,7 @@ function ProductDetailView({ product }) {
           <ProductGallery
             product={product}
             colorHex={color.hex}
-            activeView={view}
-            onViewChange={setView}
+            images={product.gallery}
           />
 
           <div className={styles.config}>
