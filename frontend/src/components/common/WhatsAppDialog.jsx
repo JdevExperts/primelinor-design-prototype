@@ -3,6 +3,7 @@ import Button from "../ui/Button";
 import Dialog from "../product/Dialog";
 import { getPublicConfig } from "../../api/config";
 import { buildWhatsAppUrl } from "../../utils/whatsapp";
+import { track } from "../../analytics/track";
 import styles from "./WhatsAppDialog.module.css";
 
 const GENERIC_MESSAGE = "Hi PrimeLinor, I'd like to talk about custom products for my brand.";
@@ -33,7 +34,18 @@ export default function WhatsAppDialog({ open, onClose }) {
       {whatsappUrl ? (
         <>
           <p className={styles.copy}>You&rsquo;ll be taken to WhatsApp to chat with our team directly.</p>
-          <Button as="a" href={whatsappUrl} target="_blank" rel="noreferrer" variant="primary" size="md" onClick={onClose}>
+          <Button
+            as="a"
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            variant="primary"
+            size="md"
+            onClick={() => {
+              track("WHATSAPP_CLICK", { metadata: { context: "whatsapp_dialog" } });
+              onClose();
+            }}
+          >
             Open WhatsApp
           </Button>
         </>

@@ -4,15 +4,17 @@ import ProductVisual from "../ui/ProductVisual";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
 import { giftingUseCases } from "../../data/corporateGiftingData";
+import { resolveBlockImage } from "../../utils/giftingCatalogue";
 import styles from "./GiftingUseCases.module.css";
 
 /**
- * Answers "what kind of gifting project are you working on?" — solution
- * entry points, not products yet. Each card scrolls to the section that
- * actually answers it (Explore Gift Collections, or the Welcome Kit
- * feature for that specific use case).
+ * "What are you gifting for?" — discovery entry points, not products. Each
+ * card shows a real Category or Product image (resolved from the shared
+ * catalogue via `resolverContext`), falling back to its ProductVisual
+ * placeholder if that image isn't available. Every card still just scrolls
+ * to the section that answers it.
  */
-export default function GiftingUseCases() {
+export default function GiftingUseCases({ resolverContext }) {
   return (
     <Section tone="muted" ariaLabelledBy="gifting-use-cases-title">
       <SectionHeader
@@ -23,30 +25,33 @@ export default function GiftingUseCases() {
       />
 
       <ul className={styles.grid}>
-        {giftingUseCases.map((item) => (
-          <li key={item.id}>
-            <Link to={{ hash: `#${item.anchor}` }} className={styles.card}>
-              <div className={styles.media}>
-                <ProductVisual
-                  art={item.art}
-                  color={item.color}
-                  src={item.image}
-                  alt=""
-                  ratio="4 / 2.6"
-                  scale={0.94}
-                />
-              </div>
-              <div className={styles.body}>
-                <h3 className={styles.title}>{item.title}</h3>
-                <p className={styles.description}>{item.description}</p>
-                <span className={styles.discover}>
-                  Discover
-                  <Icon name="arrowRight" size={16} />
-                </span>
-              </div>
-            </Link>
-          </li>
-        ))}
+        {giftingUseCases.map((item) => {
+          const image = resolveBlockImage(item.imageSource, resolverContext || {});
+          return (
+            <li key={item.id}>
+              <Link to={{ hash: `#${item.anchor}` }} className={styles.card}>
+                <div className={styles.media}>
+                  <ProductVisual
+                    art={item.art}
+                    color={item.color}
+                    src={image?.url || null}
+                    alt=""
+                    ratio="4 / 2.6"
+                    scale={0.94}
+                  />
+                </div>
+                <div className={styles.body}>
+                  <h3 className={styles.title}>{item.title}</h3>
+                  <p className={styles.description}>{item.description}</p>
+                  <span className={styles.discover}>
+                    Discover
+                    <Icon name="arrowRight" size={16} />
+                  </span>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </Section>
   );

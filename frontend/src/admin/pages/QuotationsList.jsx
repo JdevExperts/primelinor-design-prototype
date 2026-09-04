@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import * as quotationsApi from "../api/quotations";
 import * as staffApi from "../api/staff";
+import { useUrlFilters } from "../utils/useUrlFilters";
+import PeriodSelect from "../components/PeriodSelect";
 import StatusBadge from "../components/StatusBadge";
 import styles from "../components/adminTable.module.css";
 import { formatDate, formatDateTime } from "../utils/datetime";
@@ -21,17 +23,23 @@ function formatInr(value) {
 }
 
 export default function QuotationsList() {
+  const { value, patch } = useUrlFilters();
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [staff, setStaff] = useState([]);
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("");
-  const [origin, setOrigin] = useState("");
-  const [createdBy, setCreatedBy] = useState("");
-  const [expired, setExpired] = useState(false);
-  const [search, setSearch] = useState("");
   const [loadState, setLoadState] = useState("loading");
   const limit = 20;
+
+  const status = value("status");
+  const origin = value("origin");
+  const createdBy = value("createdBy");
+  const expired = value("expired") === "true";
+  const pendingRevision = value("pendingRevision") === "1";
+  const thread = value("thread"); // "" | "active"
+  const search = value("search");
+  const period = value("period", "30d");
+  const page = Number(value("page", "1")) || 1;
+  const setFilter = (updates) => patch({ ...updates, page: null });
 
   useEffect(() => {
     staffApi.listStaff().then(({ staff: list }) => setStaff(list)).catch(() => {});
@@ -48,6 +56,9 @@ export default function QuotationsList() {
         origin: origin || undefined,
         createdBy: createdBy || undefined,
         expired: expired ? "true" : undefined,
+        pendingRevision: pendingRevision ? "1" : undefined,
+        thread: thread || undefined,
+        period,
         search: search.trim() || undefined,
       })
       .then(({ quotations, total: count }) => {
@@ -60,9 +71,11 @@ export default function QuotationsList() {
     return () => {
       cancelled = true;
     };
-  }, [page, status, origin, createdBy, expired, search]);
+  }, [page, status, origin, createdBy, expired, pendingRevision, thread, period, search]);
 
   const pageCount = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total]);
+  const specialFilter =
+    (pendingRevision && "Pending revision requests") || (thread === "active" && "Active threads") || null;
 
   return (
     <div className={styles.page}>
@@ -89,25 +102,22 @@ export default function QuotationsList() {
           type="search"
           placeholder="Search quotation no, RFQ, customer, phone or product code…"
           value={search}
-          onChange={(event) => {
-            setPage(1);
-            setSearch(event.target.value);
-          }}
+          onChange={(event) => setFilter({ search: event.target.value })}
           style={{ minWidth: 320 }}
         />
-        <select value={status} onChange={(event) => { setPage(1); setStatus(event.target.value); }}>
+        <select value={status} onChange={(event) => setFilter({ status: event.target.value })}>
           <option value="">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <select value={origin} onChange={(event) => { setPage(1); setOrigin(event.target.value); }}>
+        <select value={origin} onChange={(event) => setFilter({ origin: event.target.value })}>
           <option value="">Any origin</option>
-          {ORIGINS.map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
+          {ORIGINS.map(([v, label]) => (
+            <option key={v} value={v}>{label}</option>
           ))}
         </select>
-        <select value={createdBy} onChange={(event) => { setPage(1); setCreatedBy(event.target.value); }}>
+        <select value={createdBy} onChange={(event) => setFilter({ createdBy: event.target.value })}>
           <option value="">Anyone</option>
           {staff.map((s) => (
             <option key={s.id} value={s.id}>{s.name}</option>
@@ -117,10 +127,20 @@ export default function QuotationsList() {
           <input
             type="checkbox"
             checked={expired}
-            onChange={(event) => { setPage(1); setExpired(event.target.checked); }}
+            onChange={(event) => setFilter({ expired: event.target.checked ? "true" : null })}
           />
           Expired only
         </label>
+        {specialFilter ? (
+          <button
+            type="button"
+            className={styles.clearChip}
+            onClick={() => setFilter({ pendingRevision: null, thread: null })}
+          >
+            {specialFilter} ✕
+          </button>
+        ) : null}
+        <PeriodSelect value={period} onChange={(p) => setFilter({ period: p === "30d" ? null : p })} />
       </div>
 
       {loadState === "loading" ? (
@@ -215,13 +235,13 @@ export default function QuotationsList() {
 
       {pageCount > 1 ? (
         <div className={styles.pager}>
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+          <button type="button" disabled={page <= 1} onClick={() => patch({ page: page - 1 })}>
             ← Prev
           </button>
           <span>
             Page {page} of {pageCount}
           </span>
-          <button type="button" disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)}>
+          <button type="button" disabled={page >= pageCount} onClick={() => patch({ page: page + 1 })}>
             Next →
           </button>
         </div>

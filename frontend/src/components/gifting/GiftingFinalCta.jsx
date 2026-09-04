@@ -25,7 +25,7 @@ export default function GiftingFinalCta({ onRequestQuote }) {
             </p>
           </div>
           <div className={styles.expertCtas}>
-            <Button variant="primary" size="md" icon="chat">
+            <Button variant="primary" size="md" icon="chat" onClick={onRequestQuote}>
               Talk to a Gifting Expert
             </Button>
             <Button variant="secondary" size="md" onClick={onRequestQuote}>

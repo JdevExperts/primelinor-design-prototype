@@ -12,6 +12,9 @@ const listRfqsQuerySchema = z
     assignedTo: z.string().trim().min(1).max(100).optional(), // a StaffUser id, or "unassigned"
     dateFrom: z.coerce.date().optional(),
     dateTo: z.coerce.date().optional(),
+    // Period pill — trailing window on RFQ.createdAt. Default 30 days.
+    // An explicit dateFrom/dateTo (e.g. from a dashboard link) overrides it.
+    period: z.enum(["today", "7d", "30d", "90d", "1y", "all"]).default("30d"),
     search: z.string().trim().min(1).max(200).optional(),
   })
   .strict();

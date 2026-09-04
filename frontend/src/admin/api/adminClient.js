@@ -68,6 +68,10 @@ export function adminPatch(path, payload) {
   return request(path, { method: "PATCH", body: JSON.stringify(payload ?? {}) });
 }
 
+export function adminPut(path, payload) {
+  return request(path, { method: "PUT", body: JSON.stringify(payload ?? {}) });
+}
+
 export function adminDelete(path) {
   return request(path, { method: "DELETE" });
 }

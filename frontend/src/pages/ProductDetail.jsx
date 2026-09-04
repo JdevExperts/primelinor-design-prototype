@@ -12,6 +12,7 @@ import ProductCard from "../components/ui/ProductCard";
 import Seo from "../components/layout/Seo";
 import { formatInr, pluralUnit, quoteForQuantity } from "../utils/pricing";
 import { getColorMeta, getPlacementLabel, visibleQuickQuantities } from "../utils/productDetail";
+import { track } from "../analytics/track";
 import styles from "./ProductDetail.module.css";
 
 /**
@@ -95,13 +96,21 @@ function ProductLoadError({ message, onRetry }) {
 function ProductDetailView({ product }) {
   const related = product.relatedProducts || [];
   const colors = product.colors || [];
-  const [view, setView] = useState("front");
   const [colorId, setColorId] = useState(colors[0] || "white");
   const [quantity, setQuantity] = useState(product.moq);
   const [qtyDraft, setQtyDraft] = useState(String(product.moq));
   const [moqHint, setMoqHint] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [sizeOpen, setSizeOpen] = useState(false);
+
+  useEffect(() => {
+    if (!product?.id) return;
+    track("PRODUCT_VIEW", {
+      productId: product.id,
+      productCode: product.productCode,
+      categoryId: product.categoryId || undefined,
+    });
+  }, [product?.id, product?.productCode, product?.categoryId]);
 
   const color = getColorMeta(colorId);
   const quote = quoteForQuantity(product, quantity);
@@ -161,8 +170,7 @@ function ProductDetailView({ product }) {
           <ProductGallery
             product={product}
             colorHex={color.hex}
-            activeView={view}
-            onViewChange={setView}
+            images={product.gallery}
           />
 
           <div className={styles.config}>
@@ -353,7 +361,14 @@ function ProductDetailView({ product }) {
                 variant="primary"
                 size="lg"
                 fullWidth
-                onClick={() => setQuoteOpen(true)}
+                onClick={() => {
+                  track("QUOTE_CTA_CLICK", {
+                    productId: product.id,
+                    productCode: product.productCode,
+                    metadata: { placement: "pdp_primary" },
+                  });
+                  setQuoteOpen(true);
+                }}
               >
                 Request a Quote
               </Button>

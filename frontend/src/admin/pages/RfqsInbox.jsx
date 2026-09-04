@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import * as rfqsApi from "../api/rfqs";
 import * as staffApi from "../api/staff";
 import { useAdminAuth } from "../context/useAdminAuth";
+import { useUrlFilters } from "../utils/useUrlFilters";
+import PeriodSelect from "../components/PeriodSelect";
 import StatusBadge from "../components/StatusBadge";
 import styles from "../components/adminTable.module.css";
-import { formatDateTime } from "../utils/datetime";
+import { formatDate, formatDateTime } from "../utils/datetime";
 
 const RFQ_STATUSES = ["NEW", "IN_PROGRESS", "QUOTED", "NEGOTIATING", "WON", "LOST", "CANCELLED"];
 const SOURCE_TYPES = [
@@ -27,16 +29,23 @@ function formatInr(value) {
 
 export default function RfqsInbox() {
   const { staffUser } = useAdminAuth();
+  const { value, patch } = useUrlFilters();
   const [rfqs, setRfqs] = useState([]);
   const [staff, setStaff] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("");
-  const [source, setSource] = useState("");
-  const [assignedTo, setAssignedTo] = useState("");
-  const [search, setSearch] = useState("");
   const [loadStatus, setLoadStatus] = useState("loading");
   const limit = 20;
+
+  // Filters live in the URL so dashboard deep-links + Back button work.
+  const status = value("status");
+  const source = value("source");
+  const assignedTo = value("assignedTo");
+  const search = value("search");
+  const dateFrom = value("dateFrom");
+  const dateTo = value("dateTo");
+  const period = value("period", "30d");
+  const page = Number(value("page", "1")) || 1;
+  const setFilter = (updates) => patch({ ...updates, page: null });
 
   useEffect(() => {
     staffApi.listStaff().then(({ staff: list }) => setStaff(list)).catch(() => {});
@@ -45,7 +54,17 @@ export default function RfqsInbox() {
   useEffect(() => {
     let cancelled = false;
     rfqsApi
-      .listRfqs({ page, limit, status, source, assignedTo, search: search || undefined })
+      .listRfqs({
+        page,
+        limit,
+        status: status || undefined,
+        source: source || undefined,
+        assignedTo: assignedTo || undefined,
+        search: search || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        period,
+      })
       .then(({ rfqs: list, total: count }) => {
         if (cancelled) return;
         setRfqs(list);
@@ -56,9 +75,10 @@ export default function RfqsInbox() {
     return () => {
       cancelled = true;
     };
-  }, [page, status, source, assignedTo, search]);
+  }, [page, status, source, assignedTo, search, dateFrom, dateTo, period]);
 
   const pages = Math.max(1, Math.ceil(total / limit));
+  const dateFilterActive = Boolean(dateFrom || dateTo);
 
   return (
     <div className={styles.page}>
@@ -72,18 +92,9 @@ export default function RfqsInbox() {
           type="search"
           placeholder="Search reference, name, phone, email, company…"
           value={search}
-          onChange={(event) => {
-            setPage(1);
-            setSearch(event.target.value);
-          }}
+          onChange={(event) => setFilter({ search: event.target.value })}
         />
-        <select
-          value={status}
-          onChange={(event) => {
-            setPage(1);
-            setStatus(event.target.value);
-          }}
-        >
+        <select value={status} onChange={(event) => setFilter({ status: event.target.value })}>
           <option value="">All statuses</option>
           {RFQ_STATUSES.map((s) => (
             <option key={s} value={s}>
@@ -91,13 +102,7 @@ export default function RfqsInbox() {
             </option>
           ))}
         </select>
-        <select
-          value={source}
-          onChange={(event) => {
-            setPage(1);
-            setSource(event.target.value);
-          }}
-        >
+        <select value={source} onChange={(event) => setFilter({ source: event.target.value })}>
           <option value="">All sources</option>
           {SOURCE_TYPES.map((s) => (
             <option key={s} value={s}>
@@ -105,13 +110,7 @@ export default function RfqsInbox() {
             </option>
           ))}
         </select>
-        <select
-          value={assignedTo}
-          onChange={(event) => {
-            setPage(1);
-            setAssignedTo(event.target.value);
-          }}
-        >
+        <select value={assignedTo} onChange={(event) => setFilter({ assignedTo: event.target.value })}>
           <option value="">Anyone</option>
           <option value="unassigned">Unassigned</option>
           {staffUser ? <option value={staffUser.id}>Assigned to me</option> : null}
@@ -123,6 +122,16 @@ export default function RfqsInbox() {
               </option>
             ))}
         </select>
+        {dateFilterActive ? (
+          <button type="button" className={styles.clearChip} onClick={() => setFilter({ dateFrom: null, dateTo: null })}>
+            Created {dateFrom ? formatDate(dateFrom) : "…"} – {dateTo ? formatDate(dateTo) : "now"} ✕
+          </button>
+        ) : null}
+        <PeriodSelect
+          value={period}
+          disabled={dateFilterActive}
+          onChange={(p) => setFilter({ period: p === "30d" ? null : p })}
+        />
       </div>
 
       <div className={styles.tableWrap}>
@@ -184,13 +193,13 @@ export default function RfqsInbox() {
 
       {pages > 1 ? (
         <div className={styles.pager}>
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+          <button type="button" disabled={page <= 1} onClick={() => patch({ page: page - 1 })}>
             Previous
           </button>
           <span>
             Page {page} of {pages}
           </span>
-          <button type="button" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}>
+          <button type="button" disabled={page >= pages} onClick={() => patch({ page: page + 1 })}>
             Next
           </button>
         </div>

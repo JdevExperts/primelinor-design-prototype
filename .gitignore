@@ -40,3 +40,12 @@ backend/storage/
 # does not scrub it from git history (still present in commit c959954) — a full
 # history rewrite (git filter-repo / BFG) is a separate, deliberate owner action.
 primelinorbulk_backup.sql
+
+# Database backups / dumps (Phase 6C-2 pre-production cleanup). Never commit —
+# they contain full operational data. Prisma migration SQL (backend/prisma/
+# migrations/**/migration.sql) stays tracked because only *.dump / *.sql.gz /
+# the backups/ dir are ignored here, not migration.sql by name.
+backups/
+*.dump
+*.sql.gz
+*.backup

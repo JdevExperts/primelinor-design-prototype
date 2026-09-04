@@ -12,6 +12,7 @@ const { isUniqueConstraintOn } = require("../utils/prismaErrors");
 const { canCreateRevision, canEditInPlace, canCancel } = require("./quotationEligibility");
 const { newerDraftVersion, hasPendingRevisionRequest } = require("./quotationRevisionRules");
 const { bareGroupReference } = require("./quotationThread");
+const { periodRange } = require("./dashboardPeriods");
 
 const LINES_INCLUDE = { lines: { orderBy: { sortOrder: "asc" } }, createdBy: true };
 // Detail/list also needs the RFQ reference (RFQ-origin) for display.
@@ -81,22 +82,83 @@ async function getQuotation(id) {
  * a thread and returns the thread's latest row (§4). `versionCount` is the
  * number of versions in the thread.
  */
+/** ids whose latest customer/workflow event is an unresolved revision request. */
+async function computePendingRevisionSet(ids) {
+  const set = new Set();
+  if (!ids.length) return set;
+  const events = await prisma.rFQActivity.findMany({
+    where: {
+      type: {
+        in: [
+          "CUSTOMER_REVISION_REQUESTED",
+          "REVISION_REQUEST_ADDRESSED",
+          "QUOTATION_REVISION_CREATED",
+          "QUOTATION_ACCEPTED",
+          "QUOTATION_REJECTED",
+          "QUOTATION_CANCELLED",
+        ],
+      },
+      OR: [
+        { quotationId: { in: ids } },
+        { AND: [{ quotationId: null }, { metadata: { path: ["quotationId"], not: null } }] },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+    select: { type: true, quotationId: true, metadata: true },
+  });
+  const seen = new Set();
+  for (const e of events) {
+    const qid = e.quotationId || e.metadata?.quotationId;
+    if (!qid || !ids.includes(qid) || seen.has(qid)) continue;
+    seen.add(qid);
+    if (e.type === "CUSTOMER_REVISION_REQUESTED") set.add(qid);
+  }
+  return set;
+}
+
 async function listQuotations(query) {
-  const { status, origin, createdBy, dateFrom, dateTo, search, expired, page = 1, limit = 20 } = query;
+  const {
+    status,
+    origin,
+    createdBy,
+    dateFrom,
+    dateTo,
+    period,
+    search,
+    expired,
+    pendingRevision,
+    thread,
+    page = 1,
+    limit = 20,
+  } = query;
 
   // Filters that must be evaluated against the thread's LATEST version.
   const latestWhere = {};
   if (origin) latestWhere.originType = origin;
   if (createdBy) latestWhere.createdByUserId = createdBy;
+
+  // Period is a THREAD-level filter (§9): a thread is kept when its FIRST
+  // version was created in the window — so a V2/V3 never drags an old
+  // quotation into a later date window. Explicit dateFrom/dateTo win.
+  let threadCreatedRange = null;
   if (dateFrom || dateTo) {
-    latestWhere.createdAt = {};
-    if (dateFrom) latestWhere.createdAt.gte = new Date(dateFrom);
-    if (dateTo) latestWhere.createdAt.lte = new Date(dateTo);
+    threadCreatedRange = {};
+    if (dateFrom) threadCreatedRange.gte = new Date(dateFrom).getTime();
+    if (dateTo) threadCreatedRange.lte = new Date(dateTo).getTime();
+  } else {
+    const r = periodRange(period || "30d");
+    if (r) threadCreatedRange = { gte: r.gte.getTime(), lte: r.lt.getTime() };
   }
+
+  const nowTs = Date.now();
   if (expired) {
     // Computed, never a stored status (§13): a live offer past its date.
     latestWhere.status = { in: ["SENT", "VIEWED"] };
     latestWhere.validUntil = { lt: new Date() };
+  } else if (thread === "active") {
+    // Operational open pipeline — thread's latest version is DRAFT/SENT/
+    // VIEWED (expiry is filtered out below in JS).
+    latestWhere.status = { in: ["DRAFT", "SENT", "VIEWED"] };
   } else if (status) {
     latestWhere.status = status;
   }
@@ -124,13 +186,23 @@ async function listQuotations(query) {
     if (groupIdFilter.length === 0) return { quotations: [], total: 0, page, limit };
   }
 
-  // Latest version number + total version count per thread.
-  const groups = await prisma.quotation.groupBy({
+  // Latest version number + total version count + thread-creation
+  // (earliest version's createdAt) per thread.
+  let groups = await prisma.quotation.groupBy({
     by: ["quotationGroupId"],
     where: groupIdFilter ? { quotationGroupId: { in: groupIdFilter } } : {},
     _max: { version: true },
+    _min: { createdAt: true },
     _count: { _all: true },
   });
+  if (threadCreatedRange) {
+    groups = groups.filter((g) => {
+      const t = g._min.createdAt ? new Date(g._min.createdAt).getTime() : 0;
+      if (threadCreatedRange.gte != null && t < threadCreatedRange.gte) return false;
+      if (threadCreatedRange.lte != null && t > threadCreatedRange.lte) return false;
+      return true;
+    });
+  }
   const versionCountByGroup = new Map(groups.map((g) => [g.quotationGroupId, g._count._all]));
 
   // Each thread's latest row = (groupId, its max version). Filters above
@@ -142,51 +214,39 @@ async function listQuotations(query) {
     ],
   };
 
-  const [total, quotations] = await Promise.all([
-    prisma.quotation.count({ where: rowWhere }),
-    prisma.quotation.findMany({
-      where: rowWhere,
-      include: DETAIL_INCLUDE,
-      orderBy: [{ updatedAt: "desc" }],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-  ]);
+  // Full candidate set of latest rows (small — one per thread). The
+  // pendingRevision / active-thread filters need per-row info that can't
+  // live in the SQL WHERE, so they run here before pagination.
+  let candidates = await prisma.quotation.findMany({
+    where: rowWhere,
+    select: { id: true, quotationGroupId: true, status: true, validUntil: true },
+    orderBy: [{ updatedAt: "desc" }],
+  });
 
-  for (const q of quotations) q._versionCount = versionCountByGroup.get(q.quotationGroupId) || 1;
+  const pendingSet = await computePendingRevisionSet(candidates.map((c) => c.id));
 
-  // One query to flag which of this page's quotations have an open
-  // customer revision request (their latest customer response is one).
-  const ids = quotations.map((q) => q.id);
-  if (ids.length) {
-    const events = await prisma.rFQActivity.findMany({
-      where: {
-        type: {
-          in: [
-            "CUSTOMER_REVISION_REQUESTED",
-            "REVISION_REQUEST_ADDRESSED",
-            "QUOTATION_REVISION_CREATED",
-            "QUOTATION_ACCEPTED",
-            "QUOTATION_REJECTED",
-            "QUOTATION_CANCELLED",
-          ],
-        },
-        OR: [
-          { quotationId: { in: ids } },
-          { AND: [{ quotationId: null }, { metadata: { path: ["quotationId"], not: null } }] },
-        ],
-      },
-      orderBy: { createdAt: "desc" },
-      select: { type: true, quotationId: true, metadata: true },
-    });
-    const latestByQuotation = new Map();
-    for (const e of events) {
-      const qid = e.quotationId || e.metadata?.quotationId;
-      if (qid && ids.includes(qid) && !latestByQuotation.has(qid)) latestByQuotation.set(qid, e.type);
-    }
-    for (const q of quotations) {
-      q._pendingRevision = latestByQuotation.get(q.id) === "CUSTOMER_REVISION_REQUESTED";
-    }
+  if (thread === "active") {
+    candidates = candidates.filter(
+      (c) =>
+        !(["SENT", "VIEWED"].includes(c.status) && c.validUntil && new Date(c.validUntil).getTime() < nowTs),
+    );
+  }
+  if (pendingRevision) {
+    candidates = candidates.filter((c) => pendingSet.has(c.id));
+  }
+
+  const total = candidates.length;
+  const pageIds = candidates.slice((page - 1) * limit, (page - 1) * limit + limit).map((c) => c.id);
+
+  const pageRows = pageIds.length
+    ? await prisma.quotation.findMany({ where: { id: { in: pageIds } }, include: DETAIL_INCLUDE })
+    : [];
+  const byId = new Map(pageRows.map((q) => [q.id, q]));
+  const quotations = pageIds.map((id) => byId.get(id)).filter(Boolean);
+
+  for (const q of quotations) {
+    q._versionCount = versionCountByGroup.get(q.quotationGroupId) || 1;
+    q._pendingRevision = pendingSet.has(q.id);
   }
 
   return { quotations, total, page, limit };

@@ -4,6 +4,7 @@ import Icon from "../ui/Icon";
 import { getPublicConfig } from "../../api/config";
 import { submitLead } from "../../api/leads";
 import { buildLeadWhatsAppMessage, buildWhatsAppUrl } from "../../utils/whatsapp";
+import { track } from "../../analytics/track";
 import { enquiryInterests } from "../../data/companyData";
 import styles from "./ContactForm.module.css";
 
@@ -58,6 +59,7 @@ export default function ContactForm() {
       });
       setReference(lead?.reference || null);
       setStatus("success");
+      track("CONTACT_CLICK", { metadata: { channel: "form", reference: lead?.reference || null } });
     } catch (err) {
       setErrorMessage(err.message || "Something went wrong. Please try again.");
       setStatus("error");

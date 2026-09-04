@@ -7,6 +7,7 @@ import Button from "../components/ui/Button";
 import Seo from "../components/layout/Seo";
 import { contactChannels, contactHero } from "../data/companyData";
 import { businessConfig } from "../data/siteConfig";
+import { track } from "../analytics/track";
 import styles from "./Contact.module.css";
 
 export default function Contact() {
@@ -41,13 +42,20 @@ export default function Contact() {
                     <button
                       type="button"
                       className={styles.channelAction}
-                      onClick={() => setWaOpen(true)}
+                      onClick={() => {
+                        track("WHATSAPP_CLICK", { metadata: { context: "contact_channel" } });
+                        setWaOpen(true);
+                      }}
                     >
                       Continue on WhatsApp
                     </button>
                   ) : null}
                   {channel.action === "email" ? (
-                    <a className={styles.channelAction} href={`mailto:${businessConfig.supportEmail}`}>
+                    <a
+                      className={styles.channelAction}
+                      href={`mailto:${businessConfig.supportEmail}`}
+                      onClick={() => track("CONTACT_CLICK", { metadata: { channel: "email" } })}
+                    >
                       {businessConfig.supportEmail}
                     </a>
                   ) : null}

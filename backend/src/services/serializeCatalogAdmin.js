@@ -7,6 +7,19 @@
 const { effectivePrice } = require("./pricing");
 const { selectPrimaryImage } = require("./productImageSelection");
 const { isStudioReady } = require("./studioReadiness");
+const { reviewStatusFromAttributes, REVIEW_PENDING_KEY } = require("./productAttributeService");
+const { qaChecklist } = require("./catalogHealthPredicates");
+
+/** Internal operational attributes for admin display. Never public. */
+function serializeProductAttributes(product) {
+  return (product.productAttributes || []).map((row) => ({
+    key: row.attribute?.key || null,
+    name: row.attribute?.name || null,
+    valueType: row.attribute?.valueType || null,
+    value: row.value,
+    updatedAt: row.updatedAt,
+  }));
+}
 
 function serializeCategoryAdmin(category) {
   return {
@@ -104,6 +117,9 @@ function serializeProductAdminSummary(product) {
     variantType: product.variantType,
     activeVariantCount: product._count?.variants ?? 0,
     specificationCount: product._count?.specifications ?? 0,
+    // Derived from attribute presence — NOT a stored field (§1/§14). The
+    // list include already scopes productAttributes to the review key.
+    reviewStatus: (product.productAttributes || []).length > 0 ? "PENDING" : "COMPLETE",
   };
 }
 
@@ -224,6 +240,11 @@ function serializeProductAdminDetail(product) {
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((rel) => ({ id: rel.relatedProduct.id, slug: rel.relatedProduct.slug, name: rel.relatedProduct.name, active: rel.relatedProduct.active })),
     customizationIncomplete: customizationIncomplete(product),
+    // Internal operational attributes + the derived review status (§15).
+    attributes: serializeProductAttributes(product),
+    reviewStatus: reviewStatusFromAttributes(product.productAttributes || []),
+    // Informational QA checklist for the editor (§25) — derived, not stored.
+    qa: qaChecklist(product),
     createdBy: product.createdByUser ? { id: product.createdByUser.id, name: product.createdByUser.name } : null,
     updatedBy: product.updatedByUser ? { id: product.updatedByUser.id, name: product.updatedByUser.name } : null,
     createdAt: product.createdAt,

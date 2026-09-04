@@ -129,6 +129,7 @@ model Product {
   relatedFrom     ProductRelated[]       @relation("ProductRelatedFrom")
   relatedTo       ProductRelated[]       @relation("ProductRelatedTo")
   solutions       SolutionProduct[]
+  productAttributes ProductAttribute[]
 
   @@index([primaryCategoryId])
   @@index([active])
@@ -912,4 +913,123 @@ model QuotationLine {
 
   @@index([quotationId])
   @@map("quotation_lines")
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// PHASE 6C-1 — First-party website analytics.
+// ═════════════════════════════════════════════════════════════════════════
+
+enum AnalyticsEventType {
+  PAGE_VIEW
+  PRODUCT_VIEW
+  PRODUCT_CARD_CLICK
+  CATEGORY_VIEW
+  SOLUTION_VIEW
+  SEARCH
+  QUOTE_CTA_CLICK
+  RFQ_STARTED
+  RFQ_SUBMITTED
+  WHATSAPP_CLICK
+  CONTACT_CLICK
+}
+
+// One business-relevant interaction on the public website. Deliberately
+// small and privacy-conservative: NO raw IP column exists — approximate
+// geo (country/state/city) is derived at ingest from an edge/proxy header
+// when available and left null otherwise; the User-Agent is reduced to a
+// device category and not stored. `visitorId`/`sessionId` are anonymous
+// client-generated identifiers, never a fingerprint. Admin (`/admin/*`)
+// and token quote (`/quote/*`) paths are never recorded here.
+model AnalyticsEvent {
+  id                String             @id @default(uuid())
+  eventType         AnalyticsEventType @map("event_type")
+  visitorId         String?            @map("visitor_id")
+  sessionId         String?            @map("session_id")
+  path              String?
+  referrer          String?
+  referrerGroup     String?            @map("referrer_group")
+  utmSource         String?            @map("utm_source")
+  utmMedium         String?            @map("utm_medium")
+  utmCampaign       String?            @map("utm_campaign")
+  productId         String?            @map("product_id")
+  productCode       String?            @map("product_code")
+  categoryId        String?            @map("category_id")
+  solutionId        String?            @map("solution_id")
+  searchQuery       String?            @map("search_query")
+  searchResultCount Int?               @map("search_result_count")
+  deviceType        String?            @map("device_type")
+  country           String?
+  state             String?
+  city              String?
+  metadata          Json?
+  // Marks controlled dev/QA rows so Phase 6C-2 pre-production cleanup can
+  // delete them with a single `WHERE is_test = true`.
+  isTest            Boolean            @default(false) @map("is_test")
+  createdAt         DateTime           @default(now()) @map("created_at")
+
+  @@index([eventType, createdAt])
+  @@index([createdAt])
+  @@index([productId, eventType])
+  @@index([visitorId])
+  @@index([sessionId])
+  @@index([isTest])
+  @@map("analytics_events")
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Generic Product Attribute framework — flexible internal/operational
+// product metadata that must NOT become permanent first-class columns.
+// Core catalogue fields (code, name, slug, MOQ, pricing, category, active,
+// customization, variants, colours) stay first-class; this is only for
+// flags / temporary metadata / lightweight internal controls.
+// ═════════════════════════════════════════════════════════════════════════
+
+enum ProductAttributeValueType {
+  BOOLEAN
+  STRING
+  NUMBER
+  JSON
+}
+
+// Declares an attribute: its machine key, display name, and the value
+// type the service layer validates assignments against. Seeded via
+// migration/backfill for now — no arbitrary-config Admin UI in this phase.
+model ProductAttributeConfig {
+  id          String                    @id @default(uuid())
+  // Machine-readable, unique. UPPER_SNAKE_CASE convention (e.g.
+  // PRODUCT_REVIEW_PENDING).
+  key         String                    @unique
+  name        String
+  valueType   ProductAttributeValueType @map("value_type")
+  description String?
+  createdAt   DateTime                  @default(now()) @map("created_at")
+  updatedAt   DateTime                  @updatedAt @map("updated_at")
+
+  attributes ProductAttribute[]
+
+  @@map("product_attribute_configs")
+}
+
+// One value of one attribute config for one product. `attributeId` (not
+// attributeConfigId) points at ProductAttributeConfig.id. At most one row
+// per (product, attribute). Value is JSONB; the service validates it
+// against the config's valueType before write.
+model ProductAttribute {
+  id          String   @id @default(uuid())
+  attributeId String   @map("attribute_id")
+  productId   String   @map("product_id")
+  value       Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Restrict: a config may be reused operationally — a casual config
+  // delete must not silently erase every product's attribute row.
+  attribute ProductAttributeConfig @relation(fields: [attributeId], references: [id], onDelete: Restrict)
+  // Cascade: deleting a product cleans up its attribute rows.
+  product   Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, attributeId])
+  @@index([attributeId])
+  @@index([productId])
+  @@map("product_attributes")
 }

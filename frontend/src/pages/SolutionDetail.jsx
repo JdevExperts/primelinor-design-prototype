@@ -13,6 +13,7 @@ import SolutionProducts from "../components/solutions/SolutionProducts";
 import SolutionProof from "../components/solutions/SolutionProof";
 import { getSolutionBySlug } from "../api/catalog";
 import Seo from "../components/layout/Seo";
+import { track } from "../analytics/track";
 import styles from "./SolutionDetail.module.css";
 
 function SolutionNotFound() {
@@ -51,6 +52,11 @@ function SolutionNotFound() {
  */
 function SolutionDetailView({ solution }) {
   const [quoteOpen, setQuoteOpen] = useState(false);
+
+  useEffect(() => {
+    if (!solution?.id && !solution?.slug) return;
+    track("SOLUTION_VIEW", { solutionId: solution.id || solution.slug, metadata: { slug: solution.slug } });
+  }, [solution?.id, solution?.slug]);
 
   const openQuote = () => setQuoteOpen(true);
 

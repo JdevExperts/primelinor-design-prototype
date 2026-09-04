@@ -35,13 +35,6 @@ export const hoodieSizeGuide = {
   ],
 };
 
-export const galleryViews = [
-  { id: "front", label: "Front" },
-  { id: "back", label: "Back" },
-  { id: "detail", label: "Detail" },
-  { id: "lifestyle", label: "Branding example" },
-];
-
 export const quickQuantities = [10, 25, 50, 100, 250, 500];
 
 /** Per-product overrides. Unlisted products use category defaults. */

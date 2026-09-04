@@ -184,21 +184,14 @@ export const trust = {
     },
   ],
   /**
-   * Reserved slots, not sample quotes — used by the Corporate Gifting page
-   * (GiftingTrust) and Solution detail pages (SolutionProof), not by the
-   * homepage trust section above. `quote` stays null until a verified
-   * customer story is supplied for that specific context.
+   * Reserved slots, not sample quotes — used by Solution detail pages
+   * (SolutionProof), not by the homepage trust section above. `quote` stays
+   * null until a verified customer story is supplied for that specific
+   * context.
    */
   testimonials: [
     { id: "t1", context: "Employee welcome kits", quote: null, name: null, role: null, company: null },
     { id: "t2", context: "Event and conference merchandise", quote: null, name: null, role: null, company: null },
     { id: "t3", context: "Festival and client gifting", quote: null, name: null, role: null, company: null },
-  ],
-  /** Reserved order-photography slots — used by the Corporate Gifting page. */
-  gallery: [
-    { id: "g1", art: "tshirt", color: "#22304a", label: "Completed order photo placeholder", image: null },
-    { id: "g2", art: "bottle", color: "#2b2b33", label: "Completed order photo placeholder", image: null },
-    { id: "g3", art: "kit", color: "#e3ddd0", label: "Completed order photo placeholder", image: null },
-    { id: "g4", art: "notebook", color: "#5c2733", label: "Completed order photo placeholder", image: null },
   ],
 };

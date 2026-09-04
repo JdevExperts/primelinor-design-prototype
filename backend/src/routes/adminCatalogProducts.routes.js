@@ -10,6 +10,8 @@ const {
   productSubIdParamSchema,
   productZoneIdParamSchema,
   adminListProductsQuerySchema,
+  attributeKeyParamSchema,
+  productAttributeBodySchema,
   createProductSchema,
   updateProductSchema,
   duplicateProductSchema,
@@ -39,6 +41,21 @@ router.post(
   validate(idParamSchema, "params"),
   validate(duplicateProductSchema, "body"),
   products.duplicate,
+);
+
+// Product attribute framework — ADMIN only (catalogue mutation, §13/§22).
+router.put(
+  "/:id/attributes/:key",
+  requireRole("ADMIN"),
+  validate(attributeKeyParamSchema, "params"),
+  validate(productAttributeBodySchema, "body"),
+  products.setAttribute,
+);
+router.delete(
+  "/:id/attributes/:key",
+  requireRole("ADMIN"),
+  validate(attributeKeyParamSchema, "params"),
+  products.removeAttribute,
 );
 
 // Assets (subresource — separate lifecycle from the main product payload

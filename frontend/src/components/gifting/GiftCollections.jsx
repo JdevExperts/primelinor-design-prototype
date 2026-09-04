@@ -4,127 +4,82 @@ import ProductVisual from "../ui/ProductVisual";
 import Section from "../ui/Section";
 import SectionHeader from "../ui/SectionHeader";
 import { formatInr, pluralUnit, quoteForQuantity } from "../../utils/pricing";
-import { getProductDetail } from "../../utils/productDetail";
 import { giftCollections } from "../../data/corporateGiftingData";
+import { resolveGiftProducts } from "../../utils/giftingCatalogue";
 import styles from "./GiftCollections.module.css";
 
-/** Normalises a catalogue-backed or concept collection into one card shape. */
-function resolveCollection(entry) {
-  if (entry.kind === "catalogue") {
-    const product = getProductDetail(entry.productId);
-    if (!product) return null;
-    return {
-      id: product.id,
-      name: product.name,
-      contentsSummary: product.spec,
-      art: product.art,
-      color: product.color,
-      image: product.image,
-      pricingProduct: product,
-      moq: product.moq,
-      unit: product.unit,
-      href: `/products/${product.id}`,
-    };
-  }
-
-  return {
-    id: entry.id,
-    name: entry.name,
-    contentsSummary: entry.contentsSummary,
-    art: entry.art,
-    color: entry.color,
-    image: null,
-    pricingProduct: entry,
-    moq: entry.moq,
-    unit: entry.unit,
-    href: null,
-  };
-}
-
-function CollectionCard({ collection, onRequestQuote }) {
-  const quote = quoteForQuantity(collection.pricingProduct, collection.moq);
+/**
+ * Every card is a canonical gift-kit Product resolved from the shared
+ * catalogue (`productsBySlug`). Image, name, price and MOQ come straight
+ * from that record — identical to the Products tab — and "View Details"
+ * links to its real PDP. Curated entries that no longer resolve (renamed /
+ * deactivated) are dropped by resolveGiftProducts, so no broken card.
+ */
+function CollectionCard({ product, onRequestQuote }) {
+  const context = product.gifting?.context || null;
+  const quote = quoteForQuantity(product, product.moq);
+  const contentsSummary = context || product.spec;
 
   return (
     <article className={styles.card}>
       <div className={styles.media}>
         <ProductVisual
-          art={collection.art}
-          color={collection.color}
-          src={collection.image}
-          alt={`${collection.name} — kit photography placeholder`}
+          art={product.art}
+          color={product.color}
+          src={product.image}
+          alt={product.imageAlt || `${product.name} — corporate gift kit`}
           ratio="4 / 3"
           scale={0.94}
         />
       </div>
 
       <div className={styles.body}>
-        <h3 className={styles.name}>{collection.name}</h3>
-        <p className={styles.contents}>{collection.contentsSummary}</p>
+        <h3 className={styles.name}>{product.name}</h3>
+        <p className={styles.contents}>{contentsSummary}</p>
 
         <div className={styles.priceRow}>
           {quote.kind === "priced" ? (
             <span className={styles.price}>
               {formatInr(quote.unitPrice)}
-              <span className={styles.priceUnit}> / {collection.unit}</span>
+              <span className={styles.priceUnit}> / {product.unit}</span>
             </span>
           ) : (
             <span className={styles.quotePrice}>Price on request</span>
           )}
           <span className={styles.moq}>
-            MOQ {collection.moq} {pluralUnit(collection.unit, collection.moq)}
+            MOQ {product.moq} {pluralUnit(product.unit, product.moq)}
           </span>
         </div>
 
         <div className={styles.actions}>
-          {collection.href ? (
-            <>
-              <Button as={Link} to={collection.href} variant="secondary" size="sm">
-                View Details
-              </Button>
-              <button
-                type="button"
-                className={styles.textAction}
-                onClick={() =>
-                  onRequestQuote({
-                    product: collection.pricingProduct,
-                    quantity: collection.moq,
-                    quote,
-                    extraSummary: [`Contents: ${collection.contentsSummary}`],
-                  })
-                }
-              >
-                Request Kit Quote
-              </button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  onRequestQuote({
-                    product: collection.pricingProduct,
-                    quantity: collection.moq,
-                    quote,
-                    extraSummary: [`Contents: ${collection.contentsSummary}`],
-                  })
-                }
-              >
-                Request Kit Quote
-              </Button>
-              <Link to={{ hash: "#build-kit" }} className={styles.textAction}>
-                Build a similar kit
-              </Link>
-            </>
-          )}
+          <Button as={Link} to={`/products/${product.id}`} variant="secondary" size="sm">
+            View Details
+          </Button>
+          <button
+            type="button"
+            className={styles.textAction}
+            onClick={() =>
+              onRequestQuote({
+                product,
+                productSlug: product.id,
+                quantity: product.moq,
+                quote,
+                extraSummary: contentsSummary ? [`Contents: ${contentsSummary}`] : [],
+              })
+            }
+          >
+            Request Kit Quote
+          </button>
         </div>
       </div>
     </article>
   );
 }
 
-export default function GiftCollections({ onRequestQuote }) {
-  const collections = giftCollections.map(resolveCollection).filter(Boolean);
+export default function GiftCollections({ onRequestQuote, productsBySlug }) {
+  const collections = resolveGiftProducts(giftCollections, productsBySlug);
+
+  if (collections.length === 0) return null;
 
   return (
     <Section id="gift-collections" ariaLabelledBy="gift-collections-title">
@@ -136,9 +91,9 @@ export default function GiftCollections({ onRequestQuote }) {
       />
 
       <ul className={styles.grid}>
-        {collections.map((collection) => (
-          <li key={collection.id}>
-            <CollectionCard collection={collection} onRequestQuote={onRequestQuote} />
+        {collections.map((product) => (
+          <li key={product.id}>
+            <CollectionCard product={product} onRequestQuote={onRequestQuote} />
           </li>
         ))}
       </ul>

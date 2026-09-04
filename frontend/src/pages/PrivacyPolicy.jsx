@@ -36,8 +36,17 @@ export default function PrivacyPolicy() {
       </ul>
       <p>
         We may also collect limited technical information when you use the website, such as browser/device
-        information, IP address, referring pages and basic website usage or security logs where such functionality
-        is enabled.
+        information, referring pages and basic security logs.
+      </p>
+      <p>
+        We operate our own first-party website usage analytics. We do not store your raw IP address for analytics,
+        and we do not use fingerprinting. What we record is limited to: an anonymous randomly-generated visitor
+        identifier and a short-lived session identifier stored in your browser; the pages and products you view;
+        interaction events such as searches, quote-request clicks, RFQ submissions, WhatsApp and contact clicks;
+        a device category (mobile, desktop or tablet); the referral or campaign source (referrer and any UTM
+        parameters); and an approximate city, state and country where our hosting or network provider makes that
+        available. Approximate location is derived from network information and is not precise. Admin pages and
+        private quotation links are excluded from this analytics.
       </p>
 
       <h2>How We Use Information</h2>
@@ -105,12 +114,21 @@ export default function PrivacyPolicy() {
 
       <h2>Cookies and Analytics</h2>
       <p>
-        The website may use essential browser technologies required for functionality, security and session
+        The website uses essential browser technologies required for functionality, security and session
         management.
       </p>
       <p>
-        If analytics or additional tracking services are introduced in the future, this Policy should be updated to
-        explain their use.
+        We use first-party website usage analytics, stored on our own systems, to understand how the website is
+        used and to improve our products and content. This uses anonymous visitor and session identifiers held in
+        your browser&rsquo;s local storage, records the pages and products viewed and interaction events (such as
+        searches, quote-request clicks, RFQ submissions, WhatsApp and contact clicks), a device category, the
+        referral or campaign source, and an approximate city/state/country where available. We do not store your
+        raw IP address for analytics and we do not fingerprint devices or individuals. Clearing your browser site
+        data removes these identifiers.
+      </p>
+      <p>
+        We do not currently use third-party advertising or cross-site tracking services. If that changes, this
+        Policy will be updated first.
       </p>
 
       <h2>Your Requests and Choices</h2>

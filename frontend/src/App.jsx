@@ -27,6 +27,7 @@ const ReturnReplacementPolicy = lazy(() => import("./pages/ReturnReplacementPoli
 // customer site (Phase 3 §27), never mixed into the customer Header/Footer.
 const AdminLogin = lazy(() => import("./admin/pages/AdminLogin"));
 const AdminLayout = lazy(() => import("./admin/components/AdminLayout"));
+const Dashboard = lazy(() => import("./admin/pages/dashboard/Dashboard"));
 const LeadsInbox = lazy(() => import("./admin/pages/LeadsInbox"));
 const LeadDetail = lazy(() => import("./admin/pages/LeadDetail"));
 const RfqsInbox = lazy(() => import("./admin/pages/RfqsInbox"));
@@ -77,7 +78,12 @@ export default function App() {
             <Route path="login" element={<AdminLogin />} />
             <Route element={<RequireAdminAuth />}>
               <Route element={<AdminLayout />}>
-                <Route index element={<Navigate to="rfqs" replace />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="dashboard/website" element={<Dashboard />} />
+                <Route path="dashboard/sales" element={<Dashboard />} />
+                <Route path="dashboard/products" element={<Dashboard />} />
+                <Route path="dashboard/catalogue-health" element={<Dashboard />} />
                 <Route path="leads" element={<LeadsInbox />} />
                 <Route path="leads/:id" element={<LeadDetail />} />
                 <Route path="rfqs" element={<RfqsInbox />} />

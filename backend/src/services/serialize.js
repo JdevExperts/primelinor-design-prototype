@@ -1,5 +1,6 @@
 const { effectivePrice } = require("./pricing");
 const { selectPrimaryImage } = require("./productImageSelection");
+const { buildCustomerGallery } = require("./productGallery");
 const { isStudioReady } = require("./studioReadiness");
 
 function serializeCategoryRef(category) {
@@ -131,6 +132,11 @@ function serializeProductDetail(product, relatedProducts = []) {
     variants: (product.variants || []).map(serializeVariant),
     specifications: (product.specifications || []).map(serializeSpecification),
     dispatchEstimate: product.dispatchEstimate,
+    // The ordered, de-duplicated customer-facing gallery (PDP Image Gallery
+    // Fix) — the PDP renders exactly this, one thumbnail per entry, no
+    // fixed front/back/detail template. `assets` below stays the raw
+    // collection Studio / placement zones / artwork-overlay logic needs.
+    images: buildCustomerGallery(product.assets),
     assets: (product.assets || []).map(serializeAsset),
     placementZones: (product.placementZones || []).map(serializePlacementZone),
     tags: (product.tags || []).map((productTag) => productTag.tag.slug),

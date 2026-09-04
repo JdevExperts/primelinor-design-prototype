@@ -419,6 +419,10 @@ const updateSolutionProductSchema = z
 
 // ── Admin list query ─────────────────────────────────────────────────────────
 
+// A generic attribute key filter — UPPER_SNAKE_CASE machine key only, so
+// the value can never become arbitrary filter/SQL input (§19).
+const attributeKeySchema = z.string().trim().regex(/^[A-Z][A-Z0-9_]{1,63}$/);
+
 const adminListProductsQuerySchema = z
   .object({
     page: z.coerce.number().int().positive().default(1),
@@ -428,9 +432,21 @@ const adminListProductsQuerySchema = z
     active: z.union([z.boolean(), z.enum(["true", "false"])]).transform((v) => v === true || v === "true").optional(),
     priceMode: z.enum(PRICE_MODES).optional(),
     customizable: z.union([z.boolean(), z.enum(["true", "false"])]).transform((v) => v === true || v === "true").optional(),
+    // Generic product-attribute presence filters (Product Attribute
+    // framework §14/§19) — e.g. hasAttribute=PRODUCT_REVIEW_PENDING.
+    hasAttribute: attributeKeySchema.optional(),
+    missingAttribute: attributeKeySchema.optional(),
+    // Catalogue-health filters — same predicate the dashboard counts with.
+    studioPending: z.enum(["1", "true"]).optional(),
+    missingBackImage: z.enum(["1", "true"]).optional(),
+    missingPrimaryImage: z.enum(["1", "true"]).optional(),
+    missingColours: z.enum(["1", "true"]).optional(),
     sort: z.enum(["sortOrder", "updatedAt", "name"]).default("sortOrder"),
   })
   .strict();
+
+const attributeKeyParamSchema = z.object({ id: z.string().uuid(), key: attributeKeySchema }).strict();
+const productAttributeBodySchema = z.object({ value: z.any() }).strict();
 
 module.exports = {
   idParamSchema,
@@ -452,6 +468,8 @@ module.exports = {
   placementZoneSchema,
   updatePlacementZoneSchema,
   adminListProductsQuerySchema,
+  attributeKeyParamSchema,
+  productAttributeBodySchema,
   createSolutionSchema,
   updateSolutionSchema,
   solutionImageMetaSchema,

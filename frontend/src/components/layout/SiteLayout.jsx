@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import AnnouncementBar from "./AnnouncementBar";
 import Footer from "./Footer";
 import Header from "./Header";
+import RouteAnalytics from "../../analytics/RouteAnalytics";
 import { socialLinks } from "../../data/siteConfig";
 import { trust } from "../../data/homeData";
 
@@ -70,6 +71,7 @@ export default function SiteLayout() {
       <a className="skip-link" href="#main">
         Skip to main content
       </a>
+      <RouteAnalytics />
       <AnnouncementBar />
       <Header />
       <Outlet />

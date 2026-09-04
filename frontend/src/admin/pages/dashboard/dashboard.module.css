@@ -1,0 +1,340 @@
+.page {
+  display: grid;
+  gap: 18px;
+  max-width: 1180px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-navy, #0f1b2d);
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e4e7ec;
+}
+.tab {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #667085;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.tab:hover {
+  color: var(--color-navy, #0f1b2d);
+}
+.tabActive {
+  color: var(--color-navy, #0f1b2d);
+  border-bottom-color: #e1ad01;
+}
+
+.periods {
+  display: inline-flex;
+  gap: 4px;
+}
+.period {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #d3d8e0;
+  border-radius: 999px;
+  background: #fff;
+  color: #475467;
+  cursor: pointer;
+}
+.periodActive {
+  background: var(--color-navy, #0f1b2d);
+  border-color: var(--color-navy, #0f1b2d);
+  color: #fff;
+}
+
+/* Card grids */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.cardGrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .cardGrid,
+  .cardGrid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .cardGrid,
+  .cardGrid3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: 3px solid #cbd2dc;
+  border-radius: 10px;
+  padding: 14px;
+  display: grid;
+  gap: 4px;
+}
+
+/* Restrained coloured top accents — brand mustard + semantic tints. */
+.accent_mustard {
+  border-top-color: #e1ad01;
+}
+.accent_green {
+  border-top-color: #12805c;
+}
+.accent_blue {
+  border-top-color: #2f6fed;
+}
+.accent_red {
+  border-top-color: #b42318;
+}
+.accent_grey {
+  border-top-color: #cbd2dc;
+}
+
+/* A metric card that navigates — feels clickable, not like a button. */
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.cardLink:hover {
+  background: #fcfcfd;
+  box-shadow: 0 1px 4px rgba(15, 27, 45, 0.08);
+}
+.cardLink:focus-visible {
+  outline: 2px solid #e1ad01;
+  outline-offset: 2px;
+}
+.goChevron {
+  color: #98a2b3;
+  font-weight: 700;
+}
+.cardLink:hover .goChevron,
+.rowLink:hover .goChevron {
+  color: #e1ad01;
+}
+.rowLink {
+  color: var(--color-navy, #0f1b2d);
+  font-weight: 600;
+  text-decoration: none;
+}
+.rowLink:hover {
+  text-decoration: underline;
+}
+.cardLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #667085;
+}
+.cardValue {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-navy, #0f1b2d);
+}
+.cardValueSm {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-navy, #0f1b2d);
+}
+.delta {
+  font-size: 12px;
+  font-weight: 700;
+}
+.deltaUp {
+  color: #067647;
+}
+.deltaDown {
+  color: #b42318;
+}
+.deltaFlat {
+  color: #98a2b3;
+}
+
+.attnCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #e1ad01;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: inherit;
+}
+.attnCard:hover {
+  background: #fffdf5;
+}
+.attnValue {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-navy, #0f1b2d);
+}
+.attnZero .attnValue {
+  color: #98a2b3;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.panelTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-navy, #0f1b2d);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.panelNote {
+  font-size: 11px;
+  color: #98a2b3;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .two {
+    grid-template-columns: 1fr;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #667085;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e4e7ec;
+  white-space: nowrap;
+}
+.table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid #f2f4f7;
+  vertical-align: top;
+}
+.tableScroll {
+  overflow-x: auto;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: #667085;
+}
+.pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: #eef2f6;
+  color: #475467;
+}
+.defnList {
+  display: grid;
+  gap: 8px;
+}
+.defnRow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid #f2f4f7;
+}
+.defnCount {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-navy, #0f1b2d);
+  min-width: 34px;
+}
+.defnCountZero {
+  color: #98a2b3;
+}
+
+/* Severity chips for Catalogue Health (§21) — never colour alone: each
+   carries its text label too (§22). */
+.sev {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sev_error {
+  background: #fee2e2;
+  color: #b42318;
+}
+.sev_attention {
+  background: #fef7e6;
+  color: #8a6d1a;
+}
+.sev_info {
+  background: #e7f0ff;
+  color: #2f6fed;
+}
+.defnRowError {
+  border-left: 3px solid #f3b9b4;
+}
+.defnRowAttention {
+  border-left: 3px solid #efd58f;
+}
+.defnRowInfo {
+  border-left: 3px solid #a8c6ff;
+}
+.defnRow {
+  padding-left: 8px;
+}
+.defnLabel {
+  font-weight: 600;
+  color: var(--color-navy, #0f1b2d);
+  font-size: 13px;
+}
+.defnText {
+  font-size: 11.5px;
+  color: #667085;
+}
+.loading,
+.error {
+  padding: 24px;
+  color: #667085;
+  font-size: 14px;
+}

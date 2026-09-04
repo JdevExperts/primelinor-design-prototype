@@ -20,6 +20,7 @@ import {
 } from "../utils/filterProducts";
 import { useMediaQuery } from "../utils/useMediaQuery";
 import Seo from "../components/layout/Seo";
+import { track } from "../analytics/track";
 import styles from "./ProductListing.module.css";
 
 const CHIP_LIMIT = 8;
@@ -153,6 +154,23 @@ export default function ProductListing() {
 
   const total = filtered.length;
   const pages = Math.max(1, Math.ceil(total / listingPageSize));
+
+  // Search analytics (§21) — debounced, only for a meaningful query.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) return undefined;
+    const timer = window.setTimeout(() => {
+      track("SEARCH", { searchQuery: q, searchResultCount: total });
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [query, total]);
+
+  // Category browse (§6) — when exactly one category filter is active.
+  const singleCategory = filters.categories.length === 1 ? filters.categories[0] : null;
+  useEffect(() => {
+    if (!singleCategory || singleCategory === "all") return;
+    track("CATEGORY_VIEW", { categoryId: singleCategory });
+  }, [singleCategory]);
   const filterSignature = `${query}::${sort}::${JSON.stringify(filters)}`;
   const currentPage = Math.min(
     pageSignature === filterSignature ? page : 1,

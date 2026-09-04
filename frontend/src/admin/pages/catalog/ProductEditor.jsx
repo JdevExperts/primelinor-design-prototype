@@ -7,6 +7,8 @@ import {
   listTagsAdmin,
   listProductsAdmin,
   duplicateProductAdmin,
+  markProductReviewComplete,
+  reopenProductReview,
 } from "../../api/catalog";
 import { useAdminAuth } from "../../context/useAdminAuth";
 import BasicsTab from "./productEditor/BasicsTab";
@@ -55,6 +57,8 @@ export default function ProductEditor() {
   const [activeTab, setActiveTab] = useState("basics");
   const [dirty, setDirty] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
 
   useUnsavedWarning(dirty);
 
@@ -90,6 +94,19 @@ export default function ProductEditor() {
   };
 
   const handleSaved = (updated) => setProduct(updated);
+
+  const runReviewAction = async (fn) => {
+    setReviewBusy(true);
+    setReviewError(null);
+    try {
+      const { product: updated } = await fn(id);
+      setProduct(updated);
+    } catch (err) {
+      setReviewError(err.message || "Couldn't update the review status.");
+    } finally {
+      setReviewBusy(false);
+    }
+  };
 
   const handleDuplicate = async () => {
     setDuplicating(true);
@@ -137,6 +154,84 @@ export default function ProductEditor() {
           Marked Customizable but missing a customization image or an active placement zone — Try Your Logo won&rsquo;t
           work correctly for this product yet. See the Customization tab.
         </p>
+      ) : null}
+
+      {/* Catalogue Review — temporary launch-review flag, derived from the
+          PRODUCT_REVIEW_PENDING attribute (no stored review status). */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+          border: "1px solid var(--color-border, #e5e7eb)",
+          borderLeft: `3px solid ${product.reviewStatus === "PENDING" ? "#e1ad01" : "#12805c"}`,
+          borderRadius: 8,
+          padding: "10px 14px",
+          fontSize: 12.5,
+        }}
+      >
+        <strong style={{ color: "var(--color-navy, #0f1b2d)" }}>Catalogue Review</strong>
+        <span style={{ color: product.reviewStatus === "PENDING" ? "#8a6d1a" : "#067647", fontWeight: 700 }}>
+          {product.reviewStatus === "PENDING" ? "Pending Review" : "Review Complete"}
+        </span>
+        {isAdmin ? (
+          product.reviewStatus === "PENDING" ? (
+            <button
+              type="button"
+              className={styles.button}
+              disabled={reviewBusy}
+              onClick={() => runReviewAction(markProductReviewComplete)}
+            >
+              {reviewBusy ? "Working…" : "Mark Review Complete"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.buttonSecondary}
+              disabled={reviewBusy}
+              onClick={() => runReviewAction(reopenProductReview)}
+            >
+              {reviewBusy ? "Working…" : "Reopen Review"}
+            </button>
+          )
+        ) : (
+          <span className={styles.muted}>Review state is set by an admin.</span>
+        )}
+        {reviewError ? <span style={{ color: "#b42318" }}>{reviewError}</span> : null}
+      </div>
+
+      {Array.isArray(product.qa) && product.qa.length ? (
+        <div
+          style={{
+            border: "1px solid var(--color-border, #e5e7eb)",
+            borderRadius: 8,
+            padding: "10px 14px",
+            fontSize: 12.5,
+          }}
+        >
+          <span className={styles.muted} style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+            QA checklist (informational)
+          </span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", marginTop: 6 }}>
+            {product.qa.map((item) => (
+              <span
+                key={item.key}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  color:
+                    item.status === "ok" ? "#067647" : item.status === "warn" ? "#8a6d1a" : "#98a2b3",
+                }}
+              >
+                <span aria-hidden="true">{item.status === "ok" ? "✓" : item.status === "warn" ? "⚠" : "–"}</span>
+                {item.label}
+                {item.status === "na" ? <span className={styles.muted}> (n/a)</span> : null}
+              </span>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--color-border, #e5e7eb)", flexWrap: "wrap" }}>

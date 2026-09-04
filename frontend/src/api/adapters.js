@@ -14,7 +14,7 @@
  * bridges those gaps using the same conventions already established
  * elsewhere in the frontend, rather than inventing new ones.
  */
-import { apparelSizeGuide, galleryViews, hoodieSizeGuide } from "../data/productDetail";
+import { apparelSizeGuide, hoodieSizeGuide } from "../data/productDetail";
 
 const CATEGORY_ART_FALLBACK = {
   tshirts: "tshirt",
@@ -103,49 +103,42 @@ function sizeGuideFor(product) {
 }
 
 /**
- * PDP/Studio asset unification: PDP's gallery is now built from the same
- * canonical ProductAsset TYPE taxonomy Studio already uses, instead of the
- * old disconnected `galleryViews` template with `image` always null. No
- * `front` entry here — that slot uses `product.primaryImage` directly
- * (see `galleryFor` below) so it can never drift from the card/listing
- * image.
- */
-const ASSET_TYPES_BY_GALLERY_VIEW = {
-  back: ["GALLERY_BACK"],
-  detail: ["DETAIL"],
-  lifestyle: ["LIFESTYLE", "MODEL", "TEAM"],
-};
-
-function assetUrlForGalleryView(assets, viewId) {
-  const preferredTypes = ASSET_TYPES_BY_GALLERY_VIEW[viewId] || [];
-  for (const type of preferredTypes) {
-    const match = assets.find((asset) => asset.type === type);
-    if (match) return match.url;
-  }
-  return null;
-}
-
-/**
- * The "front" gallery slot — PDP's default, initially-visible image
- * (ProductDetail.jsx opens with `view: "front"`) — must be the exact same
- * image as every card surface (Phase 6A.1 follow-up: image consistency).
- * It reuses `product.primaryImage` (computed once, backend-side, by
- * services/productImageSelection.js — the same field `image` on the
- * listing shape already uses) instead of independently re-deriving a
- * "front" pick via `ASSET_TYPES_BY_GALLERY_VIEW`, whose CATALOG/
- * GALLERY_FRONT priority had drifted from the canonical rule (GALLERY_FRONT
- * preferred over CATALOG here, the reverse of primaryImage's CATALOG-first
- * rule) — the exact cause of a product's card and PDP showing two
- * different photos. Every other view (back/detail/lifestyle) is a
- * genuinely separate concern from "the" primary image and keeps its own
- * per-type resolution.
+ * PDP gallery (PDP Image Gallery Fix). The backend now computes the
+ * ordered, de-duplicated customer-facing image set once
+ * (services/productGallery.js) and ships it as `product.images` —
+ * `[{ id, url, alt, sortOrder }]`. The frontend renders one thumbnail per
+ * entry, with no fixed front/back/detail template and no visible role
+ * labels.
+ *
+ * The only reshaping here: guarantee the PDP's opening image is the exact
+ * same photo every card surface shows. `product.primaryImage` is computed
+ * backend-side (services/productImageSelection.js — CATALOG → GALLERY_FRONT
+ * → first active) and drives every listing card; the gallery's type order
+ * already leads with CATALOG, so the two normally agree, but if a product
+ * has no CATALOG asset the primary image is floated to position 0 so the
+ * card and the PDP can't drift.
+ *
+ * Falls back to a single entry (the primary image, or `null` → the art
+ * placeholder) when a product has no eligible gallery assets yet, so the
+ * stage always has something to render.
  */
 function galleryFor(product) {
-  const assets = product.assets || [];
-  return galleryViews.map((view) => ({
-    ...view,
-    image: view.id === "front" ? product.primaryImage?.url || null : assetUrlForGalleryView(assets, view.id),
-  }));
+  const images = Array.isArray(product.images) ? product.images : [];
+  const primaryUrl = product.primaryImage?.url || null;
+
+  const ordered =
+    primaryUrl && images.some((img) => img.url === primaryUrl)
+      ? [
+          ...images.filter((img) => img.url === primaryUrl),
+          ...images.filter((img) => img.url !== primaryUrl),
+        ]
+      : images;
+
+  if (ordered.length === 0) {
+    return [{ id: "primary", image: primaryUrl, alt: product.primaryImage?.alt || null }];
+  }
+
+  return ordered.map((img) => ({ id: img.id, image: img.url, alt: img.alt || null }));
 }
 
 /** Catalog card / listing shape — matches catalogData.js's product records. */
